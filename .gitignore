@@ -3,7 +3,8 @@
 __pycache__
 GCF_009914755.1_T2T-CHM13v2.0_genomic_goodchrs.fasta*
 chm13v2.0.fa*
-phasing_stats/*
+phasing_stats/*.gz
+phasing_stats/*.pedigree
 hprc-v1.0-mc-chm13.vcf.gz*
 phased_T2T_panel/*
 phasing_stats/variant_switch.parquet

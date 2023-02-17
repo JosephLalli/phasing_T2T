@@ -1,4 +1,3 @@
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
 
 # Computationally phased T2T 1KGP panel
@@ -60,6 +59,20 @@ num_jobs=4
 echo "$(seq 1 22) X" | sed 's/ /\n/g' | parallel -j $num_jobs ./phase_T2T chr{} $number_of_cpus_per_job
 ```
 
+## Switch Error Rates
+
+Performance was measured by comparing the phased haplotypes of 39 samples shared between the Human Pangenome Reference Consortium (HPRC)'s draft human pangenome and the 1000 Genotypes dataset.
+
+|Method of phasing variants|Switch Error Rate|+/- 95th c.i.|
+|-|-|-|
+|All 3202 samples, including trios, with pedigree|0.09% |0.02%|
+|2002 singletons or trio children, no pedigree|1.02%|0.11%|
+|39 HPRC samples, using the 3202 phased panel (with trio children, HPRC samples, and HPRC parents removed) as a reference panel |1.17%|0.13%|
+
+![Switch error rate of 39 HPRC samples](phasing_stats/SER_HPRC.png)
+
+![Switch error rate of 602 trio children using family data as reference](phasing_stats/SER_trios.png)
+
 ## Potential errors/things to be done:
 - Chromosome X was phased as if it was a normal chromosome. Instead, it should have has PAR regions phased seperately from non-PAR regions. I do not know how SHAPEIT5 handles chromosome X. Empirically, chromosome X's switch error rates are elevated compared to autosomal chromosomes, but performance is still pretty good. ("Pretty good" should illustrate that chromosome X needs a more thorough evaluation.)  
 - Currently, SHAPEIT5 rare variant phasing segfaults if there are any mendelian errors in a pedigree-specified trio. Therefore, when using bcftools' mendelian tool, I also convert all mendelian errors to ./. (missing). Ideally, I would not do this, and once this bug is fixed the script should be rerun without this option (-m d) to see what effect, if any, this has on phasing performance.  
@@ -114,6 +127,7 @@ Different cohorts have been phased by different groups using different pre-phasi
 <br>
 
 # Methods
+
 ### Variant filters used in this analysis (And string used to implement filter with bcftools)
 <br>
 
