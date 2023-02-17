@@ -6,3 +6,5 @@ chm13v2.0.fa*
 phasing_stats/*
 hprc-v1.0-mc-chm13.vcf.gz*
 phased_T2T_panel/*
+phasing_stats/variant_switch.parquet
+phasing_stats/block_length.parquet
