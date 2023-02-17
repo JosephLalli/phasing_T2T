@@ -1,7 +1,12 @@
-# Computationally phased T2T 1KGP panel
-This repository contains variant data produced in Aganzov et al 2022 (https://www.science.org/doi/10.1126/science.abl3533) that has been computationally phased using SHAPEIT5 (Hofmeister et al 2022, https://www.biorxiv.org/content/10.1101/2022.10.19.512867v2). One advantage of using SHAPEIT5 is the ability to phase rare variants and/or singletons using an IBD-informed approach.
 
-A tar file containing the phased T2T panel, along with another file containing all references and intermediate files used to generate the panel, has been uploaded to zenodo at this link. Please cite the zenodo repository if you find this panel to be useful in your work.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
+
+# Computationally phased T2T 1KGP panel
+This repository contains variant data produced in [Aganzov et al 2022](https://www.science.org/doi/10.1126/science.abl3533) that has been computationally phased using SHAPEIT5 ([Hofmeister et al 2022](https://www.biorxiv.org/content/10.1101/2022.10.19.512867v2)). One advantage of using SHAPEIT5 is the ability to phase rare variants and/or singletons using an IBD-informed approach.
+
+A tar file containing the phased T2T panel, along with another file containing phasing statistics has been uploaded to zenodo at [this link](https://zenodo.org/record/7612953#.Y-8VD3bMJPY). Please cite the zenodo repository if you find this panel to be useful in your work.
+
+[Direct download link to phased 1KGP T2T panel.](https://zenodo.org/record/7612953/files/phased_T2T_panel.tar?download=1)
 
 ## Repository structure
 - phased_T2T_panel: per-chromosomome vcf files containing phased T2T variant calls.
@@ -109,23 +114,30 @@ Different cohorts have been phased by different groups using different pre-phasi
 <br>
 
 # Methods
-## Variant filters used in this analysis (And string used to implement filter with bcftools)
+### Variant filters used in this analysis (And string used to implement filter with bcftools)
 <br>
 
->      - exclude FILTER (column in the VCF) = PASS:
-         FILTER!="PASS"
->      - exclude variants with an alt allele of '*' after multiallelic splitting
-         ALT=='*'
->       exclude GT missingness rate < 5%
-          F_MISSING>0.05
->       exclude Hardy-Weinberg p-value < 1e−10 in any 1000G subpopulation (as calculated in the 2504 unrelated 1KGP samples):
-            INFO/HWE_EUR<1e-10 || INFO/HWE_AFR<1e-10 || INFO/HWE_EAS<1e-10 || INFO/HWE_AMR<1e-10 || INFO/HWE_SAS<1e-10
->       exclude sites where Mendelian Error Rate (Mendelian errors/num alleles) >= 0.05 (Note: 0.05*602 trios = 30 mendelian errors)
-          INFO/MERR>=30
->      exclude homoalellelic sites
-          MAC==0
->      exclude variants with a high chance of being errors as predicted by computational modeling*
-          INFO/NEGATIVE_TRAIN_SITE || INFO/VQSLOD<0
+- exclude FILTER (column in the VCF) = PASS:
+
+      FILTER!="PASS"
+
+- exclude variants with an alt allele of '*' after multiallelic splitting: 
+        
+      ALT=='*'
+- exclude GT missingness rate < 5%
+
+      F_MISSING>0.05
+- exclude Hardy-Weinberg p-value < 1e−10 in any 1000G subpopulation (as calculated in the 2504 unrelated 1KGP samples):
+
+      INFO/HWE_EUR<1e-10 || INFO/HWE_AFR<1e-10 || INFO/HWE_EAS<1e-10 || INFO/HWE_AMR<1e-10 || INFO/HWE_SAS<1e-10
+- exclude sites where Mendelian Error Rate (Mendelian errors/num alleles) >= 0.05 (Note: 0.05*602 trios = 30 mendelian errors)
+    
+      INFO/MERR>=30
+- exclude homoalellelic sites
+      MAC==0
+- exclude variants with a high chance of being errors as predicted by computational modeling*
+      
+      INFO/NEGATIVE_TRAIN_SITE || INFO/VQSLOD<0
 
 >      *Note: the SHAPEIT5 UK Biobank phasing paper excludes alternative alleles with AAscore < 0.5. This is a statistic produced by GraphTyper, which was not used to produce this daataset. The closest equivelent is the VQSLOD produced by Haplotype Caller.  GraphTyper's AA score is simply the likelihood of an alternative allele truly being present in the dataset, so a cutoff of 0.5 is equivelent to 50% odds. Log odds of 1:1 is 0, so the VQSLOD log odds equivelent would be to exclude sites with a VQSLOD score of less than a cutoff of 0.
 
