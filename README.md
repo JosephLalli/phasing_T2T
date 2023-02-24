@@ -16,9 +16,9 @@ A tar file containing the phased T2T panel, along with another file containing p
 
 ## Reference data sources
 - 1KGP variants called against T2Tv2.0: [T2T_1KGP_calls](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/all_samples_3202/)
-- T2T cytobands for plotting:[chm13v2.0_cytobands_allchrs.bed](https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_cytobands_allchrs.bed)
+- T2T cytobands for plotting: [chm13v2.0_cytobands_allchrs.bed](https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_cytobands_allchrs.bed)
 - T2T reference fasta: [chm13v2.0.fa.gz](https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/GCA_009914755.4/chm13v2.0.fa.gz)
-- HPRC Pangenome sample variantion in T2T coordinates: [hprc-v1.0-mc-chm13.vcf.gz](https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.0-mc-chm13.vcf.gz)
+- HPRC Pangenome sample variation in T2T coordinates: [hprc-v1.0-mc-chm13.vcf.gz](https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.0-mc-chm13.vcf.gz)
 - SHAPEIT5 1.0.0 release files: [SHAPEIT5 v1.0.0 release](https://github.com/odelaneau/shapeit5/releases/tag/v1.0.0)
 
 # How to replicate analysis
