@@ -149,12 +149,13 @@ Different cohorts have been phased by different groups using different pre-phasi
     
       INFO/MERR>=30
 - exclude homoalellelic sites
+
       MAC==0
 - exclude variants with a high chance of being errors as predicted by computational modeling*
       
       INFO/NEGATIVE_TRAIN_SITE || INFO/VQSLOD<0
 
->      *Note: the SHAPEIT5 UK Biobank phasing paper excludes alternative alleles with AAscore < 0.5. This is a statistic produced by GraphTyper, which was not used to produce this daataset. The closest equivelent is the VQSLOD produced by Haplotype Caller.  GraphTyper's AA score is simply the likelihood of an alternative allele truly being present in the dataset, so a cutoff of 0.5 is equivelent to 50% odds. Log odds of 1:1 is 0, so the VQSLOD log odds equivelent would be to exclude sites with a VQSLOD score of less than a cutoff of 0.
+Note: the SHAPEIT5 UK Biobank phasing paper excludes alternative alleles with AAscore < 0.5. This is a statistic produced by GraphTyper, which was not used to produce this dataset. The closest equivelent is the VQSLOD produced by Haplotype Caller. GraphTyper's AA score is simply the likelihood of an alternative allele truly being present in the dataset, so a cutoff of 0.5 is equivelent to 50% odds. Log odds of 1:1 is 0, so the VQSLOD log odds equivelent would be to exclude sites with a VQSLOD score of less than a cutoff of 0.
 
 <br>
 <br>
@@ -164,8 +165,9 @@ We use several methods to evaluate the validity of this phasing:
 
 First, we evaluate phasing accuracy using family data [as outlined in SHAPEIT5's documentation](https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs/#validation-of-your-phasing).  
 
-Second, we will use the haplotype-phased samples present in the draft human pangenome as a ground truth.  
-To do this, we phase the data set four times:
+Second, we use the haplotype-phased samples present in the draft human pangenome as a ground truth.  
+
+To perform these evaluations, we phase the data set four times:
 - all 3202 samples, providing a pedigree
 - all samples excluding those identified as parents in the 1KGP pedigree (2002 samples)
 - all samples excluding those identified as parents of samples included in the draft pangenome (note: all shared 1KGP-pangenome samples are in the 1KGP dataset as children of trios).
@@ -188,5 +190,6 @@ Using the 39 1KGP samples present in the draft pangenome, we can use the HPRC's 
 - Evaluate switch error rate when phasing a small number of samples (aka the 39 HPRC samples) using 2502 unrelated samples from the pedigree-informed 1KGP phased panel dataset as a reference (with the HPRC samples and parents excluded, of course)
     - Measures accuracy in most realistic use case
     - Measure switch error rate when only phasing common variants, and when phasing all variants
+        - Common variant error rate and rare variant error rate are the same, suggesting an error in this statistic. The error is noted, and will be corrected shortly.
 
 The files produced by SHAPEIT5's switch program are located in the 'phasing_stats' folder.
