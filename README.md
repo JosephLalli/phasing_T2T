@@ -73,6 +73,8 @@ Performance was measured by comparing the phased haplotypes of 39 samples shared
 
 ![Switch error rate of 602 trio children using family data as reference](phasing_stats/SER_trios.png)
 
+![Per-chromosome switch error rate of 39 HPRC samples](phasing_stats/SER_per_chrom.png)
+
 ## Potential errors/things to be done:
 - Chromosome X was phased as if it was a normal chromosome. Instead, it should have has PAR regions phased seperately from non-PAR regions. I do not know how SHAPEIT5 handles chromosome X. Empirically, chromosome X's switch error rates are elevated compared to autosomal chromosomes, but performance is still pretty good. ("Pretty good" should illustrate that chromosome X needs a more thorough evaluation.)  
 - Currently, SHAPEIT5 rare variant phasing segfaults if there are any mendelian errors in a pedigree-specified trio. Therefore, when using bcftools' mendelian tool, I also convert all mendelian errors to ./. (missing). Ideally, I would not do this, and once this bug is fixed the script should be rerun without this option (-m d) to see what effect, if any, this has on phasing performance.  
