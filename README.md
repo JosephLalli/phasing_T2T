@@ -79,8 +79,9 @@ Performance was measured by comparing the phased haplotypes of 39 samples shared
 - I have produced a jupyter notebook script called analyze_resulting_statistics.ipynb to explore the accuracy data, but this script is still in alpha stage. I've explored the error rates enough to be confident in the performance of this script, but I have not done the work to produce the kinds of figures required for publication or presentation of these data.
 - In theory, GLIMPSE2 can be used with read data to impute missing genotypes, but I'm not sure if that is a good idea. Regardless, it is currently unimplemented.  
 <br>
-<br>
+
 # Brief pre-phasing variant filtering review
+
 Different cohorts have been phased by different groups using different pre-phasing variant filtering criteria. No paper has phased this dataset (1000 Genomes) using this tool (SHAPEIT5). So, I've tried to catalog the variant filtering criteria used by some similar papers in order to determine which filtering criteria we should use to phase the T2T 1KGP dataset.
 
 ## Other group's pre-phasing variant filtering criteria
