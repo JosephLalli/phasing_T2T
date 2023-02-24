@@ -1,7 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
 
 # Computationally phased T2T 1KGP panel
-This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data [Rhie et al 2022](https://www.biorxiv.org/content/10.1101/2022.12.01.518724v1) that has been computationally phased using SHAPEIT5 ([Hofmeister et al 2022](https://www.biorxiv.org/content/10.1101/2022.10.19.512867v2)). One advantage of using SHAPEIT5 is the ability to phase rare variants and/or singletons using an IBD-informed approach.
+This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2022](https://www.biorxiv.org/content/10.1101/2022.12.01.518724v1)) that has been computationally phased using SHAPEIT5 ([Hofmeister et al 2022](https://www.biorxiv.org/content/10.1101/2022.10.19.512867v2)). One advantage of using SHAPEIT5 is the ability to phase rare variants and/or singletons using an IBD-informed approach.
 
 A tar file containing the phased T2T panel, along with another file containing phasing statistics has been uploaded to zenodo at [this link](https://zenodo.org/record/7612953#.Y-8VD3bMJPY). Please cite the zenodo repository if you find this panel to be useful in your work.
 
