@@ -12,7 +12,7 @@ mkdir -p $basedir
 input_vcf=$initial_vcf_calls_folder/1KGP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.vcf.gz
 ref_fasta=$basedir/../chm13v2.0.fa.gz
 end_chrom=$(cat $ref_fasta.fai | grep $chrom | cut -f 2)
-chrom_map=/mnt/data/lalli/nf_stage/genome_refs/1000G_imputation_panels/t2t_lifted_chrom_maps/${chrom}.t2t.gmap.resorted.gmap.gz
+chrom_map=$basedir/../t2t_lifted_chrom_maps/${chrom}.t2t.gmap.resorted.gmap.gz
 pangenome_vcf=$basedir/../hprc-v1.0-mc-chm13.vcf.gz
 population_ids=$basedir/../sample_subsets/unrelated_superpopulations.csv
 regions_for_rare=$basedir/../sample_subsets/regions.txt
@@ -75,8 +75,6 @@ pbwt_mdr=0.1  # default: 0.1; shapeit4_default=0.05
 pbwt_modulo=0.1 # default 0.1; shapeit4_sequencing_default=0.0005
 window=5      # default: 4; 1kgp paper using shapeit4: 5
 rare_variant_threshold=0.001    # default: 0.001
-
-input_vcf=$basedir/../../messy_phasing_T2T/1KGP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.vcf.gz
 
 
 # # Split multiallelic sites, filter sites using criteria described above, 
