@@ -17,6 +17,7 @@ A tar file containing the initial version of our phased T2T panel, along with an
   - recombination maps
     - t2t_lifted_from_hapmap: HapMap recombination maps lifted from GRCh38 recombination map.
     - t2t_native_scaled_maps: T2T recombination maps generated from pyrho analysis of 1KGP T2T variant panel by @andrew-bortvin.
+- scripts: various scripts used to evaluate performance and gather GLIMPSE2_concordance or SHAPEIT5_concordance output into single dataframes.
 
 ## Reference data sources
 - 1KGP variants called against T2Tv2.0: [T2T_1KGP_calls](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/all_samples_3202/)
