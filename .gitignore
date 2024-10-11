@@ -5,4 +5,6 @@
 !SHAPEIT*
 !phase_T2T.sh
 !.gitignore
-
+!resources
+!resources/*
+!resources/*/*
