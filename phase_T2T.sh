@@ -13,8 +13,10 @@ chrom=$1
 num_threads=$2
 suffix=$3
 
+missing_filter_cutoff=$4
+
 ## imputation options
-limit_to_syntenic_regions=$4 #'false'
+# limit_to_syntenic_regions=$4 #'false'
 limit_to_snps=$5 #'false'
 filter_VQSLOD=$6
 impute_5_hmm=$7
@@ -50,13 +52,14 @@ fi
 set -u
 
 final_panel_dir=$basedir/phased_T2T_panel${suffix}
-stats_dir=$basedir/phasing_stats${suffix}
+stats_dir=$basedir/phasing_stats${suffix}_custom_switch
 imputation_results_dir=$basedir/imputation_results$suffix
 initial_vcf_calls_folder=/mnt/ssd/lalli/phasing_T2T
 
 ref_fasta=$basedir/chm13v2.0.fa.gz
 pangenome_vcf=$basedir/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz
 HGSVC_vcf=$basedir/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz
+# HGSVC_vcf=$basedir/MC_hgsvc3-hprc_chm13_filtered_decomposed.vcf.gz
 
 population_ids=$basedir/sample_subsets/unrelated_superpopulations.csv
 chrom_chunking_coords=$basedir/regions2.txt
@@ -228,7 +231,7 @@ T2T_native_panel_no_pangenome=$phased_panel_no_pangenome_biallelic
 GRCh38_native_panel_no_pangenome=$basedir/phased_GRCh38_panel/1KGP.GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.nopangenome.biallelic.2504.bcf
 
 
-#### making symlinks to skip re-phasing, which is scary and wrong.
+#### making symlinks to skip re-phasing. Do not use for production.
 
 prior_working_dir=$basedir/${chrom}_working_T2T_scaled_newimpute_071524
 # ln -sf $prior_working_dir/1KGP.CHM13v2.0.${chrom}.snp_indel.phasing_qual_pass.phased.native_maps.common.{vcf.gz,bcf} $chrom_working_dir/ #$common_variants_phased_ped
@@ -253,6 +256,7 @@ pbwt_modulo=0.1      # rare default: 0.1; common default: 0.1; shapeit4_sequenci
 window=5             # rare default: 4;   common default: 4;   1kgp paper using shapeit4: 5
 rare_variant_threshold=0.001    # default: 0.001
 
+graph_reference_missing_cutoff=0.2 #$missing_filter_cutoff #0.2
 
 ## VARIANT FILTERING, QC VARIANT SUBSETTING/FORMATTING
 
@@ -266,9 +270,11 @@ if [ ! -s $chr_specific_reference_pangenome_variation_biallelic.csi ]
 then
     echo "making reference pangenome variation"
     if [[ $chrom == 'chrX' ]] || [[ $chrom == 'PAR2' ]] || [[ $chrom == 'PAR1' ]]; then    # make missing/haploid into haploid
-        bcftools view --threads 8 -r $region -s ^GRCh38 -Ou $pangenome_vcf \
-        | bcftools norm --threads 2 -Ou -f $ref_fasta -m -any - \
-        | bcftools +missing2ref -Ou - -- -p \
+        bcftools view --threads 8 -r $region -s ^GRCh38 --force-samples -Ou $pangenome_vcf \
+        | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
+        | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
+        | sed 's,\.|\.,qqq,g' | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' | sed 's,qqq,\.|\.,g' \
+        | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
@@ -277,19 +283,21 @@ then
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_pangenome_variation_biallelic \
-        && bcftools index $chr_specific_reference_pangenome_variation_biallelic
+        && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
 
     else
-        bcftools view --threads 8 -r $region -s ^GRCh38 -Ou $pangenome_vcf \
-        | bcftools norm --threads 2 -Ou -f $ref_fasta -m -any - \
-        | bcftools +missing2ref -Ou - -- -p \
+        bcftools view --threads 8 -r $region -s ^GRCh38  --force-samples -Ou $pangenome_vcf \
+        | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
+        | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
+        | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
+        | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
         | bcftools view --threads 1 -Ou -c 1:minor - \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_pangenome_variation_biallelic \
-        && bcftools index $chr_specific_reference_pangenome_variation_biallelic
+        && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
     fi
 fi
 
@@ -297,9 +305,11 @@ if [ ! -s $chr_specific_reference_HGSVC_variation_biallelic.csi ]
 then
     echo "making reference pangenome variation"
     if [[ $chrom == 'chrX' ]] || [[ $chrom == 'PAR2' ]] || [[ $chrom == 'PAR1' ]]; then    # make missing/haploid into haploid
-        bcftools view --threads 8 -r $region -s ^GRCh38 -Ou $HGSVC_vcf \
+        bcftools view --threads 8 -r $region -s ^GRCh38 --force-samples -Ou $HGSVC_vcf \
+        | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
         | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
-        | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
+        | sed 's,\.|\.,qqq,g' | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' | sed 's,qqq,\.|\.,g' \
+        | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
@@ -308,25 +318,25 @@ then
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
-        && bcftools index $chr_specific_reference_HGSVC_variation_biallelic
+        && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
 
     else
-        bcftools view --threads 8 -r $region -s ^GRCh38 -Ou $HGSVC_vcf \
+        bcftools view --threads 8 -r $region -s ^GRCh38  --force-samples -Ou $HGSVC_vcf \
+        | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
         | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
         | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
+        | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
         | bcftools view --threads 1 -Ou -c 1:minor - \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
-        && bcftools index $chr_specific_reference_HGSVC_variation_biallelic
+        && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
     fi
 fi
 
-## Idea - annotate w/ percentage of calls concordant w/ pangenome ( & HGSVC ?)
-# Take VQSR fails & nonsyntenic variants that pass that filter (>90% called coorectly)
-
+wait
 
 # Split multiallelic sites, filter sites using criteria described above,
 # convert data to bcf format, and index.
@@ -334,13 +344,6 @@ echo "creating unphased, annotated, filtered variant panel"
 if [ ! -s $fully_annotated_input_variants.csi ]
 then
     echo "fully_annotated_input_variants"
-    # bcftools +mendelian2 -Ou $input_vcf -r $region --ped $bcftools_formatted_pedigree -m a -m d \
-    # | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
-    #                     -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
-    #                     -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF - \
-    # | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,F_MISSING,HWE,MAC:1=MAC \
-    # | bcftools +fill-tags --threads 8 -Ou - -- -S $population_ids -t HWE \
-    # | bcftools norm --threads 8 -Ou  -f $ref_fasta -m -any - \
     bcftools norm --threads 8 -Ou -r $region -f $ref_fasta -m -any $input_vcf \
     | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
@@ -381,7 +384,7 @@ fi
 if [[ ! -s $fully_annotated_input_variant_report ]]
 then
     echo "making variant report"
-    if [ ! -s $fully_annotated_input_variants.csi ]
+    if [ ! -s ${fully_annotated_input_variants%%.bcf}.vcf.gz.tbi ]
     then
         echo "fully_annotated_input_variants"
         bcftools norm --threads 8 -Ou -r $region -f $ref_fasta -m -any $input_vcf \
@@ -417,51 +420,6 @@ then
             --split-multi-allelic \
             -O $fully_annotated_input_variant_report 2> /dev/null &
 fi
-
-
-
-# ##TODO: Process these data and remove these commands before upload to github
-# echo "getting unfiltered variant calls - pangenome"
-# bcftools view --threads 8 -Ou -S $basedir/sample_subsets/pangenome_samples.txt --force-samples $fully_annotated_input_variants \
-# | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING - \
-# | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
-# | bcftools view --threads 4 -c 1:minor -Ob -W -o $chrom_working_dir/${chrom}_pangenome_unfiltered_variant_calls.bcf - && \
-# ./SHAPEIT5_switch_static_v1.1.1 --validation  $chrom_working_dir/${chrom}_pangenome_unfiltered_variant_calls.bcf --estimation $chr_specific_reference_pangenome_variation_biallelic -R $whole_chrom --output test_looser_filter_cutoffs/${chrom}.pangenome 2> /dev/null &
-# bcftools view -S ^$basedir/sample_subsets/pangenome_samples_not_in_1KGP.txt $chr_specific_reference_pangenome_variation_biallelic \
-# | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING - \
-# | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING,INFO/NS \
-# | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN%INFO/NS" - > test_looser_filter_cutoffs/${chrom}.pangenome_acs_ids.txt &
-
-# ##TODO: Process these data and remove these commands before upload to github
-# bcftools view --threads 8 -Ou -S $basedir/sample_subsets/non-HPRC_HGSVC_samples.txt --force-samples $fully_annotated_input_variants \
-# | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING - \
-# | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
-# | bcftools view --threads 4 -c 1:minor -Ob -W -o $chrom_working_dir/${chrom}_HGSVC_unfiltered_variant_calls.bcf - && \
-# ./SHAPEIT5_switch_static_v1.1.1 --validation  $chrom_working_dir/${chrom}_HGSVC_unfiltered_variant_calls.bcf --estimation $chr_specific_reference_HGSVC_variation_biallelic -R $whole_chrom --output test_looser_filter_cutoffs/${chrom}.HGSVC & # 2> /dev/null &
-# bcftools view -S $basedir/sample_subsets/HGSVC_samples_in_1KGP.txt $chr_specific_reference_HGSVC_variation_biallelic \
-# | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING - \
-# | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING,INFO/NS \
-# | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\t%INFO/NS" - > test_looser_filter_cutoffs/${chrom}.HGSVC_acs_ids.txt &
-
-# for chrom in [f'chr{i} for i in list(range(1,23)) + ['X']] + ['PAR1','PAR2']:
-#     gt_accuracy = pd.read_csv('test_looser_filter_cutoffs/${chrom}.variant.typing.txt.gz', sep=' ', header=None, names=['var_id','pos','n_err','n_samp','err_rt'])
-#     gt_accuracy.var_id = 'chr' + gt_accuracy.var_id.str[3:].str.upper()
-#     chrom_working_dir=$basedir/${chrom}_working_T2T_scaled_newimpute_091724
-#     y = pd.read_csv(f'{chrom_working_dir}/1KGP.CHM13v2.0.{chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv', sep='\t')
-#     x = y.merge(x, left_on='ID', right_on='var_id', how='left')
-#     y = x.dropna(subset=['err_rt'])
-#     pgac = pd.read_csv('test_looser_filter_cutoffs/${chrom}.pangenome_acs_ids.txt', sep='\t', header=None, names=['ID','pangenome_AC', 'pangenome_AN'])
-#     pgac['ID'] = 'chr' + pgac.ID.str[3:].str.upper()
-#     y = y.merge(pgac, on='ID', how='left')
-#     y['err_pan_AC'] = y.n_err*2/y.pangenome_AC * 100
-#     y['SYNTENIC'] = y['SYNTENIC'].fillna(False)
-#     y.loc[(y.err_pan_AC < 10) & (y.pangenome_AC > 2) & ~y.SYNTENIC]
-#     y.loc[(y.err_pan_AC >= 10) | (y.pangenome_AC <= 2) & ~y.SYNTENIC]
-##TODO: Plan is to then look to see if excess het, MERR, a more tuned VQSLOD cutoff, inbreeding coeff, or missing cutoff
-##TODO: reliably identifies nonsyntenic variants w/:
-##TODO: at least 2 variants called in the pangenome dataset and less than 10% of MAC is erroneous
-##TODO: Then, phase those variants back into panel, using quality panel as scaffold
-##TODO: Also rephase one last time: norm second, or norm first? Norm first because its what is done, or norm second because the results seem to be better?
 
 
 ### PHASING
@@ -727,14 +685,12 @@ if [[ ! -s $chrom_working_dir/${chrom}_2430_AC_AN.tsv ]]; then
 fi
 
 # Identify trio-private singletons
-echo """
 if [[ ! -s $chrom_working_dir/${chrom}_private_singletons.txt ]]; then
     mkdir -p $chrom_working_dir/tmp
     cat pedigrees/duos_and_trios.txt \
-    | parallel -j $num_threads \"bcftools view --force-samples -H -G -s {} -x -c 2 ${phased_panel_vcf_3202_biallelic%%.vcf.gz}.bcf | cut -f 3 > $chrom_working_dir/tmp/{#}.txt\" && \
+    | parallel -j $num_threads "bcftools view --force-samples -H -G -s {} -x -c 2 ${phased_panel_vcf_3202_biallelic%%.vcf.gz}.bcf | cut -f 3 > $chrom_working_dir/tmp/{#}.txt" && \
     cat $chrom_working_dir/tmp/*.txt | sort | uniq > $chrom_working_dir/${chrom}_private_singletons.txt && rm -rf $chrom_working_dir/tmp &
 fi
-""" >> singleton_commands.txt
 
 echo "phasing pangenome samples against 2504 panel"
 ### Repeat phasing as above, specifying a reference panel during the common variant phasing.
@@ -760,10 +716,10 @@ if [ ! -s $common_variants_phased_pangenome_against_ref_biallelic.csi ]; then
 fi
 
 
-### Phase rare variants in chunks. We cannot specify a reference panel in this step.
+## Phase rare variants in chunks. We cannot specify a reference panel in this step.
 i=1
-for chrom_region in $(cat $chrom_regions)
-do
+# for chrom_region in $(cat $chrom_regions)
+# do
     if [ ! -s $chrom_working_dir/${i}_tmp_pangenome.rare.bcf.csi ]; then
         ./SHAPEIT5_phase_rare_static_v1.1.1 \
             --input $vcf_to_phase_pangenome_biallelic \
@@ -772,15 +728,15 @@ do
             --thread $num_threads \
             --log $chrom_working_dir/${chrom}.${i}.rare.pangenome_with_ref_panel.log \
             --pbwt-modulo $pbwt_modulo \
-            --input-region $chrom_region \
-            --scaffold-region $chrom_region \
+            --input-region $whole_chrom \
+            --scaffold-region $whole_chrom \
             --effective-size $hmm_ne \
             $haploid_arg \
             --output $chrom_working_dir/${i}_tmp_pangenome.rare.bcf && \
             bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome.rare.bcf
     fi
-    let i++
-done
+#     let i++
+# done
 
 ### Concat rare variant 
 if [ ! -s $rare_variants_phased_pangenome_against_ref_biallelic.csi ]; then
@@ -851,183 +807,192 @@ recalc_phasing_stats='true'
 if [[ "$recalc_phasing_stats" == 'true' ]]; then
     echo "evaluating phasing accuracy"
 
-    # Evaluate accuracy of 3202 panel via two methods:
-    # 1) by looking at within-trio phasing consistency per https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs/#validation-of-your-phasing
-    #  1.1) Trio consistency when only probands + unrelated are phased (no parental genomes leak into the rest of the data)
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $vcf_to_phase \
-                                    --estimation $vcf_phased_no_parents_rare_biallelic \
-                                    -P $pedigree -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/rare_noparents_vs_trios_${chrom}.log \
-                                    --output $stats_dir/rare_noparents_vs_trios_${chrom} 2> /dev/null &
+    # # Evaluate accuracy of 3202 panel via two methods:
+    # # 1) by looking at within-trio phasing consistency per https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs/#validation-of-your-phasing
+    # #  1.1) Trio consistency when only probands + unrelated are phased (no parental genomes leak into the rest of the data)
+    # ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
+    #                                 --estimation $vcf_phased_no_parents_rare_biallelic \
+    #                                 -P $pedigree -R $whole_chrom --singleton \
+    #                                 --log $chrom_working_dir/rare_noparents_vs_trios_${chrom}.log \
+    #                                 --output $stats_dir/rare_noparents_vs_trios_${chrom} 2> /dev/null &
 
-    #  1.2) by looking at within-trio phasing consistency - Full panel, trio + statistically phased.
-    #       Basically confirming that trio-phasing worked, best assessment of trio-phased sample accuracy
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $vcf_to_phase \
-                                    --estimation $phased_panel_vcf_3202_biallelic \
-                                    -P $pedigree -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/3202_panel_vs_trios_${chrom}.log \
-                                    --output $stats_dir/3202_panel_vs_trios_${chrom} 2> /dev/null &
+    # #  1.2) by looking at within-trio phasing consistency - Full panel, trio + statistically phased.
+    # #       Basically confirming that trio-phasing worked, best assessment of trio-phased sample accuracy
+    # ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
+    #                                 --estimation $phased_panel_vcf_3202_biallelic \
+    #                                 -P $pedigree -R $whole_chrom --singleton \
+    #                                 --log $chrom_working_dir/3202_panel_vs_trios_${chrom}.log \
+    #                                 --output $stats_dir/3202_panel_vs_trios_${chrom} 2> /dev/null &
 
-    #  1.3) by looking at within-trio phasing consistency - 2504 panel, trio + statistically phased.
-    #       Should be the same as 1.2, but summary statistics will not include children. Parents are phased with a mix of trio-consistency and statistical phasing.
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $vcf_to_phase \
-                                    --estimation $phased_panel_vcf_2504_biallelic \
-                                    -P $pedigree -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/2504_panel_vs_trios_${chrom}.log \
-                                    --output $stats_dir/2504_panel_vs_trios_${chrom} 2> /dev/null &
+    # #  1.3) by looking at within-trio phasing consistency - 2504 panel, trio + statistically phased.
+    # #       Should be the same as 1.2, but summary statistics will not include children. Parents are phased with a mix of trio-consistency and statistical phasing.
+    # ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
+    #                                 --estimation $phased_panel_vcf_2504_biallelic \
+    #                                 -P $pedigree -R $whole_chrom --singleton \
+    #                                 --log $chrom_working_dir/2504_panel_vs_trios_${chrom}.log \
+    #                                 --output $stats_dir/2504_panel_vs_trios_${chrom} 2> /dev/null &
 
     #  2) by looking at phasing consistency with ground truth pangenome samples
     #   2.1) trio-phased 3202 panel
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/3202_panel_vs_HPRC_${chrom}.log \
-                                    --output $stats_dir/3202_panel_vs_HPRC_${chrom} 2> /dev/null &
+                                    --log $chrom_working_dir/3202_panel_vs_HPRC_${chrom}_$4.log \
+                                    --output $stats_dir/3202_panel_vs_HPRC_${chrom}_$4 2> /dev/null &
 
 
     #  2.2) evaluate phasing performance of phasing without pedigree against ground truth pangenome samples
     #        Able to compare trio-measured SER and HPRC consistency based SER
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
                                     --estimation $chrom_working_dir/phased_pangenome_noparents.biallelic.bcf \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/noparents_vs_HPRC_${chrom}.log \
-                                    --output $stats_dir/noparents_vs_HPRC_${chrom} 2> /dev/null &
+                                    --log $chrom_working_dir/noparents_vs_HPRC_${chrom}_$4.log \
+                                    --output $stats_dir/noparents_vs_HPRC_${chrom}_$4 2> /dev/null &
 
     #  3) Evaluate panel's usefulness as a reference panel
     #      3.1) Rephased pangenome samples compared to HPRC samples
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
                                     --estimation $rare_variants_phased_pangenome_against_ref_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_pangenome_${chrom}.log \
-                                    --output $stats_dir/rare_pangenome_panelphased_vs_pangenome_${chrom} 2> /dev/null &
-
+                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_pangenome_${chrom}_$4.log \
+                                    --output $stats_dir/rare_pangenome_panelphased_vs_pangenome_${chrom}_$4 2> /dev/null &
+    
     #      3.2) Rephased pangenome samples compared to trio samples
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $vcf_to_phase \
+    ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
                                     --estimation $rare_variants_phased_pangenome_against_ref_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_trios_${chrom}.log \
-                                    --output $stats_dir/rare_pangenome_panelphased_vs_trios_${chrom} 2> /dev/null &
+                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_trios_${chrom}_$4.log \
+                                    --output $stats_dir/rare_pangenome_panelphased_vs_trios_${chrom}_$4 2> /dev/null &
+
     # 4) Experiment with HGSVC samples
     #     4.1) trio-phased 3202 panel
-    ./SHAPEIT5_switch_static_v1.1.1 --validation $chr_specific_reference_HGSVC_variation_biallelic \
+    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_variation_biallelic \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/3202_panel_vs_HGSVC_${chrom}.log \
-                                    --output $stats_dir/3202_panel_vs_HGSVC_${chrom} 2> /dev/null &
+                                    --log $chrom_working_dir/3202_panel_vs_HGSVC_${chrom}_$4.log \
+                                    --output $stats_dir/3202_panel_vs_HGSVC_${chrom}_$4 2> /dev/null &
 
+    #     4.2) only examine samples that are not part of trios
+    bcftools view --threads 4 -S $basedir/sample_subsets/HGSVC_not_part_of_trio.txt -Ob -o ${chr_specific_reference_HGSVC_variation_biallelic%%.bcf}.non_trio_samples.bcf $chr_specific_reference_HGSVC_variation_biallelic && \
+    bcftools index --threads 4 ${chr_specific_reference_HGSVC_variation_biallelic%%.bcf}.non_trio_samples.bcf && \
+    ./SHAPEIT5_switch_static_JLL --validation ${chr_specific_reference_HGSVC_variation_biallelic%%.bcf}.non_trio_samples.bcf \
+                                    --estimation $phased_panel_vcf_3202_biallelic \
+                                    -R $whole_chrom --singleton \
+                                    --log $chrom_working_dir/3202_panel_vs_HGSVC_notrios_${chrom}_$4.log \
+                                    --output $stats_dir/3202_panel_vs_HGSVC_notrios_${chrom}_$4 2> /dev/null &
 
-fi
-
-
-################### Examine imputation ##################
-
-# Liftover panels if necessary
-if [[ ! -s $T2T_native_panel.csi ]] && [[ -s $phased_panel_vcf_2504_biallelic.tbi ]]; then
-        bcftools view -Ob --threads 4 $phased_panel_vcf_2504_biallelic > $T2T_native_panel && bcftools index -f --threads 4 $T2T_native_panel \
-    && ./liftover_panel.sh $T2T_native_panel $GRCh38_lifted_panel /dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta /dev/shm/chm13v2-hg38.over.chain liftover/grch38-chm13v2.sort.vcf.gz &
-elif [[ ! -s $T2T_lifted_panel.csi ]]; then
-    ./liftover_panel.sh $T2T_native_panel $GRCh38_lifted_panel /dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta /dev/shm/chm13v2-hg38.over.chain liftover/grch38-chm13v2.sort.vcf.gz &
-fi
-
-if [[ ! -s $GRCh38_native_panel.csi ]] && [[ -s ${GRCh38_native_panel%%.bcf}.vcf.gz.tbi ]]; then
-        bcftools view -Ob --threads 4 ${GRCh38_native_panel%%.bcf}.vcf.gz > $GRCh38_native_panel && bcftools index -f --threads 4 $GRCh38_native_panel \
-    && ./liftover_panel.sh $GRCh38_native_panel $T2T_lifted_panel /dev/shm/chm13v2.0_maskedY_rCRS.fasta /dev/shm/hg38-chm13v2.over.chain liftover/chm13v2-grch38.sort.vcf.gz &
-elif [[ ! -s $GRCh38_lifted_panel.csi ]]; then
-    ./liftover_panel.sh $GRCh38_native_panel $T2T_lifted_panel /dev/shm/chm13v2.0_maskedY_rCRS.fasta /dev/shm/hg38-chm13v2.over.chain liftover/chm13v2-grch38.sort.vcf.gz &
 fi
 
 
-wait
+# ################### Examine imputation ##################
+
+# # Liftover panels if necessary
+# if [[ ! -s $T2T_native_panel.csi ]] && [[ -s $phased_panel_vcf_2504_biallelic.tbi ]]; then
+#         bcftools view -Ob --threads 4 $phased_panel_vcf_2504_biallelic > $T2T_native_panel && bcftools index -f --threads 4 $T2T_native_panel \
+#     && ./liftover_panel.sh $T2T_native_panel $GRCh38_lifted_panel /dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta /dev/shm/chm13v2-hg38.over.chain liftover/grch38-chm13v2.sort.vcf.gz &
+# elif [[ ! -s $T2T_lifted_panel.csi ]]; then
+#     ./liftover_panel.sh $T2T_native_panel $GRCh38_lifted_panel /dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta /dev/shm/chm13v2-hg38.over.chain liftover/grch38-chm13v2.sort.vcf.gz &
+# fi
+
+# if [[ ! -s $GRCh38_native_panel.csi ]] && [[ -s ${GRCh38_native_panel%%.bcf}.vcf.gz.tbi ]]; then
+#         bcftools view -Ob --threads 4 ${GRCh38_native_panel%%.bcf}.vcf.gz > $GRCh38_native_panel && bcftools index -f --threads 4 $GRCh38_native_panel \
+#     && ./liftover_panel.sh $GRCh38_native_panel $T2T_lifted_panel /dev/shm/chm13v2.0_maskedY_rCRS.fasta /dev/shm/hg38-chm13v2.over.chain liftover/chm13v2-grch38.sort.vcf.gz &
+# elif [[ ! -s $GRCh38_lifted_panel.csi ]]; then
+#     ./liftover_panel.sh $GRCh38_native_panel $T2T_lifted_panel /dev/shm/chm13v2.0_maskedY_rCRS.fasta /dev/shm/hg38-chm13v2.over.chain liftover/chm13v2-grch38.sort.vcf.gz &
+# fi
 
 
-if [[ $chrom == "PAR1" ]]
-then    
-    SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chrX.recalibrated.snp_indel.pass.vcf.gz
-    SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chrX.recalibrated.snp_indel.pass.vcf.gz
-elif [[ $chrom == "PAR2" ]]
-then
-    SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chrX.recalibrated.snp_indel.pass.vcf.gz
-    SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chrX.recalibrated.snp_indel.pass.vcf.gz
-elif [[ $chrom == "debug" ]]
-then
-    SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chr20.recalibrated.snp_indel.pass.vcf.gz
-    SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chr20.recalibrated.snp_indel.pass.vcf.gz
-else
-    SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.vcf.gz
-    SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/${chrom}.recalibrated.snp_indel.pass.vcf.gz
-fi
-
-if [ ! -s $SGDP_ground_truth_T2T.csi ]; then
-    echo $chrom "SGDP_ground_truth_T2T"
-    bcftools norm --threads 2 -Ou -r $region -f $ref_fasta -m -any $SGDP_variants_T2T \
-    | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
-                    -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
-                    -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
-    | bcftools view -Ou --force-samples -S ^$SGDP_in_1KGP - \
-    | bcftools view -Ou  -c 1:minor -i "ALT!='*' || F_MISSING<0.05 || ABS(ILEN)<=50" - \
-    | bcftools +fill-tags --threads 8 -Ob - -- -t AN,AC,MAF,MAC:1=MAC \
-    > $SGDP_ground_truth_T2T \
-    && bcftools index --threads 8 -f $SGDP_ground_truth_T2T &
-fi
-if [ ! -s $SGDP_ground_truth_GRCh38.csi ]; then
-    echo $chrom "SGDP_ground_truth_GRCh38"
-    bcftools norm --threads 2 -Ou -r $grch38_region -f $GRCh38_fasta -m -any $SGDP_variants_GRCh38 \
-    | bcftools annotate -Ou --threads 8 -a $grch38_syntenic_site_location -c CHROM,FROM,TO,SYNTENIC --mark-sites +SYNTENIC \
-                    -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
-                    -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
-    | bcftools view -Ou --force-samples -S ^$SGDP_in_1KGP - \
-    | bcftools view -Ou  -c 1:minor -i "ALT!='*' || F_MISSING<0.05 || ABS(ILEN)<=50" - \
-    | bcftools +fill-tags --threads 8 -Ob - -- -t AN,AC,MAF,MAC:1=MAC \
-    > $SGDP_ground_truth_GRCh38 \
-    && bcftools index --threads 8 -f $SGDP_ground_truth_GRCh38 &
-fi
+# wait
 
 
-wait
+# if [[ $chrom == "PAR1" ]]
+# then    
+#     SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chrX.recalibrated.snp_indel.pass.vcf.gz
+#     SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chrX.recalibrated.snp_indel.pass.vcf.gz
+# elif [[ $chrom == "PAR2" ]]
+# then
+#     SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chrX.recalibrated.snp_indel.pass.vcf.gz
+#     SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chrX.recalibrated.snp_indel.pass.vcf.gz
+# elif [[ $chrom == "debug" ]]
+# then
+#     SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.chr20.recalibrated.snp_indel.pass.vcf.gz
+#     SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/chr20.recalibrated.snp_indel.pass.vcf.gz
+# else
+#     SGDP_variants_T2T=$SGDP_ground_truth_dir_T2T/SGDP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.vcf.gz
+#     SGDP_variants_GRCh38=$SGDP_ground_truth_dir_GRCh38/${chrom}.recalibrated.snp_indel.pass.vcf.gz
+# fi
 
-if [[ ! -s $chrom_working_dir/GRCh38_imputation_workspace/GRCh38_space_filtered/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel false SGDP
-fi
-if [[ ! -s $chrom_working_dir/T2T_imputation_workspace/T2T_space_filtered/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then    
-    ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel $T2T_lifted_panel false SGDP
-fi
-if [[ ! -s $chrom_working_dir/GRCh38_snps_imputation_workspace/GRCh38_space_filtered_snpsOnly/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_snps_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel true SGDP
-fi
-if [[ ! -s $chrom_working_dir/T2T_snps_imputation_workspace/T2T_space_filtered_snpsOnly/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_snps_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel $T2T_lifted_panel true SGDP
-fi
+# if [ ! -s $SGDP_ground_truth_T2T.csi ]; then
+#     echo $chrom "SGDP_ground_truth_T2T"
+#     bcftools norm --threads 2 -Ou -r $region -f $ref_fasta -m -any $SGDP_variants_T2T \
+#     | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO --mark-sites +SYNTENIC \
+#                     -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
+#                     -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
+#     | bcftools view -Ou --force-samples -S ^$SGDP_in_1KGP - \
+#     | bcftools view -Ou  -c 1:minor -i "ALT!='*' || F_MISSING<0.05 || ABS(ILEN)<=50" - \
+#     | bcftools +fill-tags --threads 8 -Ob - -- -t AN,AC,MAF,MAC:1=MAC \
+#     > $SGDP_ground_truth_T2T \
+#     && bcftools index --threads 8 -f $SGDP_ground_truth_T2T &
+# fi
+# if [ ! -s $SGDP_ground_truth_GRCh38.csi ]; then
+#     echo $chrom "SGDP_ground_truth_GRCh38"
+#     bcftools norm --threads 2 -Ou -r $grch38_region -f $GRCh38_fasta -m -any $SGDP_variants_GRCh38 \
+#     | bcftools annotate -Ou --threads 8 -a $grch38_syntenic_site_location -c CHROM,FROM,TO,SYNTENIC --mark-sites +SYNTENIC \
+#                     -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with GRCh38 (source: https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/chain/v1_nflo/chm13v2-unique_to_hg38.bed)">' \
+#                     -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
+#     | bcftools view -Ou --force-samples -S ^$SGDP_in_1KGP - \
+#     | bcftools view -Ou  -c 1:minor -i "ALT!='*' || F_MISSING<0.05 || ABS(ILEN)<=50" - \
+#     | bcftools +fill-tags --threads 8 -Ob - -- -t AN,AC,MAF,MAC:1=MAC \
+#     > $SGDP_ground_truth_GRCh38 \
+#     && bcftools index --threads 8 -f $SGDP_ground_truth_GRCh38 &
+# fi
 
-if [[ ! -s $GRCh38_lifted_panel_no_pangenome.csi ]]; then
-    echo $chrom "GRCh38_lifted_panel_no_pangenome"
-    bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $GRCh38_lifted_panel > $GRCh38_lifted_panel_no_pangenome && \
-    bcftools index --threads 2 $GRCh38_lifted_panel_no_pangenome &
-fi
-if [[ ! -s $T2T_lifted_panel_no_pangenome.csi ]]; then
-    echo $chrom "T2T_lifted_panel_no_pangenome"
-    bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $T2T_lifted_panel > $T2T_lifted_panel_no_pangenome && \
-    bcftools index --threads 2 $T2T_lifted_panel_no_pangenome &
-fi
-if [[ ! -s $GRCh38_native_panel_no_pangenome.csi ]]; then
-    echo $chrom "GRCh38_native_panel_no_pangenome"
-    bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $GRCh38_native_panel > $GRCh38_native_panel_no_pangenome && \
-    bcftools index --threads 2 $GRCh38_native_panel_no_pangenome
-fi
 
-wait
-if [[ ! -s $chrom_working_dir/GRCh38_imputation_pangenome_workspace/GRCh38_space_filtered/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_pangenome_workspace      $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_pangenome false pangenome &
-fi
-if [[ ! -s $chrom_working_dir/GRCh38_snps_imputation_pangenome_workspace/GRCh38_space_filtered_snpsOnly/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_snps_imputation_pangenome_workspace $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_pangenome true pangenome &
-fi
-wait
-if [[ ! -s $chrom_working_dir/T2T_imputation_pangenome_workspace/T2T_space_filtered/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then    
-    ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_imputation_pangenome_workspace            $pangenome_ground_truth_T2T    $T2T_native_panel_no_pangenome    $T2T_lifted_panel_no_pangenome false pangenome &
-fi
-if [[ ! -s $chrom_working_dir/T2T_snps_imputation_pangenome_workspace/T2T_space_filtered_snpsOnly/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
-    ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_snps_imputation_pangenome_workspace       $pangenome_ground_truth_T2T    $T2T_native_panel_no_pangenome    $T2T_lifted_panel_no_pangenome true pangenome &
-fi
+# wait
+
+# if [[ ! -s $chrom_working_dir/GRCh38_imputation_workspace/GRCh38_space_filtered/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel false SGDP
+# fi
+# if [[ ! -s $chrom_working_dir/T2T_imputation_workspace/T2T_space_filtered/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then    
+#     ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel $T2T_lifted_panel false SGDP
+# fi
+# if [[ ! -s $chrom_working_dir/GRCh38_snps_imputation_workspace/GRCh38_space_filtered_snpsOnly/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_snps_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel true SGDP
+# fi
+# if [[ ! -s $chrom_working_dir/T2T_snps_imputation_workspace/T2T_space_filtered_snpsOnly/lifted_panel.common_variants.SGDP.${chrom}/lifted_panel.common_variants.SGDP.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_snps_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel $T2T_lifted_panel true SGDP
+# fi
+
+# if [[ ! -s $GRCh38_lifted_panel_no_pangenome.csi ]]; then
+#     echo $chrom "GRCh38_lifted_panel_no_pangenome"
+#     bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $GRCh38_lifted_panel > $GRCh38_lifted_panel_no_pangenome && \
+#     bcftools index --threads 2 $GRCh38_lifted_panel_no_pangenome &
+# fi
+# if [[ ! -s $T2T_lifted_panel_no_pangenome.csi ]]; then
+#     echo $chrom "T2T_lifted_panel_no_pangenome"
+#     bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $T2T_lifted_panel > $T2T_lifted_panel_no_pangenome && \
+#     bcftools index --threads 2 $T2T_lifted_panel_no_pangenome &
+# fi
+# if [[ ! -s $GRCh38_native_panel_no_pangenome.csi ]]; then
+#     echo $chrom "GRCh38_native_panel_no_pangenome"
+#     bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $GRCh38_native_panel > $GRCh38_native_panel_no_pangenome && \
+#     bcftools index --threads 2 $GRCh38_native_panel_no_pangenome
+# fi
+
+# wait
+# if [[ ! -s $chrom_working_dir/GRCh38_imputation_pangenome_workspace/GRCh38_space_filtered/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_pangenome_workspace      $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_pangenome false pangenome &
+# fi
+# if [[ ! -s $chrom_working_dir/GRCh38_snps_imputation_pangenome_workspace/GRCh38_space_filtered_snpsOnly/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_snps_imputation_pangenome_workspace $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_pangenome true pangenome &
+# fi
+# wait
+# if [[ ! -s $chrom_working_dir/T2T_imputation_pangenome_workspace/T2T_space_filtered/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then    
+#     ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_imputation_pangenome_workspace            $pangenome_ground_truth_T2T    $T2T_native_panel_no_pangenome    $T2T_lifted_panel_no_pangenome false pangenome &
+# fi
+# if [[ ! -s $chrom_working_dir/T2T_snps_imputation_pangenome_workspace/T2T_space_filtered_snpsOnly/lifted_panel.common_variants.pangenome.${chrom}/lifted_panel.common_variants.pangenome.${chrom}.rsquare.grp.txt.gz ]]; then
+#     ./assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_snps_imputation_pangenome_workspace       $pangenome_ground_truth_T2T    $T2T_native_panel_no_pangenome    $T2T_lifted_panel_no_pangenome true pangenome &
+# fi
 
 wait
 # close logfile

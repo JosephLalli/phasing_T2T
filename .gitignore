@@ -1,7 +1,7 @@
 *
 !scripts
 !scripts/*
-!README.txt
+!README.md
 !SHAPEIT*
 !phase_T2T.sh
 !.gitignore
@@ -9,3 +9,4 @@
 !resources/*
 !resources/*/*
 !resources/*/*/*
+!*.cpp
