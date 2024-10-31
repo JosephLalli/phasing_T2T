@@ -15,8 +15,6 @@ root_name=$(dirname $out)/$(basename ${out%.gz})
 root_name=${root_name%.*}
 tmpfile=$(dirname $out)/temp.$(basename $root_name).bcf
 
-echo "liftover_indels.py $in $vcf_of_differences $tmpfile $chain $target_fasta"
-
 python3 liftover_indels.py $in $vcf_of_differences $tmpfile $chain $target_fasta \
 && bcftools norm -Ou --threads 4 -f $target_fasta -m -any $tmpfile \
 | bcftools annotate -Ou --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
