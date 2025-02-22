@@ -141,16 +141,6 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
     base_groundtruth_name=${base_groundtruth_name%%.bcf}
     base_groundtruth_name=${base_groundtruth_name%%.vcf}
     if [ ! -s $base_groundtruth_name.$ground_truth_filtered_suffix.bcf.csi ]; then
-        echo $chrom ref_SGDP
-        echo """
-            bcftools view --threads 2 -Ou -i "$ground_truth_filter_string" $subsample $reference_dataset \
-            | bcftools norm --threads 2 -Ou -f $ref_fasta - \
-            | bcftools +fill-tags --threads 4 -Ou - -- -t 'AN,AC,MAF,MAC:1=MAC' \
-            | bcftools view -Ou -c 1:minor --threads 4 -e \"F_MISSING>=0.05\" - \
-            | bcftools annotate -Ob --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
-            > $base_groundtruth_name.$ground_truth_filtered_suffix.bcf \
-            && bcftools index -f --threads 2 $base_groundtruth_name.$ground_truth_filtered_suffix.bcf &
-        """
         if [[ $ref_dataset_name != 'pangenome' ]]; then
             bcftools view --threads 2 -Ou -i "$ground_truth_filter_string" $subsample $reference_dataset \
             | bcftools norm --threads 2 -Ou -f $ref_fasta - \
@@ -167,6 +157,9 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
             | bcftools annotate -Ob --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
             > $base_groundtruth_name.$ground_truth_filtered_suffix.bcf \
             && bcftools index -f --threads 2 $base_groundtruth_name.$ground_truth_filtered_suffix.bcf &
+        fi
+        if [[ $reference_genome == 'GRCh38' ]]; then
+            cp $base_groundtruth_name.$ground_truth_filtered_suffix.bcf* /mnt/ssd/lalli/phasing_T2T/GRCh38_pangenome_variation/
         fi
     fi
     base_native_panel_name=${native_panel%%.gz}
@@ -203,13 +196,11 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
     lifted_panel=$base_lifted_panel_name.$filtered_suffix.bcf
 
 # 1) Downsample ground truth variants
-    # echo "downsampling"
+    echo "downsampling $chrom"
     ground_truth_downsampled=${reference_dataset%%.bcf}.downsampled.bcf
     ground_truth_downsampled=$working_dir/$(basename $ground_truth_downsampled)
-    echo $ground_truth_downsampled
 
     if [[ ! -s $ground_truth_downsampled.csi ]]; then
-        echo $chrom downsampling
         if [[ $ref_dataset_name != 'pangenome' ]]; then
             bcftools isec -Ou -n=4 -w 1 $reference_dataset $omni $lifted_panel $native_panel \
             | bcftools +fill-tags -Ou - -- -t F_MISSING,MAF,HWE \
