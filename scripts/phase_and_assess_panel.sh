@@ -105,14 +105,13 @@ if [[ $genome == 'GRCh38' ]]; then
     chrom_map=$basedir/GRCh38_performance_comparison/hg38_chrom_maps/${chrom}.b38.gmap.gz
     initial_vcf_calls_folder=$basedir/unphased_GRCh38_panel
 
-    ref_fasta=/dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta
-    # ref_fasta=$basedir/hg38.no_alt.fa.gz
+    ref_fasta=$basedir/GRCh38_full_analysis_set_plus_decoy_hla.fasta
     pangenome_vcf=$basedir/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz
     HGSVC_vcf=$basedir/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz
     HGSVC_HPRC_vcf=$basedir/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz
 
     chrom_chunking_coords=$basedir/GRCh38_performance_comparison/regions2.txt
-    syntenic_site_location="$basedir/hg38.GCA_009914755.4.synNet.summary.bed.gz"
+    syntenic_site_location=$basedir/hg38.GCA_009914755.4.synNet.summary.bed.gz
 
     chrom_specific_syntenic_annotation_line_part1="CHROM,FROM,TO,SYNTENIC"
     chrom_specific_syntenic_annotation_line_part2="##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description=\"Syntenic with CHM13\">"
