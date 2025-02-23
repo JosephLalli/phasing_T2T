@@ -72,7 +72,7 @@ def perform_clean_liftover(var, liftover_obj, return_coordinates=False):
     if not return_coordinates:
         return var
     return new_start[0:2], new_end[0:2]
-    
+
 def revert_variant(var):
     original_contig = var.INFO['Original_Contig']
     original_pos = var.INFO['Original_POS']
@@ -128,7 +128,7 @@ def precision_edit_lifted_ref(var, ref):
     "Does not work for overlapping insertion/deletions"
     # ('chr18', 465979): var: GGA/G, ref:G/GGAGA should lead to G/GGA, instead leads to G/G because alt cannot change
     # G[:1] | GA[2:] | / G[:1] |(GAGA[2:4])
-    # in terms of the below: 
+    # in terms of the below:
     # first condition: no prefix to be added to ref (var.REF[:0]) plus ref itself (G) plus nothing after the variant deletion in the ref [5:]
     # ALT: alt itself [G]+suffix from what is leftover in the ref.ALT[0][(ref.start-var.start+1)+len(var.ALT[0])]
     if var.start <= ref.start and var.end > ref.start:
@@ -170,7 +170,7 @@ def get_adjusted_ref_alt(var, ref):
         new_ref = new_ref[:-1]
         new_alt = new_alt[:-1]
     return (new_ref, new_alt)
-    
+
 
 def convert_VCF_to_intervaltree(vcf_file):
     tree_dict = dict()
