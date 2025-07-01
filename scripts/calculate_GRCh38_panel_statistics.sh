@@ -48,7 +48,11 @@ then
     suffix="_$suffix"
 fi
 
-
+bcftools annotate -Ou --threads 8 \
+    -a /mnt/ssd/lalli/phasing_T2T/hg38.GCA_009914755.4.synNet.summary.bed.gz \
+    -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF --mark-sites +SYNTENIC \
+    -c CHROM,FROM,TO,SYNTENIC -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description=\"Syntenic with CHM13\">' \
+    --set-id "%CHROM\_%POS\_%REF\_%FIRST_ALT" -   | bcftools +fill-tags --threads 8 -Ov -- - -t AN,AC,MAF,MAC:1=MAC
 set -u
 
 final_panel_dir=$basedir/phased_GRCh38_panel
@@ -170,7 +174,8 @@ chr_specific_reference_HGSVC_variation_biallelic=$chrom_working_dir/${chrom}_ref
 chr_specific_reference_pangenome_variation_trimmed_biallelic=$chrom_working_dir/${chrom}_reference_pangenome.filtered_variants.biallelic.bcf
 
 # Define the names of input variant files that are sample subsets
-vcf_to_phase_pangenome_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.pangenome.biallelic.bcf
+vcf_to_phase_pangenome_biallelic_HPRC=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.HPRC_pangenome_calls.biallelic.bcf
+vcf_to_phase_pangenome_biallelic_1kgp=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.1kGP_pangenome_calls.biallelic.bcf
 
 # Define phased result file names
 common_variants_phased_ped=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.common.bcf
@@ -178,8 +183,10 @@ rare_variants_phased_ped=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasi
 rare_variants_phased_ped_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.biallelic.rare.bcf
 phased_panel_no_pangenome_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.no_pangenome.biallelic.bcf
 
-common_variants_phased_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.common.pangenome_samples.biallelic.bcf
-rare_variants_phased_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.biallelic.rare.pangenome_samples.bcf
+common_variants_phased_HPRC_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.common.HPRC_pangenome_calls.biallelic.bcf
+rare_variants_phased_HPRC_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.biallelic.rare.HPRC_pangenome_calls.bcf
+common_variants_phased_1kgp_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.common.1kGP_pangenome_calls.biallelic.bcf
+rare_variants_phased_1kgp_pangenome_against_ref_biallelic=$chrom_working_dir/1KGP.GRCh38.${chrom}.snp_indel.phasing_qual_pass.phased.biallelic.rare.1kGP_pangenome_calls.bcf
 
 
 # output files
@@ -228,9 +235,9 @@ graph_reference_missing_cutoff=0.2
 ## One difference between assemblies and calls is that there is no such thing as a missing variant in an assembly.
 ## What is represented as a missing variant (overlapping indel) is consistently represented as a reference allele in our variant calls
 ## So we will convert pangenome missing variants into pangenome reference alleles.
-#  | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' 
-if [ ! -s $chr_specific_reference_pangenome_variation_biallelic.csi ]
-then
+
+# if [ ! -s $chr_specific_reference_pangenome_variation_biallelic.csi ]
+# then
     echo "making reference pangenome variation"
     if [[ $chrom == 'chrX' ]] || [[ $chrom == 'PAR2' ]] || [[ $chrom == 'PAR1' ]]; then    # make missing/haploid into haploid
         bcftools view --threads 8 -r $region -s ^CHM13 --force-samples -Ou $pangenome_vcf \
@@ -245,27 +252,28 @@ then
         | bcftools +fixploidy -Ou - -- -f 2 \
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
+        | tqdm \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_pangenome_variation_biallelic \
         && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
 
     else
+    # | sed 's,\.|\.,qqq,g' | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' | sed 's,qqq,\.|\.,g' \
         bcftools view --threads 8 -r $region -s ^CHM13 --force-samples -Ou $pangenome_vcf \
         | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
-        | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
-        | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
-        | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
+        | bcftools norm --threads 2 -Ou -f $ref_fasta -m -any - \
+        | bcftools view -Ov -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO,SYNTENIC --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with CHM13">' \
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
-        | bcftools view --threads 1 -Ou -c 1:minor - \
+        | bcftools view --threads 2 -Ou -c 1:minor - \
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_pangenome_variation_biallelic \
         && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
     fi
-fi
+# fi
 
-if [ ! -s $chr_specific_reference_HGSVC_variation_biallelic.csi ]
-then
+# if [ ! -s $chr_specific_reference_HGSVC_variation_biallelic.csi ]
+# then
     echo "making reference pangenome variation"
     if [[ $chrom == 'chrX' ]] || [[ $chrom == 'PAR2' ]] || [[ $chrom == 'PAR1' ]]; then    # make missing/haploid into haploid
         bcftools view --threads 8 -r $region -s ^CHM13 --force-samples -Ou $HGSVC_vcf \
@@ -284,10 +292,10 @@ then
         && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
 
     else
+                # | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
         bcftools view --threads 8 -r $region -s ^CHM13 --force-samples -Ou $HGSVC_vcf \
         | bcftools norm --threads 2 -Ou --atomize --atom-overlaps \. -m +snps - \
         | bcftools norm --threads 2 -Ov -f $ref_fasta -m -any - \
-        | sed 's,\.|,0|,g' | sed 's,|\.,|0,g' \
         | bcftools view -Ou -i "F_MISSING<$graph_reference_missing_cutoff" - \
         | bcftools annotate -Ou --threads 8 -a $syntenic_site_location -c CHROM,FROM,TO,SYNTENIC --mark-sites +SYNTENIC \
                         -H '##INFO=<ID=SYNTENIC,Number=0,Type=Flag,Description="Syntenic with CHM13">' \
@@ -297,7 +305,7 @@ then
         | bcftools sort -m 40G -T $PWD -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
         && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
     fi
-fi
+# fi
 
 wait
 
@@ -459,44 +467,68 @@ if [ ! -s $phased_panel_vcf_2504.csi ]; then
 fi
 
 
-wait
-
 ## To evaluate 1KGP GRCh38 performance as a reference panel when phasing variants,
 ## phase samples present in pangenome using the phased 2504 panel as a reference
 ### Remove all pangenome samples and parents of pangenome samples from phased 2504 panel.
 ### This will be our 'reference panel'
 echo "creating 'ground truth' reference panels for phasing evaluation"
-if [ ! -s $phased_panel_no_pangenome_biallelic.csi ]; then
+# if [ ! -s $phased_panel_no_pangenome_biallelic.csi ]; then
     echo "phased_panel_no_pangenome_biallelic"
     bcftools view -Ou --threads 8 -S ^$pangenome_and_parents --force-samples $phased_panel_vcf_2504_biallelic \
+    | bcftools view -Ou --threads 8 -c 1:minor - \
     | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF - \
     | bcftools +fill-tags -Ob --threads 8 - -- -t AN,AC,MAF,MAC:1=MAC  > $phased_panel_no_pangenome_biallelic \
     && bcftools index --threads 8 -f $phased_panel_no_pangenome_biallelic &
-fi
-
-if [ ! -s $chr_specific_reference_pangenome_variation_trimmed_biallelic.csi ]; then
-    echo "chr_specific_reference_pangenome_variation_trimmed_biallelic"
-    ### Remove pangenome reference sites that are not present in 3202 biallelic reference.
-    bcftools isec -r $region --threads 8 -o $chr_specific_reference_pangenome_variation_trimmed_biallelic -Ob -n =2 -w 1 $chr_specific_reference_pangenome_variation_biallelic $phased_panel_vcf_3202_biallelic \
-    && bcftools index -f --threads 8 $chr_specific_reference_pangenome_variation_trimmed_biallelic &
-fi
-
-
-echo "preparing references for pangenome sample phasing"
-if [ ! -s $vcf_to_phase_pangenome_biallelic.csi ]; then
-    echo "vcf_to_phase_pangenome_biallelic"
-    ### Create unphased variant call set of samples present in the pangenomepe
-    ### also perform basic prephasing filtering to identify phasable variant set
-    bcftools +setGT -Ou --threads 8 $chr_specific_reference_pangenome_variation_biallelic -- -t a -n u \
-    | bcftools view -c 1:minor \
-        -e "ALT=='*' || F_MISSING>0.05 || INFO/MAC==0" \
-        --threads 8 -Ob - > $vcf_to_phase_pangenome_biallelic \
-    && bcftools index -f --threads 8 $vcf_to_phase_pangenome_biallelic &
-fi
+# fi
 
 wait
 
-## While doing this, gather AC_AN data to later generate reference MAF tables
+# Identify trio-private singletons
+if [[ ! -s $chrom_working_dir/${chrom}_private_singletons.txt ]]; then
+    mkdir -p $chrom_working_dir/tmp
+    cat pedigrees/duos_and_trios.txt \
+    | parallel -j $num_threads "if [[ ! -s $chrom_working_dir/tmp/{#}.txt ]]; then bcftools view --force-samples -H -G -s {} -x -c 2 ${phased_panel_vcf_3202_biallelic%%.vcf.gz}.bcf | cut -f 3 > $chrom_working_dir/tmp/{#}.txt; fi" && \
+    cat $chrom_working_dir/tmp/*.txt | sort | uniq > $chrom_working_dir/${chrom}_private_singletons.txt && rm -rf $chrom_working_dir/tmp &
+fi
+
+# if [ ! -s $chr_specific_reference_pangenome_variation_trimmed_biallelic.csi ]; then
+    echo "chr_specific_reference_pangenome_variation_trimmed_biallelic"
+    ### Remove pangenome reference sites that are not present in 3202 biallelic reference.
+    bcftools isec -r $region --threads 8 -o $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+                  -Ob -n =2 -w 1 $chr_specific_reference_pangenome_variation_biallelic $phased_panel_vcf_3202_biallelic \
+    && bcftools index -f --threads 8 $chr_specific_reference_pangenome_variation_trimmed_biallelic
+# fi
+
+wait
+
+echo "preparing references for pangenome sample phasing"
+# if [ ! -s $vcf_to_phase_pangenome_biallelic_HPRC.csi ]; then
+    echo "vcf_to_phase_pangenome_biallelic"
+    ### Create unphased variant call set of samples present in the pangenome
+    ### also perform basic prephasing filtering to identify phasable variant set
+    bcftools +setGT -Ou --threads 8 $chr_specific_reference_pangenome_variation_trimmed_biallelic -- -t a -n u \
+    | bcftools view -c 1:minor \
+        -e "ALT=='*' || F_MISSING>0.05 || INFO/MAC==0" \
+        --threads 8 -Ob - > $vcf_to_phase_pangenome_biallelic_HPRC \
+    && bcftools index -f --threads 8 $vcf_to_phase_pangenome_biallelic_HPRC &
+# fi
+
+echo "preparing references for pangenome sample phasing"
+# if [ ! -s $vcf_to_phase_pangenome_biallelic_1kgp.csi ]; then
+    echo "vcf_to_phase_pangenome_biallelic_1kgp"
+    ### Create unphased variant call set of samples present in the pangenome
+    ### also perform basic prephasing filtering to identify phasable variant set
+    bcftools view --threads 2 -Ou -S $pangenome_samples --force-samples $vcf_to_phase \
+    | bcftools view -c 1:minor \
+        -e "ALT=='*' || F_MISSING>0.05 || INFO/MAC==0" \
+        --threads 2 -Ob - > $vcf_to_phase_pangenome_biallelic_1kgp \
+    && bcftools index -f --threads 8 $vcf_to_phase_pangenome_biallelic_1kgp &
+# fi
+
+wait
+
+
+## While rephasing, gather AC_AN data to later generate reference MAF tables
 if [[ ! -s $chrom_working_dir/${chrom}_3202_AC_AN.tsv ]]; then
     echo "3202"
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $phased_panel_vcf_3202_biallelic \
@@ -515,66 +547,143 @@ if [[ ! -s $chrom_working_dir/${chrom}_2430_AC_AN.tsv ]]; then
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
     | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $chrom_working_dir/${chrom}_2430_AC_AN.tsv &
 fi
+# if [[ ! -s $chrom_working_dir/${chrom}_44_AC_AN.tsv ]]; then
+    echo "44"
+    bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $vcf_to_phase_pangenome_biallelic_HPRC \
+    | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $chrom_working_dir/${chrom}_44_AC_AN.tsv &
+# fi
+# if [[ ! -s $chrom_working_dir/${chrom}_39_AC_AN.tsv ]]; then
+    echo "39"
+    bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $vcf_to_phase_pangenome_biallelic_1kgp \
+    | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $chrom_working_dir/${chrom}_39_AC_AN.tsv &
+# fi
 
-# Identify trio-private singletons
-if [[ ! -s $chrom_working_dir/${chrom}_private_singletons.txt ]]; then
-    mkdir -p $chrom_working_dir/tmp
-    cat pedigrees/duos_and_trios.txt \
-    | parallel -j $num_threads "if [[ ! -s $chrom_working_dir/tmp/{#}.txt ]]; then bcftools view --force-samples -H -G -s {} -x -c 2 ${phased_panel_vcf_3202_biallelic%%.vcf.gz}.bcf | cut -f 3 > $chrom_working_dir/tmp/{#}.txt; fi" && \
-    cat $chrom_working_dir/tmp/*.txt | sort | uniq > $chrom_working_dir/${chrom}_private_singletons.txt && rm -rf $chrom_working_dir/tmp &
-fi
 
 echo "phasing pangenome samples against 2504 panel"
 ### Repeat phasing as above, specifying a reference panel during the common variant phasing.
-if [ ! -s $common_variants_phased_pangenome_against_ref_biallelic.csi ]; then
+#         --mcmc-iterations $mcmc_iteration_scheme \
+#         --pbwt-modulo $pbwt_modulo \
+#         --pbwt-depth $common_pbwt_depth \
+#         --pbwt-mac $common_pbwt_mac \
+#         --pbwt-mdr $pbwt_mdr \
+#         --pbwt-window $window --hmm-window $window --hmm-ne $hmm_ne \
+# if [ ! -s $common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi ]; then
     ./SHAPEIT5_phase_common_static_v1.1.1 \
-        --input $vcf_to_phase_pangenome_biallelic \
+        --input $vcf_to_phase_pangenome_biallelic_HPRC \
         --reference $phased_panel_no_pangenome_biallelic \
         --map $chrom_map \
-        --output $chrom_working_dir/tmp_pangenome.bcf \
+        --output $chrom_working_dir/tmp_HPRC_pangenome.bcf \
         --thread $num_threads \
         --log $chrom_working_dir/$chrom.common.pangenome_with_ref_panel.log \
         --filter-maf $rare_variant_threshold \
-        --mcmc-iterations $mcmc_iteration_scheme \
-        --pbwt-modulo $pbwt_modulo \
-        --pbwt-depth $common_pbwt_depth \
-        --pbwt-mac $common_pbwt_mac \
-        --pbwt-mdr $pbwt_mdr \
-        --pbwt-window $window --hmm-window $window --hmm-ne $hmm_ne \
         $haploid_arg \
         --region $region \
-    && bcftools view --threads 8 -Ob $chrom_working_dir/tmp_pangenome.bcf > $common_variants_phased_pangenome_against_ref_biallelic \
-    && bcftools index -f --threads 8 $common_variants_phased_pangenome_against_ref_biallelic
-fi
+    && bcftools view --threads 8 -Ob $chrom_working_dir/tmp_HPRC_pangenome.bcf > $common_variants_phased_HPRC_pangenome_against_ref_biallelic \
+    && bcftools index -f --threads 8 $common_variants_phased_HPRC_pangenome_against_ref_biallelic
+# fi
+
+
+
+
+## Phase rare variants in chunks. We cannot specify a reference panel in this step.
+i=1
+# for chrom_region in $(cat $chrom_regions)
+# do
+            # --pbwt-modulo $pbwt_modulo \
+            # --effective-size $hmm_ne \
+    # if [ ! -s $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf.csi ]; then
+    # if [ ! -s $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi ]; then
+        ./SHAPEIT5_phase_rare_static_v1.1.1 \
+            --input $vcf_to_phase_pangenome_biallelic_HPRC \
+            --map $chrom_map \
+            --scaffold $common_variants_phased_HPRC_pangenome_against_ref_biallelic \
+            --thread $num_threads \
+            --log $chrom_working_dir/${chrom}.${i}.rare.pangenome_with_ref_panel.log \
+            --input-region $whole_chrom \
+            --scaffold-region $whole_chrom \
+            $haploid_arg \
+            --output $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf && \
+            bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf && \
+        bcftools view --threads 8 -Ob $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf > $rare_variants_phased_HPRC_pangenome_against_ref_biallelic && \
+        bcftools index --threads 8 -f $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
+
+        
+        # if [[ ! -s $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi ]]; then
+            ## This can occur if there are no variants under the rare variant threshold - then shapeit5 errors with a 'no variants to phase' error
+            cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
+            cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi
+        # fi
+    # fi
+#     let i++
+# done
+# bcftools view --threads 8 -Ob $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf > $rare_variants_phased_HPRC_pangenome_against_ref_biallelic && \
+# bcftools index --threads 8 -f $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
+
+
+    
+echo "phasing pangenome samples against 2504 panel"
+        # --mcmc-iterations $mcmc_iteration_scheme \
+        # --pbwt-modulo $pbwt_modulo \
+        # --pbwt-depth $common_pbwt_depth \
+        # --pbwt-mac $common_pbwt_mac \
+        # --pbwt-mdr $pbwt_mdr \
+        # --pbwt-window $window --hmm-window $window --hmm-ne $hmm_ne \
+### Repeat phasing as above, specifying a reference panel during the common variant phasing.
+# if [ ! -s $common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi ]; then
+    ./SHAPEIT5_phase_common_static_v1.1.1 \
+        --input $vcf_to_phase_pangenome_biallelic_1kgp \
+        --reference $phased_panel_no_pangenome_biallelic \
+        --map $chrom_map \
+        --output $chrom_working_dir/tmp_pangenome_1kgp.bcf \
+        --thread $num_threads \
+        --log $chrom_working_dir/$chrom.common.pangenome_with_ref_panel.log \
+        --filter-maf $rare_variant_threshold \
+        $haploid_arg \
+        --region $region \
+    && bcftools view --threads 8 -Ob $chrom_working_dir/tmp_pangenome_1kgp.bcf > $common_variants_phased_1kgp_pangenome_against_ref_biallelic \
+    && bcftools index -f --threads 8 $common_variants_phased_1kgp_pangenome_against_ref_biallelic
+# fi
 
 
 ### Phase rare variants in chunks. We cannot specify a reference panel in this step.
 i=1
+            # --pbwt-modulo $pbwt_modulo \
+            # --effective-size $hmm_ne \
 # for chrom_region in $(cat $chrom_regions)
 # do
-    if [ ! -s $chrom_working_dir/${i}_tmp_pangenome.rare.bcf.csi ]; then
+    # if [ ! -s $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi ]; then
         ./SHAPEIT5_phase_rare_static_v1.1.1 \
-            --input $vcf_to_phase_pangenome_biallelic \
+            --input $vcf_to_phase_pangenome_biallelic_1kgp \
             --map $chrom_map \
-            --scaffold $common_variants_phased_pangenome_against_ref_biallelic \
+            --scaffold $common_variants_phased_1kgp_pangenome_against_ref_biallelic \
             --thread $num_threads \
             --log $chrom_working_dir/${chrom}.${i}.rare.pangenome_with_ref_panel.log \
-            --pbwt-modulo $pbwt_modulo \
             --input-region $whole_chrom \
             --scaffold-region $whole_chrom \
-            --effective-size $hmm_ne \
             $haploid_arg \
-            --output $chrom_working_dir/${i}_tmp_pangenome.rare.bcf && \
-            bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome.rare.bcf
-    fi
+            --output $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf && \
+            bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf && \
+            bcftools view --threads 8 -Ob $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf > $rare_variants_phased_1kgp_pangenome_against_ref_biallelic && \
+            bcftools index --threads 8 -f $rare_variants_phased_1kgp_pangenome_against_ref_biallelic 
+    
+        # if [[ ! -s $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi ]]; then
+            ## This can occur if there are no variants under the rare variant threshold - then shapeit5 errors with a 'no variants to phase' error
+            cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic $rare_variants_phased_1kgp_pangenome_against_ref_biallelic
+            cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi
+        # fi
+
+    # fi
 #     let i++
 # done
 
+
 ### Concat rare variant 
-if [ ! -s $rare_variants_phased_pangenome_against_ref_biallelic.csi ]; then
-    bcftools concat --threads 8 -Ob -l $chrom_working_dir/*_tmp_pangenome.rare.bcf > $rare_variants_phased_pangenome_against_ref_biallelic && \
-    bcftools index --threads 8 -f $rare_variants_phased_pangenome_against_ref_biallelic &
-fi
+# if [ ! -s $rare_variants_phased_pangenome_against_ref_biallelic.csi ]; then
+    # bcftools concat --threads 8 -Ob -l $chrom_working_dir/*_tmp_pangenome_1kgp.rare.bcf > $rare_variants_phased_pangenome_against_ref_biallelic && \
+    # bcftools index --threads 8 -f $rare_variants_phased_pangenome_against_ref_biallelic &
+# fi
 wait
 
 ##############################################################
@@ -612,11 +721,11 @@ then
 
 
 
-    if [[ ! -s ${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.females_only.bcf.csi ]]; then
+    # if [[ ! -s ${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.females_only.bcf.csi ]]; then
         bcftools view -Ob --force-samples --threads 8 -S ^$male_sample_list ${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.bcf > ${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.females_only.bcf && \
         bcftools index --threads 8 -f ${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.females_only.bcf && \
         chr_specific_reference_pangenome_variation_trimmed_biallelic=${chr_specific_reference_pangenome_variation_trimmed_biallelic%.*cf}.females_only.bcf &   
-    fi
+    # fi
 
     wait
 fi
@@ -656,11 +765,11 @@ if [[ "$recalc_phasing_stats" == 'true' ]]; then
 
     #  2) by looking at phasing consistency with ground truth pangenome samples
     #   2.1) trio-phased 3202 panel
-    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
-                                    --estimation $phased_panel_vcf_3202_biallelic \
-                                    -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/3202_panel_vs_HPRC_${chrom}_$4.log \
-                                    --output $stats_dir/3202_panel_vs_HPRC_${chrom}_$4 2> /dev/null &
+    # ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+    #                                 --estimation $phased_panel_vcf_3202_biallelic \
+    #                                 -R $whole_chrom --singleton \
+    #                                 --log $chrom_working_dir/3202_panel_vs_HPRC_${chrom}_$4.log \
+    #                                 --output $stats_dir/3202_panel_vs_HPRC_${chrom}_$4 2> /dev/null &
 
 
     #  2.2) evaluate phasing performance of phasing without pedigree against ground truth pangenome samples
@@ -674,18 +783,31 @@ if [[ "$recalc_phasing_stats" == 'true' ]]; then
     #  3) Evaluate panel's usefulness as a reference panel
     #      3.1) Rephased pangenome samples compared to HPRC samples
     ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
-                                    --estimation $rare_variants_phased_pangenome_against_ref_biallelic \
+                                    --estimation $rare_variants_phased_HPRC_pangenome_against_ref_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_pangenome_${chrom}_$4.log \
-                                    --output $stats_dir/rare_pangenome_panelphased_vs_pangenome_${chrom}_$4 2> /dev/null &
+                                    --log $chrom_working_dir/rare_HPRC_pangenome_panelphased_vs_pangenome_${chrom}_$4.log \
+                                    --output $stats_dir/rare_HPRC_pangenome_panelphased_vs_pangenome_${chrom}_$4 2> /dev/null &
     
     #      3.2) Rephased pangenome samples compared to trio samples
     ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
-                                    --estimation $rare_variants_phased_pangenome_against_ref_biallelic \
+                                    --estimation $rare_variants_phased_HPRC_pangenome_against_ref_biallelic \
+                                    -R $whole_chrom --singleton -P $pedigree \
+                                    --log $chrom_working_dir/rare_HPRC_pangenome_panelphased_vs_trios_${chrom}_$4.log \
+                                    --output $stats_dir/rare_HPRC_pangenome_panelphased_vs_trios_${chrom}_$4 2> /dev/null &
+    
+    #      3.3) Rephased pangenome samples compared to HPRC samples
+    ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_pangenome_variation_trimmed_biallelic \
+                                    --estimation $rare_variants_phased_1kgp_pangenome_against_ref_biallelic \
                                     -R $whole_chrom --singleton \
-                                    --log $chrom_working_dir/rare_pangenome_panelphased_vs_trios_${chrom}_$4.log \
-                                    --output $stats_dir/rare_pangenome_panelphased_vs_trios_${chrom}_$4 2> /dev/null &
-
+                                    --log $chrom_working_dir/rare_1kgp_pangenome_panelphased_vs_pangenome_${chrom}_$4.log \
+                                    --output $stats_dir/rare_1kgp_pangenome_panelphased_vs_pangenome_${chrom}_$4 2> /dev/null &
+    
+    #      3.4) Rephased pangenome samples compared to trio samples
+    ./SHAPEIT5_switch_static_JLL --validation $vcf_to_phase \
+                                    --estimation $rare_variants_phased_1kgp_pangenome_against_ref_biallelic \
+                                    -R $whole_chrom --singleton -P $pedigree \
+                                    --log $chrom_working_dir/rare_1kgp_pangenome_panelphased_vs_trios_${chrom}_$4.log \
+                                    --output $stats_dir/rare_1kgp_pangenome_panelphased_vs_trios_${chrom}_$4 2> /dev/null &
     # 4) Experiment with HGSVC samples
     #     4.1) trio-phased 3202 panel
     ./SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_variation_biallelic \
@@ -704,6 +826,12 @@ if [[ "$recalc_phasing_stats" == 'true' ]]; then
                                     --output $stats_dir/3202_panel_vs_HGSVC_notrios_${chrom}_$4 2> /dev/null &
 
 fi
+wait
+    date
+    ls -lat $chr_specific_reference_pangenome_variation_trimmed_biallelic
+    ls -lat $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
+    ls -lat $rare_variants_phased_1kgp_pangenome_against_ref_biallelic
+
 
 wait
 # close logfile

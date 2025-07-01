@@ -2,12 +2,6 @@
 set -o xtrace
 
 num_threads=12
-# reference_genome='GRCh38' # working coordinate space. T2T or GRCh38.
-# limit_to_snps=false
-# missing_cutoff=0.05
-# suffix=''
-# recovered_included='true'
-# filter_VQSLOD='false'
 
 reference_genome=$1 # working coordinate space. T2T or GRCh38.
 chrom=$2
@@ -17,9 +11,6 @@ native_panel=$5
 lifted_panel=$6
 limit_to_snps=$7
 ref_dataset_name=$8
-# ground_truth=$6
-# limit_to_snps=true #$6
-# filter_VQSLOD=false #$7
 
 
 missing_cutoff=0.05
@@ -27,16 +18,6 @@ missing_cutoff=0.05
 # T2T sourced from *_T2T_070224_HMMfixed_scaled
 ## All of these should have native variant IDs
 
-# GRCh38_native_panel=/mnt/ssd/lalli/phasing_T2T/phased_GRCh38_panel/1KGP.GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-# GRCh38_lifted_panel=/mnt/ssd/lalli/phasing_T2T/liftover/lifted_panels/1KGP.GRCh38.lifted_from_CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-# T2T_native_panel=/mnt/ssd/lalli/phasing_T2T/phased_T2T_panel_T2T_scaled_newimpute_071524/1KGP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.2504.bcf
-# T2T_lifted_panel=/mnt/ssd/lalli/phasing_T2T/liftover/lifted_panels/1KGP.CHM13v2.0.lifted_from_GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-
-# SGDP_ground_truth_GRCh38=liftover_071224/SGDP.GRCh38.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.bcf
-# SGDP_ground_truth_T2T=liftover_071224/SGDP.CHM13v2.0.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.bcf
-
-
-subset_110=/mnt/ssd/lalli/phasing_T2T/sample_subsets/1kgp_paper_110_sample_SGDP_subset_numeric_format.txt
 
 variant_quality_filter_string="ALT!='*' && (FILTER=='PASS' || FILTER=='.') && ((TYPE!='snp' && (ABS(ILEN) < 50)) || TYPE='snp')"
 filtered_suffix='filtered'
@@ -57,12 +38,6 @@ then
     filtered_suffix=$filtered_suffix'_vqslodThreshold'
 fi
 ground_truth_filtered_suffix=$filtered_suffix
-if [[ $sample_set == '110' ]]
-then
-    subsample="-S $subset_110"
-    ground_truth_filtered_suffix=$filtered_suffix'_110subsample'
-fi
-
 
 GRCh38_PAR1='chrX:10001-2781479'
 GRCh38_chrX='chrX:2781480-155701382'
@@ -141,16 +116,6 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
     base_groundtruth_name=${base_groundtruth_name%%.bcf}
     base_groundtruth_name=${base_groundtruth_name%%.vcf}
     if [ ! -s $base_groundtruth_name.$ground_truth_filtered_suffix.bcf.csi ]; then
-        echo $chrom ref_SGDP
-        echo """
-            bcftools view --threads 2 -Ou -i "$ground_truth_filter_string" $subsample $reference_dataset \
-            | bcftools norm --threads 2 -Ou -f $ref_fasta - \
-            | bcftools +fill-tags --threads 4 -Ou - -- -t 'AN,AC,MAF,MAC:1=MAC' \
-            | bcftools view -Ou -c 1:minor --threads 4 -e \"F_MISSING>=0.05\" - \
-            | bcftools annotate -Ob --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
-            > $base_groundtruth_name.$ground_truth_filtered_suffix.bcf \
-            && bcftools index -f --threads 2 $base_groundtruth_name.$ground_truth_filtered_suffix.bcf &
-        """
         if [[ $ref_dataset_name != 'pangenome' ]]; then
             bcftools view --threads 2 -Ou -i "$ground_truth_filter_string" $subsample $reference_dataset \
             | bcftools norm --threads 2 -Ou -f $ref_fasta - \
@@ -167,6 +132,9 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
             | bcftools annotate -Ob --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
             > $base_groundtruth_name.$ground_truth_filtered_suffix.bcf \
             && bcftools index -f --threads 2 $base_groundtruth_name.$ground_truth_filtered_suffix.bcf &
+        fi
+        if [[ $reference_genome == 'GRCh38' ]]; then
+            cp $base_groundtruth_name.$ground_truth_filtered_suffix.bcf* /mnt/ssd/lalli/phasing_T2T/GRCh38_pangenome_variation/
         fi
     fi
     base_native_panel_name=${native_panel%%.gz}
@@ -203,13 +171,11 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
     lifted_panel=$base_lifted_panel_name.$filtered_suffix.bcf
 
 # 1) Downsample ground truth variants
-    # echo "downsampling"
+    echo "downsampling $chrom"
     ground_truth_downsampled=${reference_dataset%%.bcf}.downsampled.bcf
     ground_truth_downsampled=$working_dir/$(basename $ground_truth_downsampled)
-    echo $ground_truth_downsampled
 
     if [[ ! -s $ground_truth_downsampled.csi ]]; then
-        echo $chrom downsampling
         if [[ $ref_dataset_name != 'pangenome' ]]; then
             bcftools isec -Ou -n=4 -w 1 $reference_dataset $omni $lifted_panel $native_panel \
             | bcftools +fill-tags -Ou - -- -t F_MISSING,MAF,HWE \

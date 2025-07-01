@@ -11,8 +11,8 @@ basedir=$PWD
 subset_folder=$basedir/sample_subsets
 
 
-outfolder=$PWD/genomewide_imputation_evaluation_${run_suffix}
-logfolder=$PWD/genomewide_imputation_evaluation_${run_suffix}/working
+outfolder=$PWD/testing_phasing_params2/genomewide_imputation_evaluation_${run_suffix}
+logfolder=$PWD/testing_phasing_params2/genomewide_imputation_evaluation_${run_suffix}/logs
 mkdir -p $outfolder
 mkdir -p $logfolder
 
@@ -35,7 +35,7 @@ do
             fi
 
             if [[ ! -s $outfolder/$genomic_variants.$dataset.$run.txt ]]; then
-                cat *_working*${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort \
+                cat testing_phasing_params2/*_working*${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort \
                     > $outfolder/$genomic_variants.$dataset.$run.txt
             fi
 
