@@ -1,19 +1,52 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-n_singleton_jobs=$1
-suffix=$2
+# Default values
+genome=""
+pedigree=""
+infile=""
+outdir="intermediate_data/variant_frequency_stats"
+n_singleton_jobs=2
 
-basedir=$PWD
+while getopts "c:g:p:i:o:j:" opt; do
+    case $opt in
+        c) chrom="$OPTARG" ;;
+        g) genome="$OPTARG" ;;
+        p) pedigree="$OPTARG" ;;
+        i) infile="$OPTARG" ;;
+        o) outdir="$OPTARG" ;;
+        j) n_singleton_jobs="$OPTARG" ;;
+        *) echo "Usage: $0 -g genome -p pedigree -i infile -o outdir [-j n_jobs]" >&2; exit 1 ;;
+    esac
+done
 
-for i in $(seq 1 14) X $(seq 15 22); do
-if [[ ! -s $basedir/chr${i}_working_${suffix}/chr${i}_private_singletons.txt ]]; then
-    mkdir -p $basedir/chr${i}_working_${suffix}/tmp
-    cat $basedir/pedigrees/duos_and_trios.txt     | parallel -j $n_singleton_jobs "bcftools view --force-samples -H -G -s {} -x -c 2 $basedir/phased_T2T_panel_${suffix}/1KGP.CHM13v2.0.chr${i}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.3202.bcf | cut -f 3 > $basedir/chr${i}_working_${suffix}/tmp/{#}.txt" &&     cat $basedir/chr${i}_working_${suffix}/tmp/*.txt | sort | uniq > $basedir/chr${i}_working_${suffix}/chr${i}_private_singletons.txt && rm -rf $basedir/chr${i}_working_${suffix}/tmp
+# Check required
+if [ -z "$genome" ] || [ -z "$pedigree" ] || [ -z "$infile" ] || [ -z "$outdir" ]; then
+    echo "Missing required options: -g, -p, -i, -o" >&2
+    exit 1
 fi
 
-for i in PAR1 PAR2; do
-if [[ ! -s $basedir/${i}_working_${suffix}/${i}_private_singletons.txt ]]; then
-    mkdir -p $basedir/${i}_working_${suffix}/tmp
-    cat $basedir/pedigrees/duos_and_trios.txt     | parallel -j  $n_singleton_jobs "bcftools view --force-samples -H -G -s {} -x -c 2 $basedir/phased_T2T_panel_${suffix}/1KGP.CHM13v2.0.${i}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.3202.bcf | cut -f 3 > $basedir/${i}_working_${suffix}/tmp/{#}.txt" &&     cat $basedir/${i}_working_${suffix}/tmp/*.txt | sort | uniq > $basedir/${i}_working_${suffix}/${i}_private_singletons.txt && rm -rf $basedir/${i}_working_${suffix}/tmp
+if [[ $genome == 'CHM13v2.0' ]]; then
+    short_genome='t2t'
+else
+    short_genome='grch38'
 fi
+
+basedir=$PWD/..
+
+mkdir -p $outdir/${genome}
+
+if [[ ! -s $outdir/${genome}/${chrom}_private_singletons.txt ]]; then
+    mkdir -p $outdir/../singleton_tmp/${genome}
+    # /${short_genome}/1KGP.${genome}.${chrom}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.3202.bcf
+    cat $pedigree \
+        | parallel -j $n_singleton_jobs "bcftools view --force-samples -H -G -s {} -x -c 2 \
+        $infile | \
+        cut -f 3 > $outdir/../singleton_tmp/${genome}/{#}.txt" \
+    && \
+    cat $outdir/../singleton_tmp/${genome}/*.txt | sort | uniq \
+        > $outdir/${genome}/${chrom}_private_singletons.txt \
+    && \
+    rm -rf $outdir/../singleton_tmp/${genome}
+fi
+

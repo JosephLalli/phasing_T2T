@@ -1,12 +1,53 @@
-*
-!scripts
-!scripts/*
+# Gitignore file itself
+.gitignore
+.dockerignore
+
+# Claude-related files
+*claude*
+*CLAUDE*
+DIRECTORY_LOGIC.md
+
+# Python cache
+__pycache__/
+
+# Quarto files
+.Quarto
+_quarto.yml
+
+# Test scripts
+test_docker_setup.sh
+
+# Symlinks
+*.lnk
+
+## Input files -- too large
+*unphased_variant_calls/**
+*phased_panels/**
+*fullgenome*
+*_working_*
+*SHAPEIT5_switch_output*
+*imputation_statistics/*
+resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz*
+resources/chm13v2.0.fa.gz*
+t2t_native_scaled_maps.tar.gz
+**/*.fully_annotated.tsv
+
+## Intermediate data - too large (>50MB parquets)
+all_variant_data.parquet
+bcftools_query_variant_data.parquet
+**/rolling_stats_500k_window.parquet
+**/variants.parquet
+**/MAF_performance_variants.parquet
+**/block_length.parquet
+**/rolling_stats_1m_window.parquet
+**/variants.nozeros.parquet
+
+# Keep notebooks in notebooks_fullgenome (unignore directory and .ipynb files)
+!notebooks_fullgenome/
+!notebooks_fullgenome/*.ipynb
+
+# I want to hang on to the claude refactored fig 6 scripts, but I want to upload just the original script for now.
+scripts/*R
+!scripts/Figure_6_script.R
+
 !README.md
-!SHAPEIT*
-!phase_T2T.sh
-!.gitignore
-!resources
-!resources/*
-!resources/*/*
-!resources/*/*/*
-!*.cpp
