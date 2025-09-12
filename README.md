@@ -89,7 +89,7 @@ docker run -it -v /path/to/your/phasing_T2T_project:/workspace/phasing_T2T_proje
     jlalli/phasing_T2T
 
 # Once inside the container, you can run any pipeline commands
-./test_phasing.sh chr22_test 12 docker_test CHM13v2.0 true true 0.05 true false false 1
+./create_and_assess_haplotype_panels.sh chr22_test 12 docker_test_CHM13v2.0 CHM13v2.0
 ```
 
 Replace `/path/to/your/phasing_T2T_project` with the absolute path to your local copy of this repository.
