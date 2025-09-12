@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -o xtrace
 
-num_threads=12
+script_path="$(realpath "${BASH_SOURCE[0]}")"
+script_dir="$(dirname "$script_path")"
+basedir=$script_dir/..
 # reference_genome='GRCh38' # working coordinate space. T2T or GRCh38.
 # limit_to_snps=false
 # missing_cutoff=0.05
@@ -17,26 +19,13 @@ native_panel=$5
 lifted_panel=$6
 limit_to_snps=$7
 ref_dataset_name=$8
-# ground_truth=$6
-# limit_to_snps=true #$6
-# filter_VQSLOD=false #$7
 
 
 missing_cutoff=0.05
 
-# T2T sourced from *_T2T_070224_HMMfixed_scaled
-## All of these should have native variant IDs
+# working dir is $basedir/example_workspace/${chrom}_working${suffix}/GRCh38_imputation_workspace
 
-# GRCh38_native_panel=/mnt/ssd/lalli/phasing_T2T/phased_GRCh38_panel/1KGP.GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-# GRCh38_lifted_panel=/mnt/ssd/lalli/phasing_T2T/liftover/lifted_panels/1KGP.GRCh38.lifted_from_CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-# T2T_native_panel=/mnt/ssd/lalli/phasing_T2T/phased_T2T_panel_T2T_scaled_newimpute_071524/1KGP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.2504.bcf
-# T2T_lifted_panel=/mnt/ssd/lalli/phasing_T2T/liftover/lifted_panels/1KGP.CHM13v2.0.lifted_from_GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
-
-# SGDP_ground_truth_GRCh38=liftover_071224/SGDP.GRCh38.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.bcf
-# SGDP_ground_truth_T2T=liftover_071224/SGDP.CHM13v2.0.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.bcf
-
-
-subset_110=/mnt/ssd/lalli/phasing_T2T/sample_subsets/1kgp_paper_110_sample_SGDP_subset_numeric_format.txt
+subset_110=$basedir/resources/sample_subsets/1kgp_paper_110_sample_SGDP_subset_numeric_format.txt
 
 variant_quality_filter_string="ALT!='*' && (FILTER=='PASS' || FILTER=='.') && ((TYPE!='snp' && (ABS(ILEN) < 50)) || TYPE='snp')"
 filtered_suffix='filtered'
@@ -71,8 +60,11 @@ T2T_PAR1='chrX:0-2394410'
 T2T_chrX='chrX:2394410-153925833'
 T2T_PAR2='chrX:153925834-154259566'
 
-T2T_fasta=/dev/shm/chm13v2.0_maskedY_rCRS.fasta
-GRCh38_fasta=/dev/shm/GRCh38_full_analysis_set_plus_decoy_hla.fasta
+T2T_fasta=$basedir/resources/chm13v2.0.fa.gz
+GRCh38_fasta=$basedir/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
+
+GRCh38_to_t2t_chain=$basedir/resources/grch38-chm13v2.chain
+t2t_to_GRCh38_chain=$basedir/resources/chm13v2-grch38.chain
 
 if [[ $chrom == 'PAR1' ]]
 then
@@ -95,34 +87,23 @@ fi
 if [[ $reference_genome == 'T2T' ]]; then
     whole_chrom=$T2T_region
     ref_fasta=$T2T_fasta
-    omni=1000G_omni2.5.hg38.t2t-chm13-v2.0.biallelic.vcf.gz
-    chrom_map=t2t_maps_no_filtered_regions/scaled_fixedamount/${chrom}_noMask.scaled.gmap.gz
-    # SGDP_ground_truth_dir=/mnt/ssd/lalli/nf_stage/genome_refs/T2T-CHM13_v2_ncbi110/SGDP
-    # ref_SGDP_groundtruth=$SGDP_ground_truth_dir/SGDP.CHM13v2.0.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.vcf.gz
-    # ref_pangenome_ground_truth=$working_dir/../${chrom}_reference_pangenome.filtered_variants.biallelic.bcf
-    # reference_dataset=$SGDP_ground_truth_T2T
-    # native_panel=$T2T_native_panel
-    # lifted_panel=$T2T_lifted_panel
-
+    source_fasta=$GRCh38_fasta
+    omni=$basedir/resources/1000G_omni2.5.hg38.t2t-chm13-v2.0.biallelic.vcf.gz
+    chrom_map=$basedir/resources/recombination_maps/t2t_native_scaled_maps/${chrom}.t2t.scaled.gmap.gz
 
     if [[ ! -s $lifted_panel.csi ]]; then
-        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta /dev/shm/hg38-chm13v2.over.chain /mnt/data/lalli/nf_stage/genome_refs/t2t_liftover_workspace/chm13v2-grch38.sort.vcf.gz
+        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
     fi
 elif [[ $reference_genome == 'GRCh38' ]]; then
     whole_chrom=$GRCh38_region
     ref_fasta=$GRCh38_fasta
-    omni=1000G_omni2.5.hg38.biallelic.vcf.gz
-    chrom_map=GRCh38_performance_comparison/hg38_chrom_maps/${chrom}.b38.gmap.gz
-    # SGDP_ground_truth_dir=$PWD/GRCh38_SGDP_full
-    # ref_SGDP_groundtruth=$SGDP_ground_truth_dir/SGDP.GRCh38.${chrom}.recalibrated.no_1KGP_overlaps.biallelic.snp_indel.pass.vcf.gz
-    # ref_pangenome_ground_truth=$basedir/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz
-    # reference_dataset=$SGDP_ground_truth_GRCh38
-    # native_panel=$GRCh38_native_panel
-    # lifted_panel=$GRCh38_lifted_panel
+    source_fasta=$T2T_fasta
+    omni=$basedir/resources/1000G_omni2.5.hg38.biallelic.vcf.gz
+    chrom_map=$basedir/resources/recombination_maps/grch38/${chrom}.b38.gmap.gz
 
     
     if [[ ! -s $lifted_panel.csi ]]; then
-        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta /dev/shm/chm13v2-hg38.over.chain /mnt/data/lalli/nf_stage/genome_refs/t2t_liftover_workspace/grch38-chm13v2.sort.vcf.gz
+        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
     fi
 else
     print "Must be either T2T or GRCh38"
@@ -158,9 +139,9 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
             > $base_groundtruth_name.$ground_truth_filtered_suffix.bcf \
             && bcftools index -f --threads 2 $base_groundtruth_name.$ground_truth_filtered_suffix.bcf &
         fi
-        if [[ $reference_genome == 'GRCh38' ]]; then
-            cp $base_groundtruth_name.$ground_truth_filtered_suffix.bcf* /mnt/ssd/lalli/phasing_T2T/GRCh38_pangenome_variation/
-        fi
+        # if [[ $reference_genome == 'GRCh38' ]]; then
+        #     cp $base_groundtruth_name.$ground_truth_filtered_suffix.bcf* /GRCh38_pangenome_variation/
+        # fi
     fi
     base_native_panel_name=${native_panel%%.gz}
     base_native_panel_name=${base_native_panel_name%%.bcf}
@@ -217,7 +198,7 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
 # 2) Impute downsampled SGDP variants
     # 2a: Native panel
     if [[ ! -s $working_dir/$reference_genome.$chrom.native.imputed.bcf.csi ]]; then
-        ./SHAPEIT5_phase_common_static_v1.1.1 \
+        $basedir/bin/SHAPEIT5_phase_common_static_v1.1.1 \
             --input $ground_truth_downsampled \
             --reference $native_panel \
             --map $chrom_map \
@@ -228,7 +209,7 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
             --log $working_dir/${ref_dataset_name}_native_prephasing.log \
             $haploid_arg \
             --region $whole_chrom \
-        && impute5_v1.2.0/impute5_v1.2.0_static \
+        && $basedir/bin/impute5_v1.2.0_static \
             --g ${ground_truth_downsampled%%.bcf}.native.prephased.bcf \
             --h $native_panel \
             --m $chrom_map \
@@ -244,7 +225,7 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
 
     #2b) lifted
     if [[ ! -s $working_dir/$reference_genome.$chrom.lifted.imputed.bcf.csi ]]; then
-        ./SHAPEIT5_phase_common_static_v1.1.1 \
+        $basedir/bin/SHAPEIT5_phase_common_static_v1.1.1 \
             --input $ground_truth_downsampled \
             --reference $lifted_panel \
             --map $chrom_map \
@@ -255,7 +236,7 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
             $haploid_arg \
             --hmm-ne 1000000 \
             --region $whole_chrom \
-        && impute5_v1.2.0/impute5_v1.2.0_static \
+        && $basedir/bin/impute5_v1.2.0_static \
             --g ${ground_truth_downsampled%%.bcf}.lifted.prephased.bcf \
             --h $lifted_panel \
             --m $chrom_map \
@@ -272,7 +253,7 @@ working_dir=$working_dir/${reference_genome}_space_${filtered_suffix}
 wait
 
 # 3) Identify variants in common between imputed datasets
-python3.11 get_discordant_multiallelic_sites.py $native_panel $lifted_panel $working_dir/common.$chrom.IDs.txt
+python3.11 $basedir/scripts/get_discordant_multiallelic_sites.py $native_panel $lifted_panel $working_dir/common.$chrom.IDs.txt
 
 # 4) Subset imputed datasets to variants in common
 bcftools view --threads 4 -Ob -i "ID==@$working_dir/common.$chrom.IDs.txt" $working_dir/$reference_genome.$chrom.native.imputed.bcf > $working_dir/$reference_genome.$chrom.native.imputed.common.bcf \
@@ -294,7 +275,7 @@ for infile in ${working_dir}/native_panel.${ref_dataset_name}.$chrom.txt ${worki
 do
     echo $infile
     mkdir -p ${infile%%.txt}
-    GLIMPSE2_concordance \
+    $basedir/bin/GLIMPSE2_concordance \
         --gt-val \
         --bins $r2_bins \
         --threads $num_threads \
