@@ -14,8 +14,6 @@ __pycache__/
 .Quarto
 _quarto.yml
 
-# Test scripts
-test_docker_setup.sh
 
 # Symlinks
 *.lnk
@@ -32,15 +30,18 @@ resources/chm13v2.0.fa.gz*
 t2t_native_scaled_maps.tar.gz
 **/*.fully_annotated.tsv
 
+# Large genomic data files (symlinks >50MB)
+resources/hgsvc3-*
+resources/hprc-v1.1-*
+
 ## Intermediate data - too large (>50MB parquets)
-all_variant_data.parquet
-bcftools_query_variant_data.parquet
-**/rolling_stats_500k_window.parquet
-**/variants.parquet
-**/MAF_performance_variants.parquet
-**/block_length.parquet
-**/rolling_stats_1m_window.parquet
-**/variants.nozeros.parquet
+**/all_variant_data.parquet
+**/bcftools_query_variant_data.parquet
+intermediate_data_whole_genome/rolling_stats_*parquet
+intermediate_data_whole_genome/variants.parquet
+intermediate_data_whole_genome/MAF_performance_variants.parquet
+intermediate_data_whole_genome/block_length.parquet
+intermediate_data_whole_genome/variants.nozeros.parquet
 
 # Keep notebooks in notebooks_fullgenome (unignore directory and .ipynb files)
 !notebooks_fullgenome/

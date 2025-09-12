@@ -5,6 +5,7 @@ import polars.selectors as cs
 import pandas as pd
 import os
 import glob
+import gzip
 from datetime import datetime
 
 # When running on test datasets chr15 and chr22, uses these resources on our server:
@@ -270,12 +271,12 @@ for genome, run_suffix in [('GRCh38', grch38_suffix),
                            ('CHM13v2.0', t2t_suffix)]:
     for contig in contigs:
         bash_script_output_dir = f"{summary_statistics_folder}/variant_frequency_stats/{genome}"
-        with open (f'{bash_script_output_dir}/{contig}_private_singletons.txt', 'r') as f:
+        with gzip.open(f'{bash_script_output_dir}/{contig}_private_singletons.txt.gz', 'rt') as f:
             private_variants = {x.strip() for x in f}
 
-        an_acs = ((['phased_with_parents_and_pedigree'], f"{bash_script_output_dir}/{contig}_3202_AC_AN.tsv"),
-                  (['1kgp_variation_phased_with_reference_panel'], f"{bash_script_output_dir}/{contig}_2430_AC_AN.tsv"),
-                  (['phased_without_parents_or_pedigree'], f"{bash_script_output_dir}/{contig}_2002_AC_AN.tsv"))
+        an_acs = ((['phased_with_parents_and_pedigree'], f"{bash_script_output_dir}/{contig}_3202_AC_AN.tsv.gz"),
+                  (['1kgp_variation_phased_with_reference_panel'], f"{bash_script_output_dir}/{contig}_2430_AC_AN.tsv.gz"),
+                  (['phased_without_parents_or_pedigree'], f"{bash_script_output_dir}/{contig}_2002_AC_AN.tsv.gz"))
         for methods, tsv in an_acs:
             if type(tsv) == list:
                 anac = sum_an_acs(tsv)

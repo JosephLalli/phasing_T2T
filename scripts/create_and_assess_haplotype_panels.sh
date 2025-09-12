@@ -807,44 +807,44 @@ wait
 
 
 ## While doing this, gather AC_AN data to later generate reference MAF tables
-if [[ ! -s $chrom_working_dir/${chrom}_3202_AC_AN.tsv ]]; then
+if [[ ! -s $chrom_working_dir/${chrom}_3202_AC_AN.tsv.gz ]]; then
     echo "3202"
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $phased_panel_vcf_3202_biallelic \
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $variant_frequency_stats_dir/${chrom}_3202_AC_AN.tsv &
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - | bgzip > $variant_frequency_stats_dir/${chrom}_3202_AC_AN.tsv.gz &
 fi
-if [[ ! -s $chrom_working_dir/${chrom}_2504_AC_AN.tsv ]]; then
+if [[ ! -s $chrom_working_dir/${chrom}_2504_AC_AN.tsv.gz ]]; then
     echo "2504"    
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $phased_panel_vcf_2504_biallelic \
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-    | bcftools query -f '%ID\t%INFO/MAC\t%INFO/AN\n' - > $variant_frequency_stats_dir/${chrom}_2504_AC_AN.tsv  &
+    | bcftools query -f '%ID\t%INFO/MAC\t%INFO/AN\n' - | bgzip > $variant_frequency_stats_dir/${chrom}_2504_AC_AN.tsv.gz  &
 fi
 if [[ $genome != 'GRCh38' ]]
 then
-    if [[ ! -s $chrom_working_dir/${chrom}_2002_AC_AN.tsv ]]; then
+    if [[ ! -s $chrom_working_dir/${chrom}_2002_AC_AN.tsv.gz ]]; then
         echo "2002"
         bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $vcf_phased_no_parents_rare_biallelic \
         | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-        | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $variant_frequency_stats_dir/${chrom}_2002_AC_AN.tsv &
+        | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - | bgzip > $variant_frequency_stats_dir/${chrom}_2002_AC_AN.tsv.gz &
     fi
 fi
-if [[ ! -s $chrom_working_dir/${chrom}_2430_AC_AN.tsv ]]; then
+if [[ ! -s $chrom_working_dir/${chrom}_2430_AC_AN.tsv.gz ]]; then
     echo "2430"
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $phased_panel_no_pangenome_biallelic \
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $variant_frequency_stats_dir/${chrom}_2430_AC_AN.tsv &
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - | bgzip > $variant_frequency_stats_dir/${chrom}_2430_AC_AN.tsv.gz &
 fi
-if [[ ! -s $chrom_working_dir/${chrom}_44_AC_AN.tsv ]]; then
+if [[ ! -s $chrom_working_dir/${chrom}_44_AC_AN.tsv.gz ]]; then
     echo "44"
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $vcf_to_phase_pangenome_biallelic_HPRC \
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $variant_frequency_stats_dir/${chrom}_44_AC_AN.tsv &
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - | bgzip > $variant_frequency_stats_dir/${chrom}_44_AC_AN.tsv.gz &
 fi
-if [[ ! -s $chrom_working_dir/${chrom}_39_AC_AN.tsv ]]; then
+if [[ ! -s $chrom_working_dir/${chrom}_39_AC_AN.tsv.gz ]]; then
     echo "39"
     bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF $vcf_to_phase_pangenome_biallelic_1kgp \
     | bcftools +fill-tags -Ou --threads 2 - -- -t AN,AC,MAF,MAC:1=MAC \
-    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - > $variant_frequency_stats_dir/${chrom}_39_AC_AN.tsv &
+    | bcftools query -f "%ID\t%INFO/MAC\t%INFO/AN\n" - | bgzip > $variant_frequency_stats_dir/${chrom}_39_AC_AN.tsv.gz &
 fi
 
 

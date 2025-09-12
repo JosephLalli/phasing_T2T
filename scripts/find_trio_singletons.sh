@@ -36,7 +36,7 @@ basedir=$PWD/..
 
 mkdir -p $outdir/${genome}
 
-if [[ ! -s $outdir/${genome}/${chrom}_private_singletons.txt ]]; then
+if [[ ! -s $outdir/${genome}/${chrom}_private_singletons.txt.gz ]]; then
     mkdir -p $outdir/../singleton_tmp/${genome}
     # /${short_genome}/1KGP.${genome}.${chrom}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.3202.bcf
     cat $pedigree \
@@ -44,8 +44,8 @@ if [[ ! -s $outdir/${genome}/${chrom}_private_singletons.txt ]]; then
         $infile | \
         cut -f 3 > $outdir/../singleton_tmp/${genome}/{#}.txt" \
     && \
-    cat $outdir/../singleton_tmp/${genome}/*.txt | sort | uniq \
-        > $outdir/${genome}/${chrom}_private_singletons.txt \
+    cat $outdir/../singleton_tmp/${genome}/*.txt | sort | uniq | bgzip \
+        > $outdir/${genome}/${chrom}_private_singletons.txt.gz \
     && \
     rm -rf $outdir/../singleton_tmp/${genome}
 fi
