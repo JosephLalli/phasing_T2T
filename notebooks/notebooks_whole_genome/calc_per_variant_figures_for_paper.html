@@ -1,0 +1,4185 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.34">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Variant Filtering Stats</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="calc_per_variant_figures_for_paper_files/libs/clipboard/clipboard.min.js"></script>
+<script src="calc_per_variant_figures_for_paper_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="calc_per_variant_figures_for_paper_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="calc_per_variant_figures_for_paper_files/libs/quarto-html/popper.min.js"></script>
+<script src="calc_per_variant_figures_for_paper_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="calc_per_variant_figures_for_paper_files/libs/quarto-html/anchor.min.js"></script>
+<link href="calc_per_variant_figures_for_paper_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="calc_per_variant_figures_for_paper_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="calc_per_variant_figures_for_paper_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="calc_per_variant_figures_for_paper_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="calc_per_variant_figures_for_paper_files/libs/bootstrap/bootstrap-996b3f8b7236a2c8b17e0060dfcdce54.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#percent-concordance-in-different-panels" id="toc-percent-concordance-in-different-panels" class="nav-link active" data-scroll-target="#percent-concordance-in-different-panels"><span class="header-section-number">0.1</span> Percent concordance in different panels</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Variant Filtering Stats</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div id="cell-1" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.api.types <span class="im">import</span> CategoricalDtype</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> importlib</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>pedigree_file_loc <span class="op">=</span> <span class="st">'resources/pedigrees/gatk_1kgp.ped'</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>summary_statistics_folder<span class="op">=</span><span class="st">'intermediate_data_fullgenome'</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> os.getcwd()<span class="op">!=</span><span class="st">'phasing_T2T_project'</span>:</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    os.chdir(<span class="st">'..'</span>) <span class="co"># Change to the parent directory</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-2" class="cell" data-execution_count="2">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob<span class="op">;</span> glob.glob(<span class="ss">f"</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/*"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>['intermediate_data_fullgenome/rolling_stats_500k_window.parquet',
+ 'intermediate_data_fullgenome/flips_and_switches.parquet',
+ 'intermediate_data_fullgenome/samples.parquet',
+ 'intermediate_data_fullgenome/compressed_ideogram_100000_window.parquet',
+ 'intermediate_data_fullgenome/variants.parquet',
+ 'intermediate_data_fullgenome/compressed_ideogram_1000000_window.parquet',
+ 'intermediate_data_fullgenome/per_genome_cnv_regions_with_slop.parquet',
+ 'intermediate_data_fullgenome/chroms.parquet',
+ 'intermediate_data_fullgenome/variant_frequency_stats',
+ 'intermediate_data_fullgenome/switch_errors.parquet',
+ 'intermediate_data_fullgenome/MAF_performance_variants.parquet',
+ 'intermediate_data_fullgenome/sample_genotype_concordance.parquet',
+ 'intermediate_data_fullgenome/per_sample_imputation_performance.parquet',
+ 'intermediate_data_fullgenome/rolling_stats_250k_window.parquet',
+ 'intermediate_data_fullgenome/bcftools_query_variant_data.parquet',
+ 'intermediate_data_fullgenome/per_genome_cnv_regions.parquet',
+ 'intermediate_data_fullgenome/per_variant_category_imputation_performance.parquet',
+ 'intermediate_data_fullgenome/per_MAF_bin.parquet',
+ 'intermediate_data_fullgenome/methods.parquet',
+ 'intermediate_data_fullgenome/filter_summary_stats.parquet',
+ 'intermediate_data_fullgenome/frequency.parquet',
+ 'intermediate_data_fullgenome/variants.nozeros.parquet',
+ 'intermediate_data_fullgenome/ancestries.parquet',
+ 'intermediate_data_fullgenome/block_length.parquet',
+ 'intermediate_data_fullgenome/all_variant_data.parquet',
+ 'intermediate_data_fullgenome/rolling_stats_1m_window.parquet',
+ 'intermediate_data_fullgenome/binned_maf_data.parquet',
+ 'intermediate_data_fullgenome/type.parquet',
+ 'intermediate_data_fullgenome/per_cytoband_variant_data.parquet']</code></pre>
+</div>
+</div>
+<div id="cell-3" class="cell" data-execution_count="3">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>q <span class="op">=</span> pd.read_parquet(<span class="st">'intermediate_data/per_MAF_bin.parquet'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>q <span class="op">=</span> q[(q.rounded_MAF<span class="op">==</span><span class="st">'singleton'</span>)<span class="op">&amp;</span>(q.method_of_phasing<span class="op">==</span><span class="st">'phased_with_parents_and_pedigree'</span>)<span class="op">&amp;</span>(q.syntenic<span class="op">==</span><span class="st">'All'</span>)<span class="op">&amp;</span>(q.<span class="bu">type</span><span class="op">==</span><span class="st">'SNPs + Indels'</span>)]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># q.type=='SNPs + Indels'</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">rounded_MAF</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">method_of_phasing</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">n_switch_errors</th>
+<th data-quarto-table-cell-role="th">n_checked</th>
+<th data-quarto-table-cell-role="th">n_gt_errors</th>
+<th data-quarto-table-cell-role="th">n_gt_checked</th>
+<th data-quarto-table-cell-role="th">MAC</th>
+<th data-quarto-table-cell-role="th">AN</th>
+<th data-quarto-table-cell-role="th">switch_error_rate</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">MAF</th>
+<th data-quarto-table-cell-role="th">syntenic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1105</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>4.0</td>
+<td>109.0</td>
+<td>3581</td>
+<td>52836</td>
+<td>777</td>
+<td>4975908</td>
+<td>3.669725</td>
+<td>6.777576</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">964</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>389.0</td>
+<td>1505.0</td>
+<td>3071</td>
+<td>142515</td>
+<td>2312</td>
+<td>14806048</td>
+<td>25.847176</td>
+<td>2.154861</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1058</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1046</td>
+<td>32658</td>
+<td>851</td>
+<td>5449804</td>
+<td>NaN</td>
+<td>3.202891</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">914</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>4.0</td>
+<td>109.0</td>
+<td>1607</td>
+<td>20646</td>
+<td>666</td>
+<td>4265064</td>
+<td>3.669725</td>
+<td>7.783590</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">836</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>20.0</td>
+<td>274.0</td>
+<td>1176</td>
+<td>10192</td>
+<td>784</td>
+<td>5020736</td>
+<td>7.299270</td>
+<td>11.538462</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">983</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>393.0</td>
+<td>1506.0</td>
+<td>9450</td>
+<td>267100</td>
+<td>2671</td>
+<td>17105084</td>
+<td>26.095618</td>
+<td>3.538001</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">931</td>
+<td>SNPs + Indels</td>
+<td>singleton</td>
+<td>CHM13v2.0</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>369.0</td>
+<td>1123.0</td>
+<td>2261</td>
+<td>31863</td>
+<td>1677</td>
+<td>10739508</td>
+<td>32.858415</td>
+<td>7.096005</td>
+<td>0.015615</td>
+<td>All</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-4" class="cell" data-execution_count="4">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>MAF_performance_variant_df <span class="op">=</span> pl.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/MAF_performance_variants.parquet'</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>all_chroms <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/chroms.parquet'</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>all_samples <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/samples.parquet'</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>all_ancestries <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/ancestries.parquet'</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>all_methods <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/methods.parquet'</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>all_variants <span class="op">=</span> pl.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/variants.parquet'</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>per_variant_category_imputation_performance <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/per_variant_category_imputation_performance.parquet'</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>per_sample_imputation_performance <span class="op">=</span> pd.read_parquet(<span class="ss">f'</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/per_sample_imputation_performance.parquet'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Stats in paragraph after “Full length, telomere to telomere maps of human genetic recombination rates are largely consistent with deCODE recombination rates”</p>
+<div id="cell-6" class="cell" data-execution_count="5">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>variant_filter_stats <span class="op">=</span> pd.read_parquet(<span class="ss">f"</span><span class="sc">{</span>summary_statistics_folder<span class="sc">}</span><span class="ss">/filter_summary_stats.parquet"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>variant_filter_stats[<span class="st">'gatk_filter'</span>] <span class="op">=</span> variant_filter_stats.VQSLOD_filter <span class="co">#| variant_filter_stats.neg_train_site_filter</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>chm13_variant_stats <span class="op">=</span> variant_filter_stats.loc[(variant_filter_stats.genome<span class="op">==</span><span class="st">'CHM13v2.0'</span>)]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>singletons <span class="op">=</span> chm13_variant_stats.loc[chm13_variant_stats.singleton]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>not_singletons <span class="op">=</span> chm13_variant_stats.loc[<span class="op">~</span>chm13_variant_stats.singleton]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>num_affected_gatk <span class="op">=</span> chm13_variant_stats.loc[<span class="op">~</span>(chm13_variant_stats.GRCh38_criteria_fail) <span class="op">&amp;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                                            <span class="co"># chm13_variant_stats.CHM13_criteria_fail &amp;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                                            chm13_variant_stats.gatk_filter].<span class="bu">len</span>.<span class="bu">sum</span>()</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>singletons_gained <span class="op">=</span> singletons.loc[chm13_variant_stats.GRCh38_criteria_fail <span class="op">&amp;</span> </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                                   <span class="op">~</span>(chm13_variant_stats.CHM13_criteria_fail <span class="op">|</span> </span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                   variant_filter_stats.CHM13_filtered)].<span class="bu">len</span>.<span class="bu">sum</span>()</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Our VQSLOD filter resulted in the loss of an additional </span><span class="ch">\n</span><span class="op">\</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="sc">{</span>num_affected_gatk<span class="sc">}</span><span class="ss"> </span><span class="op">\</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="ss">variants compared to the NYGC’s GRCh38 1KGP variant filtering methods, but the inclusion of singleton alleles added </span><span class="ch">\n</span><span class="op">\</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="sc">{</span>singletons_gained<span class="sc">}</span><span class="ss"> </span><span class="op">\</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="ss">unique variants to our dataset (Supplemental Figure 1)."</span>)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>singletons</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Our VQSLOD filter resulted in the loss of an additional 
+14494016 variants compared to the NYGC’s GRCh38 1KGP variant filtering methods, but the inclusion of singleton alleles added 
+26014731 unique variants to our dataset (Supplemental Figure 1).</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">singleton</th>
+<th data-quarto-table-cell-role="th">VQSLOD_filter</th>
+<th data-quarto-table-cell-role="th">MERR_filter</th>
+<th data-quarto-table-cell-role="th">HWE_pop_filter</th>
+<th data-quarto-table-cell-role="th">MAC_filter</th>
+<th data-quarto-table-cell-role="th">AC_filter</th>
+<th data-quarto-table-cell-role="th">f_missing_filter</th>
+<th data-quarto-table-cell-role="th">var_len_filter</th>
+<th data-quarto-table-cell-role="th">alt_star_filter</th>
+<th data-quarto-table-cell-role="th">pass_filter</th>
+<th data-quarto-table-cell-role="th">CHM13_filtered</th>
+<th data-quarto-table-cell-role="th">GRCh38_filtered</th>
+<th data-quarto-table-cell-role="th">GRCh38_criteria_fail</th>
+<th data-quarto-table-cell-role="th">CHM13_criteria_fail</th>
+<th data-quarto-table-cell-role="th">len</th>
+<th data-quarto-table-cell-role="th">gatk_filter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>3</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">24</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>25</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">33</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>1097</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">38</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>2418</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">40</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>2747</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">44</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>25</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">46</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>1245</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">68</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>354</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">69</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>11</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">82</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>14164284</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">87</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>1</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">107</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>5</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">127</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>12</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">146</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>2318</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">148</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>2</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">150</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>18167</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">154</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>7810883</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">159</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>5441</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">169</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>33052</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">170</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>14518</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">180</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>441729</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">192</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>31228</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">206</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>4862</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">230</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>28083</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">234</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>589337</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">265</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>3</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">267</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>44</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">270</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>11</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">271</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>109</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">272</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>2</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">274</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>532</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">276</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>1360</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">295</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>1133</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">306</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>25913141</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">313</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>533</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">315</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>14545</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">320</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>535</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">329</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>6834</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">330</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>10378</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">351</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>11841</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">353</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>1</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">354</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>90</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">365</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>1058</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">416</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>47924</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">446</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>140</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">448</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>68335</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">454</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>209932</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">491</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>63</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">500</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>489</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">501</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>73482</td>
+<td>False</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">502</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>15798</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">510</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>11239</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">511</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>16</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">514</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>52949</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">531</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>203660</td>
+<td>True</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">558</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>429771</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-7" class="cell" data-execution_count="6">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>not_singletons.loc[(not_singletons.Syntenic)].groupby([<span class="st">'CHM13_filtered'</span>, <span class="st">'CHM13_criteria_fail'</span>,<span class="st">'gatk_filter'</span>]).<span class="bu">len</span>.<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>CHM13_filtered  CHM13_criteria_fail  gatk_filter
+False           False                False          48948192
+True            False                False          11777087
+                True                 False           2032062
+                                     True           17508360
+Name: len, dtype: uint64</code></pre>
+</div>
+</div>
+<div id="cell-8" class="cell" data-execution_count="7">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>variant_filter_stats.groupby([<span class="st">'genome'</span>,<span class="st">'gatk_filter'</span>,<span class="st">'GRCh38_criteria_fail'</span>])[<span class="st">'len'</span>].<span class="bu">sum</span>().reset_index()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/ipykernel_2890186/2682831855.py:1: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  variant_filter_stats.groupby(['genome','gatk_filter','GRCh38_criteria_fail'])['len'].sum().reset_index()</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">gatk_filter</th>
+<th data-quarto-table-cell-role="th">GRCh38_criteria_fail</th>
+<th data-quarto-table-cell-role="th">len</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>GRCh38</td>
+<td>False</td>
+<td>False</td>
+<td>61243112</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>GRCh38</td>
+<td>False</td>
+<td>True</td>
+<td>42784742</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>GRCh38</td>
+<td>True</td>
+<td>False</td>
+<td>13365695</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>GRCh38</td>
+<td>True</td>
+<td>True</td>
+<td>25729879</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>False</td>
+<td>60934254</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>CHM13v2.0</td>
+<td>False</td>
+<td>True</td>
+<td>42867140</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>False</td>
+<td>14494016</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>True</td>
+<td>16177227</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-10" class="cell" data-execution_count="8">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>variant_filter_stats.loc[(<span class="op">~</span>variant_filter_stats.CHM13_criteria_fail)<span class="op">&amp;</span>(variant_filter_stats.GRCh38_criteria_fail)].groupby([<span class="st">'GRCh38_criteria_fail'</span>,<span class="st">'gatk_filter'</span>,<span class="st">'genome'</span>,<span class="st">'singleton'</span>])[<span class="st">'len'</span>].<span class="bu">sum</span>().reset_index()    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/tmp/ipykernel_2890186/1937395110.py:1: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  variant_filter_stats.loc[(~variant_filter_stats.CHM13_criteria_fail)&amp;(variant_filter_stats.GRCh38_criteria_fail)].groupby(['GRCh38_criteria_fail','gatk_filter','genome','singleton'])['len'].sum().reset_index()</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">GRCh38_criteria_fail</th>
+<th data-quarto-table-cell-role="th">gatk_filter</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">singleton</th>
+<th data-quarto-table-cell-role="th">len</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>True</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>True</td>
+<td>39599697</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>True</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>True</td>
+<td>40226623</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Table 1 and supplemental table XX</p>
+<div id="cell-12" class="cell" data-execution_count="9">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>best_phased_variants <span class="op">=</span> MAF_performance_variant_df.<span class="bu">filter</span>((pl.col(<span class="st">'ground_truth_data_source'</span>)<span class="op">!=</span><span class="st">'trios'</span>)<span class="op">&amp;</span>(pl.col(<span class="st">'method_of_phasing'</span>)<span class="op">==</span><span class="st">'phased_with_parents_and_pedigree'</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>catVarType <span class="op">=</span> pl.Enum([<span class="st">'SNP'</span>,<span class="st">'Indel'</span>,<span class="st">'SNPs + Indels'</span>])</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>best_phased_variants <span class="op">=</span> best_phased_variants.with_columns(<span class="bu">type</span><span class="op">=</span>pl.col(<span class="st">'type'</span>).cast(catVarType))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>best_phased_variants <span class="op">=</span> pl.concat([best_phased_variants, best_phased_variants.with_columns(<span class="bu">type</span><span class="op">=</span>pl.lit(<span class="st">'SNPs + Indels'</span>).cast(catVarType))])</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>best_phased_variants_by_syntenic <span class="op">=</span> best_phased_variants.group_by([<span class="st">'type'</span>,<span class="st">'Syntenic'</span>,<span class="st">'method_of_phasing'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>]</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                                                                 ).<span class="bu">sum</span>(</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                                                                 ).with_columns(gt_error_rate <span class="op">=</span> pl.col(<span class="st">'n_gt_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_gt_checked'</span>)<span class="op">*</span><span class="dv">100</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                                                                                switch_error_rate <span class="op">=</span> pl.col(<span class="st">'n_switch_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_checked'</span>)<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                                                                 ).to_pandas()</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>best_phased_variants_overall <span class="op">=</span> best_phased_variants.group_by([<span class="st">'type'</span>,<span class="st">'method_of_phasing'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>]</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                                                                 ).<span class="bu">sum</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                                                                 ).with_columns(gt_error_rate <span class="op">=</span> pl.col(<span class="st">'n_gt_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_gt_checked'</span>)<span class="op">*</span><span class="dv">100</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                                                                                switch_error_rate <span class="op">=</span> pl.col(<span class="st">'n_switch_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_checked'</span>)<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                                                                 ).to_pandas()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-13" class="cell" data-execution_count="10">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>best_phased_variants_overall.sort_values([<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">method_of_phasing</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">variant_id</th>
+<th data-quarto-table-cell-role="th">n_switch_errors</th>
+<th data-quarto-table-cell-role="th">n_checked</th>
+<th data-quarto-table-cell-role="th">n_gt_errors</th>
+<th data-quarto-table-cell-role="th">n_gt_checked</th>
+<th data-quarto-table-cell-role="th">MAC</th>
+<th data-quarto-table-cell-role="th">AN</th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">multiallelic</th>
+<th data-quarto-table-cell-role="th">in_STRs</th>
+<th data-quarto-table-cell-role="th">in_segdups</th>
+<th data-quarto-table-cell-role="th">in_platinum_STRs</th>
+<th data-quarto-table-cell-role="th">MAF</th>
+<th data-quarto-table-cell-role="th">rounded_MAF</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">switch_error_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">19</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>203833</td>
+<td>96830151</td>
+<td>3025975</td>
+<td>711358610</td>
+<td>10944096358</td>
+<td>116867178764</td>
+<td>18221880</td>
+<td>1265576</td>
+<td>766061</td>
+<td>729897</td>
+<td>1743056</td>
+<td>163978912.0</td>
+<td>NaN</td>
+<td>0.425380</td>
+<td>0.210506</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>270831</td>
+<td>19555688</td>
+<td>6481975</td>
+<td>145991067</td>
+<td>2456453580</td>
+<td>23980917912</td>
+<td>3740768</td>
+<td>2691149</td>
+<td>755934</td>
+<td>125781</td>
+<td>2640091</td>
+<td>38157448.0</td>
+<td>NaN</td>
+<td>4.439981</td>
+<td>1.384922</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>474664</td>
+<td>116385839</td>
+<td>9507950</td>
+<td>857349677</td>
+<td>13400549938</td>
+<td>140848096676</td>
+<td>21962648</td>
+<td>3956725</td>
+<td>1521995</td>
+<td>855678</td>
+<td>4383147</td>
+<td>199150912.0</td>
+<td>NaN</td>
+<td>1.108993</td>
+<td>0.407837</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">27</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>125429</td>
+<td>83970616</td>
+<td>1581451</td>
+<td>615986668</td>
+<td>9469281970</td>
+<td>101191249828</td>
+<td>15792611</td>
+<td>987434</td>
+<td>517335</td>
+<td>278683</td>
+<td>1313540</td>
+<td>142845632.0</td>
+<td>NaN</td>
+<td>0.256735</td>
+<td>0.149372</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">36</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>236515</td>
+<td>18027890</td>
+<td>5285347</td>
+<td>131789145</td>
+<td>2235467907</td>
+<td>21649362400</td>
+<td>3376142</td>
+<td>2364140</td>
+<td>779837</td>
+<td>113103</td>
+<td>2303815</td>
+<td>34772896.0</td>
+<td>NaN</td>
+<td>4.010457</td>
+<td>1.311939</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">28</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>361944</td>
+<td>101998506</td>
+<td>6866798</td>
+<td>747775813</td>
+<td>11704749877</td>
+<td>122840612228</td>
+<td>19168753</td>
+<td>3351574</td>
+<td>1297172</td>
+<td>391786</td>
+<td>3617355</td>
+<td>174973280.0</td>
+<td>NaN</td>
+<td>0.918296</td>
+<td>0.354852</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">41</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>754134</td>
+<td>151010447</td>
+<td>8002821</td>
+<td>1262828279</td>
+<td>10955497233</td>
+<td>128888389728</td>
+<td>20094909</td>
+<td>1367442</td>
+<td>838425</td>
+<td>803320</td>
+<td>1895313</td>
+<td>163417504.0</td>
+<td>NaN</td>
+<td>0.633722</td>
+<td>0.499392</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">18</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>645574</td>
+<td>29972914</td>
+<td>13099186</td>
+<td>257525124</td>
+<td>2469918872</td>
+<td>26283412072</td>
+<td>4099769</td>
+<td>2940460</td>
+<td>813114</td>
+<td>138324</td>
+<td>2887930</td>
+<td>38311516.0</td>
+<td>NaN</td>
+<td>5.086566</td>
+<td>2.153858</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>1399708</td>
+<td>180983361</td>
+<td>21102007</td>
+<td>1520353403</td>
+<td>13425416105</td>
+<td>155171801800</td>
+<td>24194678</td>
+<td>4307902</td>
+<td>1651539</td>
+<td>941644</td>
+<td>4783243</td>
+<td>198561632.0</td>
+<td>NaN</td>
+<td>1.387967</td>
+<td>0.773390</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>485678</td>
+<td>131554603</td>
+<td>5512226</td>
+<td>1118869739</td>
+<td>9491939443</td>
+<td>114194366900</td>
+<td>17820975</td>
+<td>1097102</td>
+<td>587425</td>
+<td>302935</td>
+<td>1471419</td>
+<td>142577184.0</td>
+<td>NaN</td>
+<td>0.492660</td>
+<td>0.369184</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">31</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>533760</td>
+<td>27594727</td>
+<td>10825486</td>
+<td>232867189</td>
+<td>2243090467</td>
+<td>23766358296</td>
+<td>3702815</td>
+<td>2583571</td>
+<td>833259</td>
+<td>123069</td>
+<td>2518845</td>
+<td>34848980.0</td>
+<td>NaN</td>
+<td>4.648781</td>
+<td>1.934283</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">20</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>1019438</td>
+<td>159149330</td>
+<td>16337712</td>
+<td>1351736928</td>
+<td>11735029910</td>
+<td>137960725196</td>
+<td>21523790</td>
+<td>3680673</td>
+<td>1420684</td>
+<td>426004</td>
+<td>3990264</td>
+<td>174604576.0</td>
+<td>NaN</td>
+<td>1.208646</td>
+<td>0.640554</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>957339</td>
+<td>241013562</td>
+<td>14721907</td>
+<td>2350794845</td>
+<td>10982317171</td>
+<td>152594204608</td>
+<td>23793129</td>
+<td>1568185</td>
+<td>958358</td>
+<td>920122</td>
+<td>2213064</td>
+<td>162859712.0</td>
+<td>NaN</td>
+<td>0.626252</td>
+<td>0.397214</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">39</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>903281</td>
+<td>47466990</td>
+<td>21396841</td>
+<td>445915360</td>
+<td>2476326087</td>
+<td>29056677080</td>
+<td>4532480</td>
+<td>3185320</td>
+<td>886608</td>
+<td>150987</td>
+<td>3129710</td>
+<td>38340076.0</td>
+<td>NaN</td>
+<td>4.798409</td>
+<td>1.902967</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">7</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>1860620</td>
+<td>288480552</td>
+<td>36118748</td>
+<td>2796710205</td>
+<td>13458643258</td>
+<td>181650881688</td>
+<td>28325609</td>
+<td>4753505</td>
+<td>1844966</td>
+<td>1071109</td>
+<td>5342774</td>
+<td>197901856.0</td>
+<td>NaN</td>
+<td>1.291473</td>
+<td>0.644972</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>619740</td>
+<td>209878593</td>
+<td>10533796</td>
+<td>2082299645</td>
+<td>9521752792</td>
+<td>135196547464</td>
+<td>21100865</td>
+<td>1266753</td>
+<td>672813</td>
+<td>341500</td>
+<td>1726315</td>
+<td>142198736.0</td>
+<td>NaN</td>
+<td>0.505873</td>
+<td>0.295285</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">35</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>766099</td>
+<td>43608428</td>
+<td>17831326</td>
+<td>402399835</td>
+<td>2245832839</td>
+<td>26229554432</td>
+<td>4089910</td>
+<td>2798030</td>
+<td>893192</td>
+<td>131438</td>
+<td>2729404</td>
+<td>34835496.0</td>
+<td>NaN</td>
+<td>4.431246</td>
+<td>1.756768</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">23</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>1385839</td>
+<td>253487021</td>
+<td>28365122</td>
+<td>2484699480</td>
+<td>11767585631</td>
+<td>161426101896</td>
+<td>25190775</td>
+<td>4064783</td>
+<td>1566005</td>
+<td>472938</td>
+<td>4455719</td>
+<td>174114928.0</td>
+<td>NaN</td>
+<td>1.141592</td>
+<td>0.546710</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>392141</td>
+<td>164491634</td>
+<td>7523433</td>
+<td>1396660154</td>
+<td>10907986574</td>
+<td>133179742148</td>
+<td>20766556</td>
+<td>1386360</td>
+<td>839847</td>
+<td>805160</td>
+<td>1939416</td>
+<td>162603296.0</td>
+<td>NaN</td>
+<td>0.538673</td>
+<td>0.238396</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">14</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>530431</td>
+<td>32349730</td>
+<td>13448642</td>
+<td>275069141</td>
+<td>2433600414</td>
+<td>26313991172</td>
+<td>4105018</td>
+<td>2919010</td>
+<td>811535</td>
+<td>135286</td>
+<td>2866535</td>
+<td>37747428.0</td>
+<td>NaN</td>
+<td>4.889186</td>
+<td>1.639677</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">34</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>922572</td>
+<td>196841364</td>
+<td>20972075</td>
+<td>1671729295</td>
+<td>13341586988</td>
+<td>159493733320</td>
+<td>24871574</td>
+<td>4305370</td>
+<td>1651382</td>
+<td>940446</td>
+<td>4805951</td>
+<td>197185104.0</td>
+<td>NaN</td>
+<td>1.254514</td>
+<td>0.468688</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">38</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>239782</td>
+<td>142966973</td>
+<td>4885380</td>
+<td>1206225547</td>
+<td>9459032010</td>
+<td>115063447336</td>
+<td>17958339</td>
+<td>1097397</td>
+<td>576521</td>
+<td>292548</td>
+<td>1475703</td>
+<td>141984288.0</td>
+<td>NaN</td>
+<td>0.405014</td>
+<td>0.167718</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">15</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>468515</td>
+<td>29686314</td>
+<td>11141390</td>
+<td>247071200</td>
+<td>2206659927</td>
+<td>23644887224</td>
+<td>3687219</td>
+<td>2553224</td>
+<td>824407</td>
+<td>116962</td>
+<td>2491677</td>
+<td>34286452.0</td>
+<td>NaN</td>
+<td>4.509384</td>
+<td>1.578219</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">32</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>708297</td>
+<td>172653287</td>
+<td>16026770</td>
+<td>1453296747</td>
+<td>11665691937</td>
+<td>138708334560</td>
+<td>21645558</td>
+<td>3650621</td>
+<td>1400928</td>
+<td>409510</td>
+<td>3967380</td>
+<td>173475584.0</td>
+<td>NaN</td>
+<td>1.102787</td>
+<td>0.410242</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>189404</td>
+<td>73719637</td>
+<td>3536488</td>
+<td>478222804</td>
+<td>10701095005</td>
+<td>99849848776</td>
+<td>15569973</td>
+<td>1075135</td>
+<td>639116</td>
+<td>607418</td>
+<td>1470196</td>
+<td>161630560.0</td>
+<td>NaN</td>
+<td>0.739506</td>
+<td>0.256925</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">37</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>246392</td>
+<td>14535103</td>
+<td>5879840</td>
+<td>103388337</td>
+<td>2360505655</td>
+<td>21645936260</td>
+<td>3377159</td>
+<td>2470508</td>
+<td>678159</td>
+<td>109993</td>
+<td>2422863</td>
+<td>36720604.0</td>
+<td>NaN</td>
+<td>5.687141</td>
+<td>1.695151</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">17</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>435796</td>
+<td>88254740</td>
+<td>9416328</td>
+<td>581611141</td>
+<td>13061600660</td>
+<td>121495785036</td>
+<td>18947132</td>
+<td>3545643</td>
+<td>1317275</td>
+<td>717411</td>
+<td>3893059</td>
+<td>195674480.0</td>
+<td>NaN</td>
+<td>1.619008</td>
+<td>0.493793</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">8</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>111439</td>
+<td>64083157</td>
+<td>2443173</td>
+<td>413454077</td>
+<td>9283079788</td>
+<td>86358522764</td>
+<td>13478025</td>
+<td>850471</td>
+<td>438828</td>
+<td>221570</td>
+<td>1117010</td>
+<td>141086784.0</td>
+<td>NaN</td>
+<td>0.590918</td>
+<td>0.173897</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>214074</td>
+<td>13331480</td>
+<td>4837731</td>
+<td>92803375</td>
+<td>2140405049</td>
+<td>19439463676</td>
+<td>3031931</td>
+<td>2155489</td>
+<td>699440</td>
+<td>94593</td>
+<td>2102793</td>
+<td>33334632.0</td>
+<td>NaN</td>
+<td>5.212883</td>
+<td>1.605778</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">33</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_probands</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>325513</td>
+<td>77414637</td>
+<td>7280904</td>
+<td>506257452</td>
+<td>11423484837</td>
+<td>105797986440</td>
+<td>16509956</td>
+<td>3005960</td>
+<td>1138268</td>
+<td>316163</td>
+<td>3219803</td>
+<td>172083120.0</td>
+<td>NaN</td>
+<td>1.438182</td>
+<td>0.420480</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">24</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>142964</td>
+<td>33168366</td>
+<td>1101386</td>
+<td>155285503</td>
+<td>10306271778</td>
+<td>77507554364</td>
+<td>12085944</td>
+<td>856704</td>
+<td>500251</td>
+<td>472025</td>
+<td>1148979</td>
+<td>157311664.0</td>
+<td>NaN</td>
+<td>0.709265</td>
+<td>0.431025</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">40</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>132952</td>
+<td>6628759</td>
+<td>2189651</td>
+<td>34800663</td>
+<td>2238640700</td>
+<td>17421422388</td>
+<td>2718117</td>
+<td>2005144</td>
+<td>562272</td>
+<td>87418</td>
+<td>1962357</td>
+<td>34890920.0</td>
+<td>NaN</td>
+<td>6.291981</td>
+<td>2.005685</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">13</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>275916</td>
+<td>39797125</td>
+<td>3291037</td>
+<td>190086166</td>
+<td>12544912478</td>
+<td>94928976752</td>
+<td>14804061</td>
+<td>2861848</td>
+<td>1062523</td>
+<td>559443</td>
+<td>3111336</td>
+<td>190270688.0</td>
+<td>NaN</td>
+<td>1.731340</td>
+<td>0.693306</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">21</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>60029</td>
+<td>28907987</td>
+<td>687896</td>
+<td>135397717</td>
+<td>8941645479</td>
+<td>67615026596</td>
+<td>10552603</td>
+<td>682129</td>
+<td>346061</td>
+<td>174238</td>
+<td>878947</td>
+<td>137145680.0</td>
+<td>NaN</td>
+<td>0.508056</td>
+<td>0.207655</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">29</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>110811</td>
+<td>6100767</td>
+<td>1824830</td>
+<td>31395703</td>
+<td>2031937895</td>
+<td>15729447164</td>
+<td>2453315</td>
+<td>1755681</td>
+<td>586063</td>
+<td>75477</td>
+<td>1709678</td>
+<td>31681192.0</td>
+<td>NaN</td>
+<td>5.812356</td>
+<td>1.816345</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_parents</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>170840</td>
+<td>35008754</td>
+<td>2512726</td>
+<td>166793420</td>
+<td>10973583374</td>
+<td>83344473760</td>
+<td>13005918</td>
+<td>2437810</td>
+<td>932124</td>
+<td>249715</td>
+<td>2588625</td>
+<td>167135872.0</td>
+<td>NaN</td>
+<td>1.506490</td>
+<td>0.487992</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>423045</td>
+<td>43341629</td>
+<td>2699076</td>
+<td>233348273</td>
+<td>10442767236</td>
+<td>79816247596</td>
+<td>12446981</td>
+<td>883777</td>
+<td>514418</td>
+<td>483147</td>
+<td>1184948</td>
+<td>159613792.0</td>
+<td>NaN</td>
+<td>1.156673</td>
+<td>0.976071</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">12</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>241792</td>
+<td>8580217</td>
+<td>3510984</td>
+<td>53180074</td>
+<td>2283546245</td>
+<td>18263529176</td>
+<td>2849598</td>
+<td>2120649</td>
+<td>583367</td>
+<td>91449</td>
+<td>2076316</td>
+<td>35577040.0</td>
+<td>NaN</td>
+<td>6.602067</td>
+<td>2.818017</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">26</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>664837</td>
+<td>51921846</td>
+<td>6210060</td>
+<td>286528347</td>
+<td>12726313481</td>
+<td>98079776772</td>
+<td>15296579</td>
+<td>3004426</td>
+<td>1097785</td>
+<td>574596</td>
+<td>3261264</td>
+<td>193158208.0</td>
+<td>NaN</td>
+<td>2.167346</td>
+<td>1.280457</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">30</td>
+<td>SNP</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>320395</td>
+<td>37994100</td>
+<td>2097605</td>
+<td>207776731</td>
+<td>9060713235</td>
+<td>71102619380</td>
+<td>11097182</td>
+<td>713470</td>
+<td>361885</td>
+<td>180836</td>
+<td>923329</td>
+<td>139174608.0</td>
+<td>NaN</td>
+<td>1.009548</td>
+<td>0.843276</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25</td>
+<td>Indel</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>188371</td>
+<td>7907309</td>
+<td>2866376</td>
+<td>47918554</td>
+<td>2070335651</td>
+<td>16469973704</td>
+<td>2569134</td>
+<td>1853408</td>
+<td>607640</td>
+<td>78461</td>
+<td>1805361</td>
+<td>32271340.0</td>
+<td>NaN</td>
+<td>5.981766</td>
+<td>2.382239</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">0</td>
+<td>SNPs + Indels</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HGSVC_samples_nontrios_only</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>508766</td>
+<td>45901409</td>
+<td>4963981</td>
+<td>255695285</td>
+<td>11131048886</td>
+<td>87572593084</td>
+<td>13666316</td>
+<td>2566878</td>
+<td>969525</td>
+<td>259297</td>
+<td>2728690</td>
+<td>169718640.0</td>
+<td>NaN</td>
+<td>1.941366</td>
+<td>1.108389</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-14" class="cell" data-execution_count="11">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>best_phased_variants_by_syntenic.loc[best_phased_variants_by_syntenic.ground_truth_data_source<span class="op">==</span><span class="st">'HPRC_samples'</span>].sort_values([<span class="st">'ground_truth_data_source'</span>,<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">method_of_phasing</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">variant_id</th>
+<th data-quarto-table-cell-role="th">n_switch_errors</th>
+<th data-quarto-table-cell-role="th">n_checked</th>
+<th data-quarto-table-cell-role="th">n_gt_errors</th>
+<th data-quarto-table-cell-role="th">n_gt_checked</th>
+<th data-quarto-table-cell-role="th">MAC</th>
+<th data-quarto-table-cell-role="th">AN</th>
+<th data-quarto-table-cell-role="th">multiallelic</th>
+<th data-quarto-table-cell-role="th">in_STRs</th>
+<th data-quarto-table-cell-role="th">in_segdups</th>
+<th data-quarto-table-cell-role="th">in_platinum_STRs</th>
+<th data-quarto-table-cell-role="th">MAF</th>
+<th data-quarto-table-cell-role="th">rounded_MAF</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">switch_error_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">3</td>
+<td>SNP</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>450</td>
+<td>122930</td>
+<td>25015</td>
+<td>1054999</td>
+<td>14013151</td>
+<td>174259244</td>
+<td>3736</td>
+<td>16442</td>
+<td>983</td>
+<td>2220</td>
+<td>2.188301e+05</td>
+<td>NaN</td>
+<td>2.371092</td>
+<td>0.366062</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">58</td>
+<td>Indel</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>174</td>
+<td>15490</td>
+<td>10527</td>
+<td>152017</td>
+<td>2255971</td>
+<td>25039640</td>
+<td>2623</td>
+<td>1673</td>
+<td>191</td>
+<td>1852</td>
+<td>3.522783e+04</td>
+<td>NaN</td>
+<td>6.924883</td>
+<td>1.123305</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">42</td>
+<td>SNPs + Indels</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>624</td>
+<td>138420</td>
+<td>35542</td>
+<td>1207016</td>
+<td>16269122</td>
+<td>199298884</td>
+<td>6359</td>
+<td>18115</td>
+<td>1174</td>
+<td>4072</td>
+<td>2.540636e+05</td>
+<td>NaN</td>
+<td>2.944617</td>
+<td>0.450802</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">41</td>
+<td>SNP</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>133</td>
+<td>26737</td>
+<td>15469</td>
+<td>336505</td>
+<td>3625205</td>
+<td>55368984</td>
+<td>1475</td>
+<td>3542</td>
+<td>2255</td>
+<td>849</td>
+<td>5.660954e+04</td>
+<td>NaN</td>
+<td>4.596960</td>
+<td>0.497438</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">80</td>
+<td>Indel</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>410</td>
+<td>15019</td>
+<td>16586</td>
+<td>173023</td>
+<td>2662187</td>
+<td>28549032</td>
+<td>3520</td>
+<td>3259</td>
+<td>1868</td>
+<td>1150</td>
+<td>4.157111e+04</td>
+<td>NaN</td>
+<td>9.586009</td>
+<td>2.729875</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">76</td>
+<td>SNPs + Indels</td>
+<td>False</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>543</td>
+<td>41756</td>
+<td>32055</td>
+<td>509528</td>
+<td>6287392</td>
+<td>83918016</td>
+<td>4995</td>
+<td>6801</td>
+<td>4123</td>
+<td>1999</td>
+<td>9.818216e+04</td>
+<td>NaN</td>
+<td>6.291116</td>
+<td>1.300412</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">43</td>
+<td>SNP</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>203383</td>
+<td>96707221</td>
+<td>3000960</td>
+<td>710303611</td>
+<td>10930083207</td>
+<td>116692919520</td>
+<td>1261840</td>
+<td>749619</td>
+<td>728914</td>
+<td>1740836</td>
+<td>1.637886e+08</td>
+<td>NaN</td>
+<td>0.422490</td>
+<td>0.210308</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">68</td>
+<td>Indel</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>270657</td>
+<td>19540198</td>
+<td>6471448</td>
+<td>145839050</td>
+<td>2454197609</td>
+<td>23955878272</td>
+<td>2688526</td>
+<td>754261</td>
+<td>125590</td>
+<td>2638239</td>
+<td>3.812274e+07</td>
+<td>NaN</td>
+<td>4.437390</td>
+<td>1.385129</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">33</td>
+<td>SNPs + Indels</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>GRCh38</td>
+<td>None</td>
+<td>474040</td>
+<td>116247419</td>
+<td>9472408</td>
+<td>856142661</td>
+<td>13384280816</td>
+<td>140648797792</td>
+<td>3950366</td>
+<td>1503880</td>
+<td>854504</td>
+<td>4379075</td>
+<td>1.989228e+08</td>
+<td>NaN</td>
+<td>1.106405</td>
+<td>0.407785</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">63</td>
+<td>SNP</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>125296</td>
+<td>83943879</td>
+<td>1565982</td>
+<td>615650163</td>
+<td>9465656765</td>
+<td>101135880844</td>
+<td>985959</td>
+<td>513793</td>
+<td>276428</td>
+<td>1312691</td>
+<td>1.427933e+08</td>
+<td>NaN</td>
+<td>0.254362</td>
+<td>0.149262</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">52</td>
+<td>Indel</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>236105</td>
+<td>18012871</td>
+<td>5268761</td>
+<td>131616122</td>
+<td>2232805720</td>
+<td>21620813368</td>
+<td>2360620</td>
+<td>776578</td>
+<td>111235</td>
+<td>2302665</td>
+<td>3.473216e+07</td>
+<td>NaN</td>
+<td>4.003127</td>
+<td>1.310757</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">38</td>
+<td>SNPs + Indels</td>
+<td>True</td>
+<td>phased_with_parents_and_pedigree</td>
+<td>HPRC_samples</td>
+<td>CHM13v2.0</td>
+<td>None</td>
+<td>361401</td>
+<td>101956750</td>
+<td>6834743</td>
+<td>747266285</td>
+<td>11698462485</td>
+<td>122756694212</td>
+<td>3346579</td>
+<td>1290371</td>
+<td>387663</td>
+<td>3615356</td>
+<td>1.748844e+08</td>
+<td>NaN</td>
+<td>0.914633</td>
+<td>0.354465</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="percent-concordance-in-different-panels" class="level3" data-number="0.1">
+<h3 data-number="0.1" class="anchored" data-anchor-id="percent-concordance-in-different-panels"><span class="header-section-number">0.1</span> Percent concordance in different panels</h3>
+<div id="cell-16" class="cell" data-execution_count="12">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>overall_subsetted <span class="op">=</span> MAF_performance_variant_df.<span class="bu">filter</span>((pl.col(<span class="st">'ground_truth_data_source'</span>)<span class="op">!=</span><span class="st">'trios'</span>)<span class="op">&amp;</span>(pl.col(<span class="st">'method_of_phasing'</span>)<span class="op">==</span><span class="st">'phased_with_parents_and_pedigree'</span>)).group_by([<span class="st">'type'</span>,<span class="st">'Syntenic'</span>,<span class="st">'method_of_phasing'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>]).<span class="bu">sum</span>().with_columns(gt_error_rate <span class="op">=</span> pl.col(<span class="st">'n_gt_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_gt_checked'</span>))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>overall           <span class="op">=</span> MAF_performance_variant_df.<span class="bu">filter</span>((pl.col(<span class="st">'ground_truth_data_source'</span>)<span class="op">!=</span><span class="st">'trios'</span>)<span class="op">&amp;</span>(pl.col(<span class="st">'method_of_phasing'</span>)<span class="op">==</span><span class="st">'phased_with_parents_and_pedigree'</span>)).group_by([<span class="st">'method_of_phasing'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>]).<span class="bu">sum</span>().with_columns(gt_error_rate <span class="op">=</span> pl.col(<span class="st">'n_gt_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_gt_checked'</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>overall_syntenic  <span class="op">=</span> MAF_performance_variant_df.<span class="bu">filter</span>((pl.col(<span class="st">'ground_truth_data_source'</span>)<span class="op">!=</span><span class="st">'trios'</span>)<span class="op">&amp;</span>(pl.col(<span class="st">'Syntenic'</span>))<span class="op">&amp;</span>(pl.col(<span class="st">'method_of_phasing'</span>)<span class="op">==</span><span class="st">'phased_with_parents_and_pedigree'</span>)).group_by([<span class="st">'method_of_phasing'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'genome'</span>]).<span class="bu">sum</span>().with_columns(gt_error_rate <span class="op">=</span> pl.col(<span class="st">'n_gt_errors'</span>)<span class="op">/</span>pl.col(<span class="st">'n_gt_checked'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-17" class="cell" data-execution_count="13">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>overall_syntenic <span class="op">=</span> overall_syntenic.to_pandas()[[<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'gt_error_rate'</span>]].sort_values([<span class="st">'genome'</span>,<span class="st">'Syntenic'</span>,<span class="st">'gt_error_rate'</span>])</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>overall_syntenic[<span class="st">'Non-reference true positive rate'</span>] <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>overall_syntenic.gt_error_rate) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>overall_syntenic[<span class="st">'gt_error_rate'</span>] <span class="op">*=</span> <span class="dv">100</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>overall_syntenic.loc[overall_syntenic.ground_truth_data_source.isin((<span class="st">'HPRC_samples'</span>, <span class="st">'HGSVC_samples'</span>,<span class="st">'HPRC_HGSVC_all_samples'</span>))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">Non-reference true positive rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>21962648</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>1.106405</td>
+<td>98.893595</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4</td>
+<td>24194678</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>1.386977</td>
+<td>98.613023</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>28325609</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>1.289689</td>
+<td>98.710311</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">12</td>
+<td>19168753</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>0.914633</td>
+<td>99.085367</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">11</td>
+<td>21523790</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>1.203934</td>
+<td>98.796066</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>25190775</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>1.138373</td>
+<td>98.861627</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-18" class="cell" data-execution_count="14">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>overall <span class="op">=</span> overall.to_pandas()[[<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'gt_error_rate'</span>]].sort_values([<span class="st">'genome'</span>,<span class="st">'Syntenic'</span>,<span class="st">'gt_error_rate'</span>])</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>overall[<span class="st">'Non-reference true positive rate'</span>] <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>overall.gt_error_rate) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>overall[<span class="st">'gt_error_rate'</span>] <span class="op">*=</span> <span class="dv">100</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>overall.loc[overall.ground_truth_data_source.isin((<span class="st">'HPRC_samples'</span>, <span class="st">'HGSVC_samples'</span>,<span class="st">'HPRC_HGSVC_all_samples'</span>))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">Non-reference true positive rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">11</td>
+<td>21962648</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>1.108993</td>
+<td>98.891007</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2</td>
+<td>24194678</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>1.387967</td>
+<td>98.612033</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5</td>
+<td>28325609</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>1.291473</td>
+<td>98.708527</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6</td>
+<td>19168753</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>0.918296</td>
+<td>99.081704</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>21523790</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>1.208646</td>
+<td>98.791354</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4</td>
+<td>25190775</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>1.141592</td>
+<td>98.858408</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-19" class="cell" data-execution_count="15">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>overall_subsetted <span class="op">=</span> overall_subsetted.to_pandas()[[<span class="st">'type'</span>,<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'ground_truth_data_source'</span>,<span class="st">'gt_error_rate'</span>]].sort_values([<span class="st">'genome'</span>,<span class="st">'type'</span>,<span class="st">'Syntenic'</span>,<span class="st">'gt_error_rate'</span>])</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>overall_subsetted[<span class="st">'Non-reference true positive rate'</span>] <span class="op">=</span> (<span class="dv">1</span><span class="op">-</span>overall_subsetted.gt_error_rate) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>overall_subsetted[<span class="st">'gt_error_rate'</span>] <span class="op">*=</span> <span class="dv">100</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>overall_subsetted.loc[overall_subsetted.ground_truth_data_source.isin((<span class="st">'HPRC_samples'</span>, <span class="st">'HGSVC_samples'</span>,<span class="st">'HPRC_HGSVC_all_samples'</span>))]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">ground_truth_data_source</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">Non-reference true positive rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">38</td>
+<td>SNP</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>1.442616</td>
+<td>98.557384</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">44</td>
+<td>SNP</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>2.010190</td>
+<td>97.989810</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>SNP</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>2.371092</td>
+<td>97.628908</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">18</td>
+<td>SNP</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>0.422490</td>
+<td>99.577510</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>SNP</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>0.624200</td>
+<td>99.375800</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">36</td>
+<td>SNP</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>0.632463</td>
+<td>99.367537</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">51</td>
+<td>Indel</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>6.394128</td>
+<td>93.605872</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Indel</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>6.490134</td>
+<td>93.509866</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9</td>
+<td>Indel</td>
+<td>False</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>6.924883</td>
+<td>93.075117</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">53</td>
+<td>Indel</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HPRC_samples</td>
+<td>4.437390</td>
+<td>95.562610</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">49</td>
+<td>Indel</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>4.796596</td>
+<td>95.203404</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">25</td>
+<td>Indel</td>
+<td>True</td>
+<td>GRCh38</td>
+<td>HGSVC_samples</td>
+<td>5.085148</td>
+<td>94.914852</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">11</td>
+<td>SNP</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>4.181155</td>
+<td>95.818845</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">43</td>
+<td>SNP</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>4.204832</td>
+<td>95.795168</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">31</td>
+<td>SNP</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>4.596960</td>
+<td>95.403040</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">12</td>
+<td>SNP</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>0.254362</td>
+<td>99.745638</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">26</td>
+<td>SNP</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>0.490435</td>
+<td>99.509565</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>SNP</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>0.504153</td>
+<td>99.495847</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">20</td>
+<td>Indel</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>9.586009</td>
+<td>90.413991</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">22</td>
+<td>Indel</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>9.598220</td>
+<td>90.401780</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">45</td>
+<td>Indel</td>
+<td>False</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>9.751645</td>
+<td>90.248355</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>Indel</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HPRC_samples</td>
+<td>4.003127</td>
+<td>95.996873</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Indel</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HPRC_HGSVC_all_samples</td>
+<td>4.423507</td>
+<td>95.576493</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">55</td>
+<td>Indel</td>
+<td>True</td>
+<td>CHM13v2.0</td>
+<td>HGSVC_samples</td>
+<td>4.637721</td>
+<td>95.362279</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-20" class="cell" data-execution_count="16">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>rephase<span class="op">=</span>all_variants.<span class="bu">filter</span>((pl.col(<span class="st">'method_of_phasing'</span>) <span class="op">==</span> <span class="st">'1kgp_variation_phased_with_reference_panel'</span>) <span class="op">&amp;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                         (pl.col(<span class="st">'ground_truth_data_source'</span>) <span class="op">==</span> <span class="st">'HPRC_samples'</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>singletons_rephase_sum <span class="op">=</span> rephase.<span class="bu">filter</span>(pl.col(<span class="st">'contextual_MAC'</span>) <span class="op">==</span> <span class="dv">1</span>).group_by(<span class="st">'genome'</span>).<span class="bu">sum</span>().to_pandas().reset_index()</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>singletons_rephase_sum[<span class="st">'SER'</span>] <span class="op">=</span> singletons_rephase_sum.n_switch_errors<span class="op">/</span>singletons_rephase_sum.n_checked<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> idx, (genome, ser) <span class="kw">in</span> singletons_rephase_sum[[<span class="st">'genome'</span>,<span class="st">'SER'</span>]].iterrows():</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Singletons in </span><span class="sc">{</span>genome<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>ser<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>rare_rephase <span class="op">=</span> rephase.<span class="bu">filter</span>(pl.col(<span class="st">'contextual_MAC'</span>)<span class="op">/</span>pl.col(<span class="st">'contextual_AN'</span>) <span class="op">&lt;</span> <span class="fl">0.01</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>common_rephase <span class="op">=</span> rephase.<span class="bu">filter</span>(pl.col(<span class="st">'contextual_MAC'</span>)<span class="op">/</span>pl.col(<span class="st">'contextual_AN'</span>) <span class="op">&gt;=</span> <span class="fl">0.01</span>)</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>rare_rephase_sum <span class="op">=</span> rare_rephase.group_by(<span class="st">'genome'</span>).<span class="bu">sum</span>().to_pandas().reset_index()</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>common_rephase_sum <span class="op">=</span> common_rephase.group_by(<span class="st">'genome'</span>).<span class="bu">sum</span>().to_pandas().reset_index()</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> idx, (genome, n_switch_errors, n_checked) <span class="kw">in</span> rare_rephase_sum[[<span class="st">'genome'</span>,<span class="st">'n_switch_errors'</span>, <span class="st">'n_checked'</span>]].iterrows():</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Rare in </span><span class="sc">{</span>genome<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>n_switch_errors<span class="op">/</span>n_checked<span class="op">*</span><span class="dv">100</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="ss">f"Common in </span><span class="sc">{</span>genome<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>common_rephase_sum<span class="sc">.</span>iloc[idx]<span class="sc">.</span>n_switch_errors<span class="op">/</span>common_rephase_sum<span class="sc">.</span>iloc[idx]<span class="sc">.</span>n_checked<span class="op">*</span><span class="dv">100</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>syntenic <span class="op">=</span> common_rephase.<span class="bu">filter</span>(pl.col(<span class="st">'Syntenic'</span>) <span class="op">==</span> <span class="va">True</span>)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>nonsyntenic <span class="op">=</span> common_rephase.<span class="bu">filter</span>(pl.col(<span class="st">'Syntenic'</span>) <span class="op">==</span> <span class="va">False</span>)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>syntenic_sum <span class="op">=</span> syntenic.group_by(<span class="st">'genome'</span>).<span class="bu">sum</span>().to_pandas().set_index(<span class="st">'genome'</span>)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>nonsyntenic_sum <span class="op">=</span> nonsyntenic.group_by(<span class="st">'genome'</span>).<span class="bu">sum</span>().to_pandas().set_index(<span class="st">'genome'</span>)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> genome, row <span class="kw">in</span> syntenic_sum.iterrows():</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Common Syntenic in </span><span class="sc">{</span>genome<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>row<span class="sc">.</span>n_switch_errors<span class="op">/</span>row<span class="sc">.</span>n_checked<span class="op">*</span><span class="dv">100</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="ss">f"Common Nonsyntenic </span><span class="sc">{</span>genome<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>nonsyntenic_sum<span class="sc">.</span>loc[genome]<span class="sc">.</span>n_switch_errors<span class="op">/</span>nonsyntenic_sum<span class="sc">.</span>loc[genome]<span class="sc">.</span>n_checked<span class="op">*</span><span class="dv">100</span><span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Singletons in CHM13v2.0: 8.27393547908082
+Singletons in GRCh38: 11.690793831015235
+
+Rare in GRCh38: 6.616868852558108
+Common in GRCh38: 0.9045780019233195
+
+Rare in CHM13v2.0: 6.225743033345612
+Common in CHM13v2.0: 0.8103833501207229
+
+Common Syntenic in CHM13v2.0: 0.8099508170456401
+Common Nonsyntenic CHM13v2.0: 1.8914473684210527
+
+Common Syntenic in GRCh38: 0.9045591759081486
+Common Nonsyntenic GRCh38: 0.9198633549213578</code></pre>
+</div>
+</div>
+<div id="cell-21" class="cell" data-execution_count="17">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>synEnum <span class="op">=</span> pl.Enum(categories<span class="op">=</span>[<span class="st">'All_regions'</span>, <span class="st">'Syntenic'</span>, <span class="st">'Nonsyntenic'</span>])</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>concordance <span class="op">=</span> all_variants.<span class="bu">filter</span>((pl.col(<span class="st">'method_of_phasing'</span>) <span class="op">==</span> <span class="st">'phased_with_parents_and_pedigree'</span>) <span class="op">&amp;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                                  (pl.col(<span class="st">'ground_truth_data_source'</span>) <span class="op">==</span> <span class="st">'HPRC_samples'</span>)).with_columns(Syntenic<span class="op">=</span>pl.col(<span class="st">'Syntenic'</span>).cast(<span class="bu">str</span>).replace(<span class="st">'true'</span>,<span class="st">'Syntenic'</span>).replace(<span class="st">'false'</span>,<span class="st">'Nonsyntenic'</span>).cast(synEnum))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-22" class="cell" data-execution_count="18">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>concordance_summary <span class="op">=</span> concordance.clone().with_columns(Syntenic <span class="op">=</span> pl.lit(<span class="st">'All_regions'</span>).cast(synEnum))</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>concordance_summary <span class="op">=</span> pl.concat((concordance, concordance_summary)).group_by([<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>]).<span class="bu">sum</span>().to_pandas().reset_index()</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>concordance_summary <span class="op">=</span> pd.concat((concordance_summary, concordance_summary.copy().assign(<span class="bu">type</span> <span class="op">=</span> <span class="st">'SNPs + Indels'</span>).groupby([<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>], observed<span class="op">=</span><span class="va">True</span>).<span class="bu">sum</span>(numeric_only<span class="op">=</span><span class="va">True</span>).reset_index()))</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>concordance_summary[<span class="st">'gt_error_rate'</span>] <span class="op">=</span> concordance_summary.n_gt_errors<span class="op">/</span>concordance_summary.n_gt_checked<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>concordance_summary[<span class="st">'gt_accuracy_rate'</span>] <span class="op">=</span> <span class="dv">100</span><span class="op">-</span>concordance_summary[<span class="st">'gt_error_rate'</span>] </span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>concordance_summary[<span class="st">'switch_error_rate'</span>] <span class="op">=</span> concordance_summary.n_switch_errors<span class="op">/</span>concordance_summary.n_checked<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>concordance_summary[<span class="st">'Syntenic'</span>] <span class="op">=</span> concordance_summary.Syntenic.replace(<span class="st">'false'</span>, <span class="st">'Nonsyntenic'</span>).replace(<span class="st">'true'</span>,<span class="st">'Syntenic'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="cell-23" class="cell" data-execution_count="19">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">"display.precision"</span>, <span class="dv">3</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>concordance_summary.sort_values([<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>]).set_index([<span class="st">'Syntenic'</span>,<span class="st">'genome'</span>,<span class="st">'type'</span>])[[<span class="st">'switch_error_rate'</span>,<span class="st">'gt_error_rate'</span>,<span class="st">'n_gt_errors'</span>,<span class="st">'n_gt_checked'</span>, <span class="st">'n_switch_errors'</span>, <span class="st">'n_checked'</span>]].astype(<span class="bu">float</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">switch_error_rate</th>
+<th data-quarto-table-cell-role="th">gt_error_rate</th>
+<th data-quarto-table-cell-role="th">n_gt_errors</th>
+<th data-quarto-table-cell-role="th">n_gt_checked</th>
+<th data-quarto-table-cell-role="th">n_switch_errors</th>
+<th data-quarto-table-cell-role="th">n_checked</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Syntenic</th>
+<th data-quarto-table-cell-role="th">genome</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td rowspan="6" data-quarto-table-cell-role="th" data-valign="top">All_regions</td>
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">GRCh38</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>1.385</td>
+<td>4.440</td>
+<td>6.482e+06</td>
+<td>1.460e+08</td>
+<td>270831.0</td>
+<td>1.956e+07</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.211</td>
+<td>0.425</td>
+<td>3.026e+06</td>
+<td>7.114e+08</td>
+<td>203833.0</td>
+<td>9.683e+07</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>0.408</td>
+<td>1.109</td>
+<td>9.508e+06</td>
+<td>8.573e+08</td>
+<td>474664.0</td>
+<td>1.164e+08</td>
+</tr>
+<tr class="even">
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">CHM13v2.0</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>1.312</td>
+<td>4.010</td>
+<td>5.285e+06</td>
+<td>1.318e+08</td>
+<td>236515.0</td>
+<td>1.803e+07</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.149</td>
+<td>0.257</td>
+<td>1.581e+06</td>
+<td>6.160e+08</td>
+<td>125429.0</td>
+<td>8.397e+07</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>0.355</td>
+<td>0.918</td>
+<td>6.867e+06</td>
+<td>7.478e+08</td>
+<td>361944.0</td>
+<td>1.020e+08</td>
+</tr>
+<tr class="odd">
+<td rowspan="6" data-quarto-table-cell-role="th" data-valign="top">Syntenic</td>
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">GRCh38</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>1.385</td>
+<td>4.437</td>
+<td>6.471e+06</td>
+<td>1.458e+08</td>
+<td>270657.0</td>
+<td>1.954e+07</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.210</td>
+<td>0.422</td>
+<td>3.001e+06</td>
+<td>7.103e+08</td>
+<td>203383.0</td>
+<td>9.671e+07</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>0.408</td>
+<td>1.106</td>
+<td>9.472e+06</td>
+<td>8.561e+08</td>
+<td>474040.0</td>
+<td>1.162e+08</td>
+</tr>
+<tr class="even">
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">CHM13v2.0</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>1.311</td>
+<td>4.003</td>
+<td>5.269e+06</td>
+<td>1.316e+08</td>
+<td>236105.0</td>
+<td>1.801e+07</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.149</td>
+<td>0.254</td>
+<td>1.566e+06</td>
+<td>6.157e+08</td>
+<td>125296.0</td>
+<td>8.394e+07</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>0.354</td>
+<td>0.915</td>
+<td>6.835e+06</td>
+<td>7.473e+08</td>
+<td>361401.0</td>
+<td>1.020e+08</td>
+</tr>
+<tr class="odd">
+<td rowspan="6" data-quarto-table-cell-role="th" data-valign="top">Nonsyntenic</td>
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">GRCh38</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>1.123</td>
+<td>6.925</td>
+<td>1.053e+04</td>
+<td>1.520e+05</td>
+<td>174.0</td>
+<td>1.549e+04</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.366</td>
+<td>2.371</td>
+<td>2.502e+04</td>
+<td>1.055e+06</td>
+<td>450.0</td>
+<td>1.229e+05</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>0.451</td>
+<td>2.945</td>
+<td>3.554e+04</td>
+<td>1.207e+06</td>
+<td>624.0</td>
+<td>1.384e+05</td>
+</tr>
+<tr class="even">
+<td rowspan="3" data-quarto-table-cell-role="th" data-valign="top">CHM13v2.0</td>
+<td data-quarto-table-cell-role="th">Indel</td>
+<td>2.730</td>
+<td>9.586</td>
+<td>1.659e+04</td>
+<td>1.730e+05</td>
+<td>410.0</td>
+<td>1.502e+04</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">SNP</td>
+<td>0.497</td>
+<td>4.597</td>
+<td>1.547e+04</td>
+<td>3.365e+05</td>
+<td>133.0</td>
+<td>2.674e+04</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">SNPs + Indels</td>
+<td>1.300</td>
+<td>6.291</td>
+<td>3.206e+04</td>
+<td>5.095e+05</td>
+<td>543.0</td>
+<td>4.176e+04</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
