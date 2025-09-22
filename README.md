@@ -1,4 +1,5 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
+Repository: [![DOI](https://zenodo.org/badge/602872324.svg)](https://doi.org/10.5281/zenodo.17178669)
+Full Dataset: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
 
 **[Download phased haplotype panel at this location](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/100_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/)**
 
