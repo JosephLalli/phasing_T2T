@@ -13,11 +13,6 @@ chrom=$1
 num_threads=$2
 suffix=$3
 genome=$4
-# atomize=$5
-# missing_to_ref=$6
-# missing_filter_cutoff=$7
-# trim_assemblies_to_callset=$8
-# filter_multiallelic_indels=$9
 
 
 #settings
