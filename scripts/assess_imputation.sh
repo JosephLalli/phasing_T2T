@@ -27,6 +27,11 @@ missing_cutoff=0.05
 
 subset_110=$basedir/resources/sample_subsets/1kgp_paper_110_sample_SGDP_subset_numeric_format.txt
 
+working_dir=$(realpath -m "$working_dir")
+reference_dataset=$(realpath -m "$reference_dataset")
+native_panel=$(realpath -m "$native_panel")
+lifted_panel=$(realpath -m "$lifted_panel")
+
 variant_quality_filter_string="ALT!='*' && (FILTER=='PASS' || FILTER=='.') && ((TYPE!='snp' && (ABS(ILEN) < 50)) || TYPE='snp')"
 filtered_suffix='filtered'
 if [[ $limit_to_syntenic_regions == 'true' ]]
@@ -92,7 +97,7 @@ if [[ $reference_genome == 'T2T' ]]; then
     chrom_map=$basedir/resources/recombination_maps/t2t_native_scaled_maps/${chrom}.t2t.scaled.gmap.gz
 
     if [[ ! -s $lifted_panel.csi ]]; then
-        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
+        "$script_dir/liftover_panel.sh" $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
     fi
 elif [[ $reference_genome == 'GRCh38' ]]; then
     whole_chrom=$GRCh38_region
@@ -103,7 +108,7 @@ elif [[ $reference_genome == 'GRCh38' ]]; then
 
     
     if [[ ! -s $lifted_panel.csi ]]; then
-        ./liftover_panel.sh $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
+        "$script_dir/liftover_panel.sh" $native_panel $lifted_panel $ref_fasta $GRCh38_to_t2t_chain - $source_fasta
     fi
 else
     print "Must be either T2T or GRCh38"
