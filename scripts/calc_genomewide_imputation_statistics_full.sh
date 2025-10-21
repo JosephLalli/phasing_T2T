@@ -40,7 +40,7 @@ wait
 
 for dataset in SGDP pangenome
 do 
-    for genomic_variants in T2T T2T_snps GRCh38 GRCh38_snps 
+    for genomic_variants in T2T T2T_snps T2T_no_singletons GRCh38 GRCh38_snps 
     do 
         for run in native_panel "native_panel.common_variants" lifted_panel "lifted_panel.common_variants"
         do 
@@ -108,7 +108,7 @@ done
 
 for dataset in SGDP pangenome
 do 
-    for genomic_variants in T2T T2T_snps GRCh38 GRCh38_snps 
+    for genomic_variants in T2T T2T_snps T2T_no_singletons GRCh38 GRCh38_snps 
     do 
         for run in native_panel "native_panel.common_variants" lifted_panel "lifted_panel.common_variants"
         do 
