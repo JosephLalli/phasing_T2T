@@ -1,0 +1,12 @@
+Metric,Value,Interpretation
+SNPs: Mean Δr² (MAF bins),-0.002182,Small negative effect (mean driven by singleton bin)
+SNPs: Median Δr² (MAF bins),-0.000011,Near zero
+Indels: Mean Δr² (MAF bins),-0.002371,Small negative effect (mean driven by lowest MAF bin)
+Indels: Median Δr² (MAF bins),-0.000044,Near zero
+SNPs: Median Δr² (per sample),-0.000696,Negative but negligible
+Indels: Median Δr² (per sample),-0.000170,Negative but negligible
+All variants: Median Δr² (per sample),-0.000608,Negative but negligible
+"MAF bins with harm (SNPs, Δr² < -0.01)",1/21 (4.8%),Minimal harm
+"MAF bins with harm (Indels, Δr² < -0.01)",1/21 (4.8%),Minimal harm
+Samples with harm (Δr² < -0.01),0/768 (0.0%),No harm
+Samples with |Δr²| < 0.001,689/768 (89.7%),Negligible effect

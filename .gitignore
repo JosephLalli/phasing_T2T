@@ -5,6 +5,7 @@
 # Claude-related files
 *claude*
 *CLAUDE*
+AGENTS.md
 DIRECTORY_LOGIC.md
 
 # Python cache
@@ -34,21 +35,92 @@ t2t_native_scaled_maps.tar.gz
 resources/hgsvc3-*
 resources/hprc-v1.1-*
 
-## Intermediate data - too large (>50MB parquets)
+## Intermediate data - all regenerable from pipeline + notebooks
 **/all_variant_data.parquet
 **/bcftools_query_variant_data.parquet
-intermediate_data_whole_genome/rolling_stats_*parquet
-intermediate_data_whole_genome/variants.parquet
-intermediate_data_whole_genome/MAF_performance_variants.parquet
-intermediate_data_whole_genome/block_length.parquet
-intermediate_data_whole_genome/variants.nozeros.parquet
+intermediate_data_whole_genome/
+
+# Temporary and log files
+**true_false**
+**log
+intermediate_data_test/
+imputation_statistics_test/
+*tmp*
+
+# Small, unnecessary files that can be regenerated
+*ancestry_specific*
+*txt.gz
+*txt.gz.tbi
+*syntenic-nonsyntenic*
+*/imputation*/*bcf*
+*imputation*test*/*
 
 # Keep notebooks in notebooks_fullgenome (unignore directory and .ipynb files)
 !notebooks_fullgenome/
 !notebooks_fullgenome/*.ipynb
 
-# I want to hang on to the claude refactored fig 6 scripts, but I want to upload just the original script for now.
-scripts/*R
-!scripts/Figure_6_script.R
-
 !README.md
+
+# ── Root-level scratch/debug files ──
+all_files.txt
+all_imputation_stats_files_to_check.txt
+all_input_description_files.txt
+error_reports.txt
+found_inputs.txt
+found_reports.txt
+missing_inputs.txt
+missing_reports.txt
+out.txt
+output.png
+liftover_indels_r2.pdf
+per_sample_missing_candidates.tsv
+pangenie_v2.*.bcf
+pangenie_v2.*.bcf.csi
+
+# ── Virtual environments ──
+.venv*/
+
+# ── Non-core script subdirectories ──
+scripts/deprecated/
+scripts/investigation/
+scripts/utility/
+
+# ── Entire liftover_indels_review/ directory ──
+scripts/liftover_indels_review/
+
+# ── Superseded liftover scripts ──
+scripts/liftover_panel_JLL.sh
+
+# ── Duplicate/backup/WIP notebooks ──
+notebooks/calc_per_variant_figures_for_paper copy.ipynb
+notebooks/calc_per_variant_figures_for_paper copy.BACKUP.ipynb
+notebooks/make_plots copy.ipynb
+notebooks/_build_refactored_*.py
+notebooks/REFACTORING_*.md
+notebooks/notebooks_whole_genome/calc_figures_for_paper.ipynb
+notebooks/notebooks_whole_genome/calc_per_variant_figures_for_paper_to_be_reorganized.ipynb
+notebooks/**/*refactored*.ipynb
+notebooks/**/*to_be_refactored*.ipynb
+
+# ── Notebook-generated figure outputs (regenerable) ──
+notebooks/notebooks_whole_genome/figures/
+notebooks/notebooks_whole_genome/Supp3.png
+
+# ── Experimental figure6 artifacts ──
+scripts/figure6/Figure_6_script_refactored.R
+scripts/figure6/Figure_6_script_graceful_exit.R
+scripts/figure6/*CLAUDE*
+scripts/figure6/*claude*
+scripts/figure6/AGENTS.md
+scripts/figure6/__pycache__/
+scripts/figure6/.claude/
+
+# ── R session artifacts ──
+scripts/.RData
+scripts/.Rhistory
+
+# ── Data directories (backups) ──
+intermediate_data_whole_genome_backup/
+intermediate_data_test/
+
+# ── Stray intermediate data files ──

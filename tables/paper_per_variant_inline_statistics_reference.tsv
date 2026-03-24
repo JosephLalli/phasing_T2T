@@ -1,0 +1,20 @@
+Section	Statistic_Description	Value_CHM13	Value_GRCh38	Paper_Location	Source_Notebook	Notes
+Variant filtering	GATK VQSLOD filter additional loss (CHM13)	30671243.0		Results: variant QC paragraph	calc_per_variant_figures_for_paper	
+Variant filtering	Singleton variants gained (CHM13)	0.0		Results: variant QC paragraph	calc_per_variant_figures_for_paper	
+Variant filtering	CHM13-unique region % removed by VQSLOD (F7)	91.8235290762776		Results: variant QC paragraph	calc_per_variant_figures_for_paper	From bcftools_query nonsyntenic subset; may differ from make_plots figure source
+Variant filtering	CHM13-unique region % retained in panel (F8)	4.652318478820865		Results: variant QC paragraph	calc_per_variant_figures_for_paper	From bcftools_query nonsyntenic subset; may differ from make_plots figure source
+Concordance	Overall concordance % (CHM13v2.0) (C1)	99.0817036495937		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Overall concordance % (GRCh38) (C2)		98.8910067554618	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Doubleton SNP discordance % GRCh38 (C3)		0.4825276248022302	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	Doubleton bin = 0.00021-0.00042
+Concordance	Doubleton SNP discordance % CHM13 (C4)	0.40640043233762474		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	Doubleton bin = 0.00021-0.00042
+Concordance	Singleton SNP discordance % CHM13 (C5)	0.8796982921701996		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Shared-region SNP discordance % CHM13 (C6)	0.25436231387792224		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Shared-region SNP discordance % GRCh38 (C7)		0.42248975698928276	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Shared-region indel discordance % CHM13 (C8)	4.003127367633579		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Concordance	Shared-region indel discordance % GRCh38 (C9)		4.437390397153575	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
+Rephase SER	Singleton SER (CHM13v2.0) (R1)	8.27393547908082		Results: singleton SER paragraph	calc_per_variant_figures_for_paper	
+Rephase SER	Singleton SER (GRCh38) (R2)		11.645089351135173	Results: singleton SER paragraph	calc_per_variant_figures_for_paper	
+Singleton SER by type	Singleton SER SNP stat. phased (CHM13v2.0) (A5)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
+Singleton SER by type	Singleton SER Indel stat. phased (CHM13v2.0) (A6)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
+Singleton SER by type	Singleton SER SNP stat. phased (GRCh38) (A5)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
+Singleton SER by type	Singleton SER Indel stat. phased (GRCh38) (A6)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	

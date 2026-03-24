@@ -6,13 +6,139 @@ script_dir="$(dirname "$script_path")"
 basedir="$(dirname "$script_dir")"
 source $script_dir/parameters.sh
 
+# Track background process failures
+trap 'jobs -p | xargs -r kill 2>/dev/null; exit 1' ERR EXIT
+
 test_run=false
+force_imputation=false
 
 
-GRCh38_run_suffix=$1
-CHM13v2_run_suffix=$2
-num_threads=$3
-test_run=$4
+file_mtime_epoch() {
+    # GNU stat: -c %Y, BSD/macOS stat: -f %m
+    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
+}
+
+
+should_run() {
+    local target=$1
+    # If file doesn't exist or is empty, needs to run
+    if [[ ! -s "$target" || $force_imputation == true ]]; then
+        echo "$target is missing and will be regenerated."
+        return 0
+    fi
+    # File exists and is valid
+    return 1
+}
+
+max_age_hours=72
+should_run() {
+    local target=$1
+    if [[ $force_imputation == true ]]; then
+        # echo "$target will be regenerated (force mode)."
+        return 0
+    fi
+    # If file doesn't exist or is empty, needs to run
+    if [[ ! -s "$target" ]]; then
+        # echo "$target is missing and will be regenerated."
+        return 0
+    fi
+    # If file exists but is zero-sized, needs to run
+    if [[ -f "$target" && ! -s "$target" ]]; then
+        # echo "$target is missing and will be regenerated."
+        return 0
+    fi
+    # If target is an vcf/bcf (or index of one), check the underlying VCF/BCF
+    if [[ "$target" == *.vcf* || "$target" == *.bcf* ]]; then
+        target="${target%.csi}"
+        target="${target%.tbi}"
+        if [[ ! -s "$target" ]]; then
+            echo "ERROR: Expected output $target was not created or is empty." >&2
+            return 1
+        fi
+        if [[ "$target" == *.vcf || "$target" == *.vcf.gz || "$target" == *.bcf ]]; then
+            local variant_count
+            variant_count=$(bcftools index -n "$target" 2>/dev/null) || { echo "$target is missing and will be regenerated."; return 0; }
+            if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
+                # echo "$target is missing and will be regenerated."
+                return 0
+            fi
+        fi
+    fi
+    echo "Checking age of $target with max_age_hours=$max_age_hours..."
+    if [[ -z ${max_age_hours:-} ]]; then
+        echo "$target has no age limit set; skipping age check."
+    fi
+    if [[ ! -z ${max_age_hours:-} ]]; then    ## Finally, if the target is older than max_age_hours, return 0 to ensure regeneration
+        local now mtime age_seconds max_age_seconds
+        now=$(date +%s)
+        mtime=$(file_mtime_epoch "$target") || { echo "$target mtime unavailable; will be regenerated."; return 0; }
+
+        age_seconds=$(( now - mtime ))
+        max_age_seconds=$(( max_age_hours * 3600 ))
+
+        if (( age_seconds > max_age_seconds )); then
+            echo "$target is older than ${max_age_hours}h and will be regenerated."
+            return 0
+        fi
+    fi
+
+    # File exists and is valid
+    return 1
+}
+
+
+# Global array to track expanded commands for background jobs
+declare -A expanded_job_cmds
+
+log_expanded_command() {
+    local cmd="$*"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting background job: $cmd" >&2
+    eval "$cmd" &
+    local pid=$!
+    expanded_job_cmds[$pid]="$cmd"
+    return 0
+}
+
+wait_and_check() {
+    local failed=0
+    local -a failed_pids=()
+
+    for pid in $(jobs -p); do
+        if ! wait "$pid"; then
+            ((failed++))
+            failed_pids+=("$pid")
+        fi
+    done
+
+    if (( failed > 0 )); then
+        echo "ERROR: $failed background job(s) failed:" >&2
+        for pid in "${failed_pids[@]}"; do
+            if [[ -n "${expanded_job_cmds[$pid]:-}" ]]; then
+                echo "  [$pid] ${expanded_job_cmds[$pid]}" >&2
+                unset expanded_job_cmds[$pid]
+            else
+                # Fallback if we don't have the expanded command
+                local ps_cmd
+                ps_cmd=$(ps -o command= -p "$pid" 2>/dev/null || true)
+                echo "  [$pid] ${ps_cmd:-<command unavailable>}" >&2
+            fi
+        done
+        return 1
+    fi
+    
+    # Clean up successful job entries
+    for pid in "${!expanded_job_cmds[@]}"; do
+        if ! kill -0 "$pid" 2>/dev/null; then
+            unset expanded_job_cmds[$pid]
+        fi
+    done
+    return 0
+}
+
+GRCh38_run_suffix="${1:-true_false_0.05_false_1_GRCh38}"
+CHM13v2_run_suffix="${2:-true_false_0.05_false_1_CHM13v2.0}"
+num_threads="${3:-16}"
+test_run="${4:-false}"
 
 subset_folder=$basedir/resources/sample_subsets
 
@@ -24,102 +150,112 @@ mkdir -p $outfolder
 mkdir -p $logfolder
 
 
-for alt_genome in GRCh38 CHM13v2.0; do
-    if [[ ! -s $outfolder/${alt_genome}_syntenic-nonsyntenic_overall.tsv ]]; then
-        if [[ $alt_genome == 'GRCh38' ]]; then
+for genome in GRCh38 CHM13v2.0; do
+    if [[ ! -s "$outfolder/${genome}_syntenic-nonsyntenic_overall.tsv" || \
+          ! -s "$outfolder/${genome}_syntenic-nonsyntenic_vartype.tsv" ]]; then
+        if [[ $genome == 'GRCh38' ]]; then
             run_suffix=$GRCh38_run_suffix
         else
             run_suffix=$CHM13v2_run_suffix
         fi
-        echo "Identifying binned syntenic/nonsyntenic variants for $alt_genome"
-        $script_dir/create_syn_nonsyn_bins.sh $alt_genome $run_suffix $outfolder $test_run
+        echo "Identifying binned syntenic/nonsyntenic variants for $genome"
+        echo """
+            Did not find $outfolder/${genome}_syntenic-nonsyntenic_overall.tsv and/or $outfolder/${genome}_syntenic-nonsyntenic_vartype.tsv
+            Need to run:
+            $script_dir/create_syn_nonsyn_bins.sh $genome $run_suffix $outfolder $test_run
+        """
+        exit 1
     fi
 done
 
-wait
+wait_and_check || exit 1
 
 for dataset in SGDP pangenome
 do 
-    for genomic_variants in T2T T2T_snps T2T_no_singletons GRCh38 GRCh38_snps 
+    for genomic_variants in T2T GRCh38 T2T_snps T2T_no_singletons  GRCh38 GRCh38_snps GRCh38_no_singletons #T2T_no_singletons_snps GRCh38_no_singletons_snps T2T_no_coinflips GRCh38_no_coinflips
     do 
         for run in native_panel "native_panel.common_variants" lifted_panel "lifted_panel.common_variants"
-        do 
+        do
             if [[ $genomic_variants != *GRCh38* ]]; then
                 genome="CHM13v2.0"
-                alt_genome='T2T'
+                genome='T2T'
                 suffix=$CHM13v2_run_suffix
             else
                 genome=GRCh38
-                alt_genome=GRCh38
+                genome=GRCh38
                 suffix=$CHM13v2_run_suffix
             fi
-            
 
             echo "$outfolder/$genomic_variants.$dataset.$run.txt"
-            if [[ ! -s $outfolder/$genomic_variants.$dataset.$run.txt ]]; then
-                cat $basedir/working_directories/*_working_${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort \
-                    > $outfolder/$genomic_variants.$dataset.$run.txt
+            rm -f $outfolder/$genomic_variants.$dataset.$run.txt 
+
+            cat $basedir/working_directories/*_working_${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort > $outfolder/$genomic_variants.$dataset.$run.txt
+            if [[ ! $(wc -l < $outfolder/$genomic_variants.$dataset.$run.txt) == "25" ]]; then
+                echo "WARNING: Less than 25 files found for $outfolder/$genomic_variants.$dataset.$run.txt" >&2
+                continue
             fi
 
-            syntenic_nonsyntenic_variant_grouping=$outfolder/${genome}_syntenic-nonsyntenic_overall.tsv
-            syntenic_nonsyntenic_vartype_grouping=$outfolder/${genome}_syntenic-nonsyntenic_vartype.tsv
 
-            if [[ ! -s $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_r2_bins.rsquare.grp.txt.gz ]]; then
+            run_prefix=$outfolder/$genomic_variants.$dataset.$run
+            log_prefix=$outfolder/logs/$genomic_variants.$dataset.$run
+            if should_run "$run_prefix.glimpse2_concordance_r2_bins.rsquare.grp.txt.gz"; then
                 $basedir/bin/GLIMPSE2_concordance \
                     --gt-val \
                     --bins $r2_bins \
                     --threads $num_threads \
                     --af-tag MAF \
-                    --input $outfolder/$genomic_variants.$dataset.$run.txt \
-                    --log $logfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_r2_bins.log \
+                    --input $run_prefix.txt \
+                    --log $log_prefix.glimpse2_concordance_r2_bins.log \
                     --out-r2-per-site \
                     --out-rej-sites	\
                     --out-disc-sites \
-                    --output $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_r2_bins &
+                    --output $run_prefix.glimpse2_concordance_r2_bins &
             fi
-            if [[ ! -s $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_overall_bins.rsquare.grp.txt.gz ]]; then
-               $basedir/bin/GLIMPSE2_concordance \
-                    --gt-val \
-                    --groups $syntenic_nonsyntenic_variant_grouping \
-                    --threads $num_threads \
-                    --af-tag MAF \
-                    --input $outfolder/$genomic_variants.$dataset.$run.txt \
-                    --log $logfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_overall_bins.log \
-                    --output $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_overall_bins &
-            fi
-            if [[ ! -s $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_vartype_bins.rsquare.grp.txt.gz ]]; then
+            if should_run "$run_prefix.glimpse2_concordance_syntenic_maf_overall_bins.rsquare.grp.txt.gz"; then
                 $basedir/bin/GLIMPSE2_concordance \
                     --gt-val \
-                    --groups $syntenic_nonsyntenic_vartype_grouping \
+                    --groups $outfolder/${genome}_syntenic-nonsyntenic_overall.tsv \
                     --threads $num_threads \
                     --af-tag MAF \
-                    --input $outfolder/$genomic_variants.$dataset.$run.txt \
-                    --log $logfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_vartype_bins.log \
-                    --output $outfolder/${genomic_variants}.$dataset.$run.glimpse2_concordance_syntenic_maf_vartype_bins &
+                    --input $run_prefix.txt \
+                    --log $log_prefix.glimpse2_concordance_syntenic_maf_overall_bins.log \
+                    --output $run_prefix.glimpse2_concordance_syntenic_maf_overall_bins &
+            fi
+            if should_run "$run_prefix.glimpse2_concordance_syntenic_maf_vartype_bins.rsquare.grp.txt.gz"; then
+                $basedir/bin/GLIMPSE2_concordance \
+                    --gt-val \
+                    --groups $outfolder/${genome}_syntenic-nonsyntenic_vartype.tsv \
+                    --threads $num_threads \
+                    --af-tag MAF \
+                    --input $run_prefix.txt \
+                    --log $log_prefix.glimpse2_concordance_syntenic_maf_vartype_bins.log \
+                    --output $run_prefix.glimpse2_concordance_syntenic_maf_vartype_bins &
             fi
         done
-        wait
     done
+    wait_and_check || exit 1
 done
 
 ### Per-ancestry concordance runs take far less time than the whole sample concordance runs.
 ### So we'll run the whole sample commands 4 at a time
 ### But run the per-ancestry concordance runs 16 at a time.
 
-for dataset in SGDP pangenome
+for dataset in SGDP
 do 
-    for genomic_variants in T2T T2T_snps T2T_no_singletons GRCh38 GRCh38_snps 
-    do 
+    for genomic_variants in T2T GRCh38 #T2T_snps T2T_no_singletons T2T_no_singletons_snps GRCh38 GRCh38_snps GRCh38_no_singletons GRCh38_no_singletons_snps #T2T_no_coinflips GRCh38_no_coinflips
+    do
         for run in native_panel "native_panel.common_variants" lifted_panel "lifted_panel.common_variants"
-        do 
-            if [[ $genomic_variants != *GRCh38* ]]; then
+        do
+            input_location="$outfolder/$genomic_variants.$dataset.$run.txt"
+            run_prefix="$outfolder/ancestry_specific/$genomic_variants.$dataset.$run"
+            log_prefix="$outfolder/ancestry_specific/logs/$genomic_variants.$dataset.$run"
+
+            if [[ $genome != *GRCh38* ]]; then
                 genome="CHM13v2.0"
-                alt_genome='T2T'
                 suffix=$CHM13v2_run_suffix
             else
                 genome=GRCh38
-                alt_genome=GRCh38
-                suffix=$CHM13v2_run_suffix
+                suffix=$CHM13v2_run_suffix # keep both genomes in same folder for comparison's sake
             fi
 
             if [[ $dataset == *SGDP* ]]
@@ -127,21 +263,23 @@ do
                 for ancestry_samples in $basedir/resources/sample_subsets/CHM13_SGDP*_samples.txt
                 do
                     ancestry=$(echo $(basename $ancestry_samples) | cut -f 3 -d '_')
-                    mkdir -p $outfolder/ancestry_specific
-                    if [[ ! -s $outfolder/ancestry_specific/${genomic_variants}.$dataset.$run.$ancestry.glimpse2_concordance_r2_bins.rsquare.grp.txt.gz ]]; then
+                    if should_run "$run_prefix.$ancestry.glimpse2_concordance_r2_bins.rsquare.grp.txt.gz"; then
                         $basedir/bin/GLIMPSE2_concordance \
                             --samples $ancestry_samples \
                             --gt-val \
                             --bins $r2_bins \
                             --threads $num_threads \
                             --af-tag MAF \
-                            --input $outfolder/$genomic_variants.$dataset.$run.txt \
-                            --log $logfolder/${genomic_variants}.$dataset.$run.$ancestry.glimpse2_concordance_r2_bins.log \
-                            --output $outfolder/ancestry_specific/${genomic_variants}.$dataset.$run.$ancestry.glimpse2_concordance_r2_bins &
+                            --input $input_location \
+                            --log $log_prefix.$ancestry.glimpse2_concordance_r2_bins.log \
+                            --output $run_prefix.$ancestry.glimpse2_concordance_r2_bins &
                     fi
                 done
             fi
         done
+    wait_and_check || exit 1
     done
-    wait
 done
+
+# Disable trap on successful completion
+trap - ERR EXIT
