@@ -251,10 +251,10 @@ Three jupyter notebooks were used to produce the final data reported in the pape
 
 ###  Run the Figure 6 script
 
-Run scripts/figure6/Figure_6_script_final.R, which produces the karyotype plots used in Figure 6.
+Run scripts/figure6/Figure_6_script.R, which produces the karyotype plots used in Figure 6.
 
 ```bash
-Rscript scripts/figure6/Figure_6_script_final.R
+Rscript scripts/figure6/Figure_6_script.R
 ```
 
 
