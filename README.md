@@ -340,3 +340,120 @@ Using the 39 1KGP samples present in the draft pangenome, we can use the HPRC's 
 - Evaluate switch error rate when phasing a small number of samples (aka the 39 HPRC samples) using 2502 unrelated samples from the pedigree-informed 1KGP phased panel dataset as a reference (with the HPRC samples and parents excluded, of course)
     - Measures accuracy in most realistic use case
   
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7612953.svg)](https://doi.org/10.5281/zenodo.7612953)
+
+# Computationally phased T2T 1KGP panel
+
+This repository contains the code used to build and evaluate the CHM13v2.0-
+aligned 1000 Genomes Project phased panel described in Lalli et al. 2025. The
+repository is intended to be:
+
+- cloneable
+- container-runnable
+- reproducible at the software level
+
+The biological inputs are not fully self-contained in git. Large external data
+files are required for both the smoke test and the full reproduction workflow.
+
+## Published outputs
+
+- Phased panel release:
+  https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/
+- CHM13 recombination maps:
+  https://doi.org/10.5281/zenodo.17178670
+- Summary parquet files and archived paper resources:
+  https://zenodo.org/record/7612953
+- Preprint:
+  https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1
+
+## What is in git
+
+- `bin/`: pinned static binaries used by the shell pipeline
+- `scripts/`: phasing, imputation, aggregation, and figure utilities
+- `resources/`: small tracked annotations, recombination maps, pedigrees, and sample lists
+- `notebooks/`: figure and paper-summary notebooks
+- `figures/` and `tables/`: generated publication artifacts kept for reference
+- `Dockerfile`: reproducible runtime environment
+
+## What is not in git
+
+The following are required at runtime but intentionally not tracked:
+
+- CHM13 and GRCh38 reference FASTA files plus indexes
+- unphased 1KGP callsets
+- phased GRCh38 reference panels
+- SGDP truth data
+- HPRC and HGSVC3 pangenome VCFs plus indexes
+
+See `resources/README.md` for the canonical runtime paths and source URLs.
+
+## Supported workflows
+
+### 1. Docker smoke test
+
+This is the recommended first run. It validates the containerized environment
+and the repo entrypoints on the `chr22_test` and `chr15_test` regions.
+
+1. Clone the repository.
+2. Build the image.
+3. Copy `docker.env.example` to `docker.env` and edit the host paths.
+4. Run the smoke test.
+
+```bash
+git clone https://github.com/JosephLalli/phasing_T2T.git
+cd phasing_T2T
+
+docker build -t phasing-t2t .
+cp docker.env.example docker.env
+
+./scripts/run_docker_smoke_test.sh docker.env
+```
+
+Notes:
+
+- The smoke test is not self-contained; it still requires external biological inputs.
+- Notebook execution is off by default. Set `RUN_NOTEBOOKS=1` in `docker.env` if you want the notebooks executed in the container.
+- Outputs are written to `OUTPUT_DIR`, which defaults to `./docker_smoke_output`.
+
+### 2. Full reproduction
+
+For the full publication workflow, run the shell pipeline on the desired
+chromosomes or regions, then aggregate the outputs and execute the notebooks.
+
+```bash
+# Example test-region runs
+./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 test_CHM13 CHM13v2.0
+./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 test_GRCh38 GRCh38
+
+# Aggregate genome-wide imputation outputs
+./scripts/calc_genomewide_imputation_statistics_full.sh test_GRCh38 test_CHM13 12 true
+
+# Build summary parquet files
+python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py \
+    --CHM13_run_suffix test_CHM13 \
+    --GRCh38_run_suffix test_GRCh38
+```
+
+The main output locations are:
+
+- `phased_panels/`
+- `SHAPEIT5_switch_output/`
+- `imputation_statistics/`
+- `intermediate_data/`
+
+## Notebook and figure generation
+
+- `notebooks/calc_figures_for_paper.ipynb`
+  Computes paper-level summary values from the aggregated parquet files.
+- `notebooks/calc_per_variant_figures_for_paper.ipynb`
+  Performs heavier per-variant analyses.
+- `notebooks/make_plots.ipynb`
+  Produces the main and supplemental figures, except Figure 6.
+- `scripts/figure6/Figure_6_script.R`
+  Generates the Figure 6 karyotype visualizations.
+
+## Publication notes
+
+- The publication branch no longer tracks machine-specific symlinks under `resources/`.
+- The Docker environment is the source of truth for software reproducibility.
+- If long-term bitwise reproducibility matters, archive the exact external input files and checksums alongside the repository release.

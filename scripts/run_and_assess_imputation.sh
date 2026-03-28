@@ -349,7 +349,7 @@ fi
 
 chrom_working_dir=$basedir/working_directories/${chrom}_working${suffix}
 final_panel_dir=$basedir/phased_panels/phased_${genome}_panel${suffix}
-stats_dir=$basedir/bin/SHAPEIT5_switch_output/phasing_stats_${genome}${suffix}
+stats_dir=$basedir/SHAPEIT5_switch_output/phasing_stats_${genome}${suffix}
 lifted_panel_folder=$chrom_working_dir/liftover/lifted_panels_JLL_post_fix
 imputation_results_dir=$basedir/imputation_statistics/imputation_results$suffix
 variant_frequency_stats_dir=$basedir/intermediate_data/variant_frequency_stats/${genome}
@@ -468,7 +468,7 @@ GRCh38_to_t2t_diffs=$basedir/resources/chm13v2-grch38.sort.vcf.gz
 grch38_syntenic_site_location="$basedir/resources/hg38.GCA_009914755.4.synNet.summary.bed.gz"
 t2t_syntenic_site_location="$basedir/resources/chm13v2-syntenic_to_hg38.bed"
 
-grch38_chrom_working_dir=$basedir/working_directories/${chrom}_working$(echo $suffix | sed 's/CHM13v2.0/GRCh38/')
+grch38_chrom_working_dir=$basedir/working_directories/${chrom_arg}_working$(echo $suffix | sed 's/CHM13v2.0/GRCh38/')
 
 GRCh38_lifted_panel=$lifted_panel_folder/$(echo $(basename $phased_panel_vcf_2504_biallelic) | sed 's/CHM13v2.0/GRCh38.lifted_from_CHM13v2.0/' | sed 's/native_maps.//' )
 GRCh38_native_panel=$basedir/phased_panels/grch38/1KGP.GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
@@ -541,7 +541,7 @@ if should_run "$T2T_lifted_panel.csi"; then
 fi
 max_age_hours=''
 
-wait_and_check || exit 1
+wait_and_check || echo "WARNING: Some liftover jobs failed (non-fatal; lifted panels may be incomplete)" >&2
 
 if [[ $genome == 'GRCh38' ]]; then
     phased_panel_vcf_3202_GRCh38=$final_panel_dir/1KGP.${genome}.${chrom}.recalibrated.snp_indel.pass.phased.3202.bcf

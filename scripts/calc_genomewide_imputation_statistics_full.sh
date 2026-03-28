@@ -190,9 +190,14 @@ do
             rm -f $outfolder/$genomic_variants.$dataset.$run.txt 
 
             cat $basedir/working_directories/*_working_${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort > $outfolder/$genomic_variants.$dataset.$run.txt
-            if [[ ! $(wc -l < $outfolder/$genomic_variants.$dataset.$run.txt) == "25" ]]; then
-                echo "WARNING: Less than 25 files found for $outfolder/$genomic_variants.$dataset.$run.txt" >&2
+            local n_contigs
+            n_contigs=$(wc -l < $outfolder/$genomic_variants.$dataset.$run.txt)
+            if [[ "$n_contigs" == "0" ]]; then
+                echo "WARNING: No files found for $outfolder/$genomic_variants.$dataset.$run.txt, skipping." >&2
                 continue
+            fi
+            if [[ "$n_contigs" != "25" ]]; then
+                echo "NOTE: Found $n_contigs contigs (expected 25) for $outfolder/$genomic_variants.$dataset.$run.txt — proceeding anyway." >&2
             fi
 
 

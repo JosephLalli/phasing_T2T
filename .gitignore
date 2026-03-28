@@ -8,6 +8,14 @@
 AGENTS.md
 DIRECTORY_LOGIC.md
 
+# Publication prep / local release scratch
+CHANGES.md
+patches/
+docker_test_output/
+docker_smoke_output/
+scripts/docker_run_chr22_test.sh
+docker.env
+
 # Python cache
 __pycache__/
 

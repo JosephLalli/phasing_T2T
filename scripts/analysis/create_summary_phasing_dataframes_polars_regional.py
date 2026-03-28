@@ -47,9 +47,9 @@ elif os.getcwd().split('/')[-1] == 'scripts':
 # -------- Define folder and file locations --------
 # File locations
 summary_statistics_folder = 'intermediate_data'
-t2t_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats{t2t_suffix}_CHM13v2.0'
-grch_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats{grch38_suffix}_GRCh38'
-imputation_statistics_folder = f'imputation_statistics/imputation_results{t2t_suffix}_CHM13v2.0'
+t2t_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats_CHM13v2.0{t2t_suffix}'
+grch_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats_GRCh38{grch38_suffix}'
+imputation_statistics_folder = f'imputation_statistics/imputation_results{t2t_suffix}'
 
 regional_bedfiles = {'CHM13v2.0': {'in_STRs':   'resources/GIABv3.6_bedfiles/CHM13_AllTandemRepeats.bed.gz',
                                    'in_segdups':'resources/GIABv3.6_bedfiles/CHM13_segdups.bed.gz',
@@ -89,8 +89,8 @@ contigs = ['chr' + str(x) for x in list(range(1,23))] + ['PAR1', 'chrX', 'PAR2']
 catChrom = pl.Enum(contigs + ['chrY'])
 
 if test_run:
-    # Test contig set
-    contigs = ['chr15','chr22']
+    # Test contig set — chr15 and chr22 test regions
+    contigs = ['chr15', 'chr22']
 
 catMethod = pl.Enum(methods)
 catGroundTruth = pl.Enum(ground_truths)
@@ -209,10 +209,10 @@ def group_phasing_statistics(df, columns_to_groupby):
     if 'N50' in df_cols:
         means = df.group_by(columns_to_groupby).mean()
         N50_L50 = means.select(columns_to_groupby+['N50','L50'])
-        df = df.group_by(columns_to_groupby).sum()
+        df = df.group_by(columns_to_groupby).agg(cs.numeric().sum())
         df = df.drop(['N50','L50']).join(N50_L50, on=columns_to_groupby)
     else:
-        df = df.group_by(columns_to_groupby).sum()
+        df = df.group_by(columns_to_groupby).agg(cs.numeric().sum())
 
     expressions = dict()
     if 'n_gt_errors' in df_cols:
@@ -231,8 +231,10 @@ def group_phasing_statistics(df, columns_to_groupby):
     return df.with_columns(**expressions)
 
 def add_bedfile_column(variant_df: pl.DataFrame, bedfile: str, name: str = 'in_STR', sorted: bool = False) -> pl.DataFrame:
-    bed_df = pl.read_csv(bedfile, separator='\t', columns=['chrom','start','end'], 
-                         schema_overrides={'chrom': catChrom, 'start': pl.UInt32, 'end': pl.UInt32}
+    bed_df = pl.read_csv(bedfile, separator='\t', has_header=False,
+                         new_columns=['chrom','start','end'],
+                         schema_overrides={'chrom': catChrom, 'start': pl.UInt32, 'end': pl.UInt32},
+                         columns=[0, 1, 2],
                          ).unique().sort(by=["chrom", "start"])
     if not sorted:
         variant_df = variant_df.sort(by=["chrom", "position"])
@@ -266,7 +268,7 @@ def sum_an_acs(files):
                                         schema_overrides={'variant_id':pl.String(),
                                                             'contextual_MAC':pl.UInt16(),
                                                             'contextual_AN':pl.UInt16()}))
-    anac = pl.concat(anac).group_by('variant_id').sum().with_columns(contextual_MAC=pl.col('contextual_MAC').cast(pl.UInt16()),
+    anac = pl.concat(anac).group_by('variant_id').agg(cs.numeric().sum()).with_columns(contextual_MAC=pl.col('contextual_MAC').cast(pl.UInt16()),
                                                                      contextual_AN=pl.col('contextual_AN').cast(pl.UInt16()))
     return anac
 
@@ -277,9 +279,16 @@ variant_frequency_data=list()
 print(f'Gathering alt frequencies for each phased panel, dropping trio-private singletons ({print_runtime()})')
 for genome, run_suffix in [('GRCh38', grch38_suffix),
                            ('CHM13v2.0', t2t_suffix)]:
+    bash_script_output_dir = f"{summary_statistics_folder}/variant_frequency_stats/{genome}"
+    if not os.path.isdir(bash_script_output_dir):
+        print(f'Skipping {genome}: directory {bash_script_output_dir} does not exist')
+        continue
     for contig in contigs:
-        bash_script_output_dir = f"{summary_statistics_folder}/variant_frequency_stats/{genome}"
-        with gzip.open(f'{bash_script_output_dir}/{contig}_private_singletons.txt.gz', 'rt') as f:
+        singleton_file = f'{bash_script_output_dir}/{contig}_private_singletons.txt.gz'
+        if not os.path.exists(singleton_file):
+            print(f'Skipping {genome}/{contig}: {singleton_file} does not exist')
+            continue
+        with gzip.open(singleton_file, 'rt') as f:
             private_variants = {x.strip() for x in f}
 
         an_acs = ((['phased_with_parents_and_pedigree'], f"{bash_script_output_dir}/{contig}_3202_AC_AN.tsv.gz"),
@@ -410,6 +419,9 @@ for contig in contigs:
     per_contig_phasing_stats_datasets = {stat: list() for stat in schemas.keys()}
     for statistic, schema in schemas.items():
         for genome, phasing_stats_folder in [('GRCh38',grch_phasing_stats_folder),('CHM13v2.0', t2t_phasing_stats_folder)]:
+            if not os.path.isdir(phasing_stats_folder):
+                print(f'Skipping {genome}: phasing stats folder {phasing_stats_folder} does not exist')
+                continue
             for verification_sample in analysis_suffixes.keys():
                 for phasing_method, prefix in analysis_suffixes[verification_sample].items():
                     if genome == 'GRCh38' and 'noparents' in prefix:
@@ -464,15 +476,21 @@ for contig in contigs:
                                                                                .then(pl.lit(float("nan")))
                                                                                .otherwise(pl.col('n_gt_errors')))
                     per_contig_phasing_stats_datasets[statistic].append(contig_file)
+        if len(per_contig_phasing_stats_datasets[statistic]) == 0:
+            print(f'WARNING: No data found for {statistic} in {contig}, skipping.')
+            continue
         per_contig_phasing_stats_datasets[statistic] = pl.concat(per_contig_phasing_stats_datasets[statistic])
-        
+
         # I want to merge these two per-variant datasets together before appending to the study-wide dataframes
         if statistic not in ('variant_switch','variant_genotype_concordance'):
             total_phasing_stats_datasets[statistic].append(per_contig_phasing_stats_datasets[statistic])
-    
+
     # I do that merging here
-    merged_variant_switch_and_genotype_data = (per_contig_phasing_stats_datasets['variant_switch'].join(per_contig_phasing_stats_datasets['variant_genotype_concordance'], 
-                                                                                                        on=['variant_id','position','chrom','ground_truth_data_source','genome','method_of_phasing'], 
+    if 'variant_switch' not in per_contig_phasing_stats_datasets or not isinstance(per_contig_phasing_stats_datasets['variant_switch'], pl.LazyFrame):
+        print(f'WARNING: No variant_switch data for {contig}, skipping merge.')
+        continue
+    merged_variant_switch_and_genotype_data = (per_contig_phasing_stats_datasets['variant_switch'].join(per_contig_phasing_stats_datasets['variant_genotype_concordance'],
+                                                                                                        on=['variant_id','position','chrom','ground_truth_data_source','genome','method_of_phasing'],
                                                                                                         how='left', validate='1:1').drop(['gt_error_rate']))
     total_phasing_stats_datasets['variant_switch'].append(merged_variant_switch_and_genotype_data)
 
@@ -488,6 +506,9 @@ del total_phasing_stats_datasets['variant_genotype_concordance']
 # For the other datasets, save to disk
 for stat, datasets in total_phasing_stats_datasets.items():
     print (f'Collecting statistics on {stat}... ({print_runtime()})')
+    if not datasets:
+        print(f'WARNING: No data for {stat}, skipping.')
+        continue
     dataset = pl.concat(datasets)
     if stat != 'variant_switch':
         total_phasing_stats_datasets[stat] = dataset.collect()
@@ -502,82 +523,87 @@ for stat, datasets in total_phasing_stats_datasets.items():
         total_phasing_stats_datasets[stat] = total_phasing_stats_datasets[stat].collect(engine='streaming')
         total_phasing_stats_datasets[stat].write_parquet(f'{summary_statistics_folder}/variants.parquet')
 
-print (f'Annotating variants by region...')
-total_phasing_stats_datasets['variant_switch'] = pl.concat([add_bedfiles(
-                                                            total_phasing_stats_datasets['variant_switch'].filter(pl.col('genome')==genome), 
-                                                            regions) 
-                                                            for genome, regions in regional_bedfiles.items()])
+has_variant_switch_data = isinstance(total_phasing_stats_datasets.get('variant_switch'), pl.DataFrame)
+if has_variant_switch_data:
+    print (f'Annotating variants by region...')
+    total_phasing_stats_datasets['variant_switch'] = pl.concat([add_bedfiles(
+                                                                total_phasing_stats_datasets['variant_switch'].filter(pl.col('genome')==genome),
+                                                                regions)
+                                                                for genome, regions in regional_bedfiles.items()])
 
-print (f'Writing a second, abbreviated per-variant switch statistics to disk ({print_runtime()})')
-total_phasing_stats_datasets['variant_switch'].filter(pl.col('contextual_AN') > 0).write_parquet(f'{summary_statistics_folder}/variants.nozeros.parquet')
+    print (f'Writing a second, abbreviated per-variant switch statistics to disk ({print_runtime()})')
+    total_phasing_stats_datasets['variant_switch'].filter(pl.col('contextual_AN') > 0).write_parquet(f'{summary_statistics_folder}/variants.nozeros.parquet')
 
-print (f'Binning variants ({print_runtime()})')
-MAF_performance_variant_df = total_phasing_stats_datasets['variant_switch'].select(['variant_id','n_switch_errors','n_checked','n_gt_errors', 
-                                                                                    'n_gt_checked','method_of_phasing','ground_truth_data_source',
-                                                                                    'genome', 'contextual_MAC', 'contextual_AN', 'Syntenic', 
-                                                                                    'type','multiallelic'] + regional_cols
-                                                                                    ).rename({'contextual_MAC':'MAC', 'contextual_AN':'AN'})
+    print (f'Binning variants ({print_runtime()})')
+    MAF_performance_variant_df = total_phasing_stats_datasets['variant_switch'].select(['variant_id','n_switch_errors','n_checked','n_gt_errors',
+                                                                                        'n_gt_checked','method_of_phasing','ground_truth_data_source',
+                                                                                        'genome', 'contextual_MAC', 'contextual_AN', 'Syntenic',
+                                                                                        'type','multiallelic'] + regional_cols
+                                                                                        ).rename({'contextual_MAC':'MAC', 'contextual_AN':'AN'})
 
-MAF_performance_variant_df = (MAF_performance_variant_df.filter(~pl.col('MAC').is_null())
-                                                        .filter(~(pl.col('MAC') == 0), ~(pl.col('AN')==0))
-                                                        .with_columns(MAF = ((pl.col('MAC') / pl.col('AN'))).cast(pl.Float32())))
-MAF_performance_variant_df = MAF_performance_variant_df.with_columns(rounded_MAF = pl.col('MAF').cut(r2_bins[1:-1], labels=r2_bin_names))
-MAF_performance_variant_df = MAF_performance_variant_df.with_columns(MAF = pl.col('MAF') * 100)
+    MAF_performance_variant_df = (MAF_performance_variant_df.filter(~pl.col('MAC').is_null())
+                                                            .filter(~(pl.col('MAC') == 0), ~(pl.col('AN')==0))
+                                                            .with_columns(MAF = ((pl.col('MAC') / pl.col('AN'))).cast(pl.Float32())))
+    MAF_performance_variant_df = MAF_performance_variant_df.with_columns(rounded_MAF = pl.col('MAF').cut(r2_bins[1:-1], labels=r2_bin_names))
+    MAF_performance_variant_df = MAF_performance_variant_df.with_columns(MAF = pl.col('MAF') * 100)
 
-MAF_performance_variant_df.write_parquet(f'{summary_statistics_folder}/MAF_performance_variants.parquet')
+    MAF_performance_variant_df.write_parquet(f'{summary_statistics_folder}/MAF_performance_variants.parquet')
+else:
+    print('WARNING: No variant_switch data found. Skipping per-variant phasing analysis.')
 
 
-print(f'Calculating MAF binned statistics ({print_runtime()})')
+if has_variant_switch_data:
+    print(f'Calculating MAF binned statistics ({print_runtime()})')
 
-def groupby_region(df, colname):
-    """
-    Group by region for MAF binning analysis
-    """
-    if colname == 'Syntenic':
-        non = 'Nonsyntenic'
-    elif colname == 'multiallelic':
-        non = 'biallelic'
-    else:
-        non = 'not_' + colname
+    def groupby_region(df, colname):
+        """
+        Group by region for MAF binning analysis
+        """
+        if colname == 'Syntenic':
+            non = 'Nonsyntenic'
+        elif colname == 'multiallelic':
+            non = 'biallelic'
+        else:
+            non = 'not_' + colname
 
-    df = (df.rename({colname:'region'})
-            .with_columns(region=pl.when(pl.col('region'))
-                                .then(pl.lit(colname)
-                                .cast(catSyn))
-                                .otherwise(pl.lit(non).cast(catSyn))))
-    binned_df = (df.group_by(['type','rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source', 'region'])
+        df = (df.rename({colname:'region'})
+                .with_columns(region=pl.when(pl.col('region'))
+                                    .then(pl.lit(colname)
+                                    .cast(catSyn))
+                                    .otherwise(pl.lit(non).cast(catSyn))))
+        binned_df = (df.group_by(['type','rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source', 'region'])
+                                                .sum()
+                                                .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
+                                                            gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
+                                                            MAF=(pl.col('MAC')/pl.col('AN')) * 100))
+        binned_df = pl.concat([binned_df, df.group_by(['rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source', 'region'])
+                                                .sum()
+                                                .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
+                                                            gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
+                                                            MAF=((pl.col('MAC')/pl.col('AN')) * 100),
+                                                            type=pl.lit('SNPs + Indels').cast(catVarType))
+                                                .select(binned_df.columns)])
+        return binned_df
+
+    regions = [r for r in regional_bedfiles['GRCh38'].keys()]+['Syntenic','multiallelic']
+
+    MAF_bins = (MAF_performance_variant_df.drop(['variant_id','MAF']).group_by(['type','rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source'])
                                             .sum()
                                             .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
                                                         gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
                                                         MAF=(pl.col('MAC')/pl.col('AN')) * 100))
-    binned_df = pl.concat([binned_df, df.group_by(['rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source', 'region'])
+    MAF_bins = pl.concat([MAF_bins, MAF_performance_variant_df.drop(['variant_id','MAF']).group_by(['rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source'])
                                             .sum()
                                             .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
                                                         gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
                                                         MAF=((pl.col('MAC')/pl.col('AN')) * 100),
                                                         type=pl.lit('SNPs + Indels').cast(catVarType))
-                                            .select(binned_df.columns)])
-    return binned_df
+                                            .select(MAF_bins.columns)]).with_columns(region=pl.lit('All').cast(catSyn)).drop(regions, strict=False)
 
-regions = [r for r in regional_bedfiles['GRCh38'].keys()]+['Syntenic','multiallelic']
+    MAF_bins = pl.concat([MAF_bins] +
+                         [groupby_region(MAF_performance_variant_df.drop(['variant_id','MAF']), region).drop(regions, strict=False).select(MAF_bins.columns) for region in regions])
 
-MAF_bins = (MAF_performance_variant_df.drop(['variant_id','MAF']).group_by(['type','rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source'])
-                                        .sum()
-                                        .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
-                                                    gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
-                                                    MAF=(pl.col('MAC')/pl.col('AN')) * 100))
-MAF_bins = pl.concat([MAF_bins, MAF_performance_variant_df.drop(['variant_id','MAF']).group_by(['rounded_MAF', 'genome','method_of_phasing', 'ground_truth_data_source'])
-                                        .sum()
-                                        .with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked')*100,
-                                                    gt_error_rate=pl.col('n_gt_errors')/pl.col('n_gt_checked')*100,
-                                                    MAF=((pl.col('MAC')/pl.col('AN')) * 100),
-                                                    type=pl.lit('SNPs + Indels').cast(catVarType))
-                                        .select(MAF_bins.columns)]).with_columns(region=pl.lit('All').cast(catSyn)).drop(regions, strict=False)
-
-MAF_bins = pl.concat([MAF_bins] +
-                     [groupby_region(MAF_performance_variant_df.drop(['variant_id','MAF']), region).drop(regions, strict=False).select(MAF_bins.columns) for region in regions])
-
-MAF_bins.write_parquet(f'{summary_statistics_folder}/binned_maf_data.parquet')
+    MAF_bins.write_parquet(f'{summary_statistics_folder}/binned_maf_data.parquet')
 
 # MAF_bins = pl.read_parquet(f'{summary_statistics_folder}/binned_maf_data.parquet')
 # MAF_performance_variant_df= pl.read_parquet(f'{summary_statistics_folder}/MAF_performance_variants.parquet')
@@ -783,83 +809,83 @@ def make_r_compatible(df: pl.DataFrame | pl.LazyFrame):
     # Cast all categorical/enum columns to plain strings to avoid Arrow dictionary arrays
     return df.with_columns(cs.by_dtype(pl.Categorical, pl.Enum).cast(pl.Utf8()))
 
-print (f'Gathering per-cnv stats ({print_runtime()})')
+if has_variant_switch_data:
+    print (f'Gathering per-cnv stats ({print_runtime()})')
 
-decipher_cnvs = pd.read_csv('resources/decipher_syndromes.txt', sep='\t')
-decipher_cnvs.loc[decipher_cnvs.end_grch38 < decipher_cnvs.start_grch38, ['start_grch38','end_grch38']] = decipher_cnvs.loc[decipher_cnvs.end_grch38 < decipher_cnvs.start_grch38, ['end_grch38','start_grch38']].values
-decipher_cnvs.loc[decipher_cnvs.end_chm13 < decipher_cnvs.start_chm13, ['start_chm13','end_chm13']] = decipher_cnvs.loc[decipher_cnvs.end_chm13 < decipher_cnvs.start_chm13, ['end_chm13','start_chm13']].values
+    decipher_cnvs = pd.read_csv('resources/decipher_syndromes.txt', sep='\t')
+    decipher_cnvs.loc[decipher_cnvs.end_grch38 < decipher_cnvs.start_grch38, ['start_grch38','end_grch38']] = decipher_cnvs.loc[decipher_cnvs.end_grch38 < decipher_cnvs.start_grch38, ['end_grch38','start_grch38']].values
+    decipher_cnvs.loc[decipher_cnvs.end_chm13 < decipher_cnvs.start_chm13, ['start_chm13','end_chm13']] = decipher_cnvs.loc[decipher_cnvs.end_chm13 < decipher_cnvs.start_chm13, ['end_chm13','start_chm13']].values
 
-chm13_intervals = list(decipher_cnvs[['chrom','start_chm13','end_chm13', 'Syndrome']].itertuples(index=False, name=None))
-grch38_intervals = list(decipher_cnvs[['chrom','start_grch38','end_grch38', 'Syndrome']].itertuples(index=False, name=None))
-interval_dict = {'CHM13v2.0':chm13_intervals, 'GRCh38':grch38_intervals}
+    chm13_intervals = list(decipher_cnvs[['chrom','start_chm13','end_chm13', 'Syndrome']].itertuples(index=False, name=None))
+    grch38_intervals = list(decipher_cnvs[['chrom','start_grch38','end_grch38', 'Syndrome']].itertuples(index=False, name=None))
+    interval_dict = {'CHM13v2.0':chm13_intervals, 'GRCh38':grch38_intervals}
 
-var_info = pl.col('variant_id').str.split('_')
-MAF_performance_variant_df = MAF_performance_variant_df.with_columns(chrom = var_info.list[0].cast(catChrom),
-                                                                     position = var_info.list[1].cast(all_variant_annotations_dtypes['POS']))
+    var_info = pl.col('variant_id').str.split('_')
+    MAF_performance_variant_df = MAF_performance_variant_df.with_columns(chrom = var_info.list[0].cast(catChrom),
+                                                                         position = var_info.list[1].cast(all_variant_annotations_dtypes['POS']))
 
-ideogram_variants = MAF_performance_variant_df.drop(['variant_id','Syntenic','type','rounded_MAF'] + regional_cols)
+    ideogram_variants = MAF_performance_variant_df.drop(['variant_id','Syntenic','type','rounded_MAF'] + regional_cols)
 
-per_genome_cnv_regions = list()
-per_genome_cnv_regions_with_slop = list()
-slop=int(1e6)
-for (genome, method_of_phasing, ground_truth_data_source), df in ideogram_variants.group_by(['genome','method_of_phasing','ground_truth_data_source']):
-    keys = {'genome':pl.lit(genome),
-            'method_of_phasing':pl.lit(method_of_phasing),
-            'ground_truth_data_source':pl.lit(ground_truth_data_source)}
-    per_genome_cnv_regions.extend(sum_by_interval(df, interval_dict[genome], keys=keys, return_lazy=True))
-    per_genome_cnv_regions_with_slop.extend(sum_by_interval(df, interval_dict[genome], keys=keys, return_lazy=True, slop=slop))
-per_genome_cnv_regions = pl.concat(per_genome_cnv_regions
-                                  ).collect(
-                                  ).with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked') * 100)
-per_genome_cnv_regions_with_slop = pl.concat(per_genome_cnv_regions_with_slop
-                                  ).collect(
-                                  ).with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked') * 100)
-per_genome_cnv_regions.write_parquet(f'{summary_statistics_folder}/per_genome_cnv_regions.parquet')
-per_genome_cnv_regions_with_slop.write_parquet(f'{summary_statistics_folder}/per_genome_cnv_regions_with_slop.parquet')
-
-
-cytoband_coords = get_cytobands_in_bed_format(chm13_cytobands)
-cytoband_coords['genome'] = 'CHM13v2.0'
-cytoband_coords2 = get_cytobands_in_bed_format(grch38_cytobands)
-cytoband_coords2['genome'] = 'GRCh38'
-cytoband_coords = pd.concat((cytoband_coords, cytoband_coords2))
-
-print (f'Calculating per cytoband stats ({print_runtime()})')
-all_cytobands = variants_to_compressed_ideogram_data(ideogram_variants, intervals=cytoband_coords)
-all_cytobands = make_r_compatible(all_cytobands)
-all_cytobands.write_parquet(f'{summary_statistics_folder}/per_cytoband_variant_data.parquet')
-
-print (f'Calculating per 100,000 stats ({print_runtime()})')
-compressed_ideogram_100k = variants_to_compressed_ideogram_data(ideogram_variants, window_size=100000)
-compressed_ideogram_100k = make_r_compatible(compressed_ideogram_100k)
-compressed_ideogram_100k.write_parquet(f'{summary_statistics_folder}/compressed_ideogram_100000_window.parquet')
-
-print (f'Calculating per 1,000,000 stats ({print_runtime()})')
-compressed_ideogram_1m = variants_to_compressed_ideogram_data(ideogram_variants, window_size=1000000)
-compressed_ideogram_1m = make_r_compatible(compressed_ideogram_1m)
-compressed_ideogram_1m.write_parquet(f'{summary_statistics_folder}/compressed_ideogram_1000000_window.parquet')
-
-print (f'Calculating per 250,000 stats ({print_runtime()})')
-rolling_stats_250k = rolling_stats(ideogram_variants, window_size=250000, smoothing_factor=25)
-rolling_stats_250k = make_r_compatible(rolling_stats_250k)
-rolling_stats_250k.write_parquet(f'{summary_statistics_folder}/rolling_stats_250k_window.parquet')
-
-print (f'Calculating per 500,000 stats ({print_runtime()})')
-rolling_stats_500k = rolling_stats(ideogram_variants, window_size=500000, smoothing_factor=50)
-rolling_stats_500k = make_r_compatible(rolling_stats_500k)
-rolling_stats_500k.write_parquet(f'{summary_statistics_folder}/rolling_stats_500k_window.parquet')
-
-print (f'Calculating per 1,000,000 stats ({print_runtime()})')
-rolling_stats_1m = rolling_stats(ideogram_variants, window_size=1000000, smoothing_factor=100)
-rolling_stats_1m = make_r_compatible(rolling_stats_1m)
-rolling_stats_1m.write_parquet(f'{summary_statistics_folder}/rolling_stats_1m_window.parquet')
+    per_genome_cnv_regions = list()
+    per_genome_cnv_regions_with_slop = list()
+    slop=int(1e6)
+    for (genome, method_of_phasing, ground_truth_data_source), df in ideogram_variants.group_by(['genome','method_of_phasing','ground_truth_data_source']):
+        keys = {'genome':pl.lit(genome),
+                'method_of_phasing':pl.lit(method_of_phasing),
+                'ground_truth_data_source':pl.lit(ground_truth_data_source)}
+        per_genome_cnv_regions.extend(sum_by_interval(df, interval_dict[genome], keys=keys, return_lazy=True))
+        per_genome_cnv_regions_with_slop.extend(sum_by_interval(df, interval_dict[genome], keys=keys, return_lazy=True, slop=slop))
+    per_genome_cnv_regions = pl.concat(per_genome_cnv_regions
+                                      ).collect(
+                                      ).with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked') * 100)
+    per_genome_cnv_regions_with_slop = pl.concat(per_genome_cnv_regions_with_slop
+                                      ).collect(
+                                      ).with_columns(switch_error_rate=pl.col('n_switch_errors')/pl.col('n_checked') * 100)
+    per_genome_cnv_regions.write_parquet(f'{summary_statistics_folder}/per_genome_cnv_regions.parquet')
+    per_genome_cnv_regions_with_slop.write_parquet(f'{summary_statistics_folder}/per_genome_cnv_regions_with_slop.parquet')
 
 
+    cytoband_coords = get_cytobands_in_bed_format(chm13_cytobands)
+    cytoband_coords['genome'] = 'CHM13v2.0'
+    cytoband_coords2 = get_cytobands_in_bed_format(grch38_cytobands)
+    cytoband_coords2['genome'] = 'GRCh38'
+    cytoband_coords = pd.concat((cytoband_coords, cytoband_coords2))
+
+    print (f'Calculating per cytoband stats ({print_runtime()})')
+    all_cytobands = variants_to_compressed_ideogram_data(ideogram_variants, intervals=cytoband_coords)
+    all_cytobands = make_r_compatible(all_cytobands)
+    all_cytobands.write_parquet(f'{summary_statistics_folder}/per_cytoband_variant_data.parquet')
+
+    print (f'Calculating per 100,000 stats ({print_runtime()})')
+    compressed_ideogram_100k = variants_to_compressed_ideogram_data(ideogram_variants, window_size=100000)
+    compressed_ideogram_100k = make_r_compatible(compressed_ideogram_100k)
+    compressed_ideogram_100k.write_parquet(f'{summary_statistics_folder}/compressed_ideogram_100000_window.parquet')
+
+    print (f'Calculating per 1,000,000 stats ({print_runtime()})')
+    compressed_ideogram_1m = variants_to_compressed_ideogram_data(ideogram_variants, window_size=1000000)
+    compressed_ideogram_1m = make_r_compatible(compressed_ideogram_1m)
+    compressed_ideogram_1m.write_parquet(f'{summary_statistics_folder}/compressed_ideogram_1000000_window.parquet')
+
+    print (f'Calculating per 250,000 stats ({print_runtime()})')
+    rolling_stats_250k = rolling_stats(ideogram_variants, window_size=250000, smoothing_factor=25)
+    rolling_stats_250k = make_r_compatible(rolling_stats_250k)
+    rolling_stats_250k.write_parquet(f'{summary_statistics_folder}/rolling_stats_250k_window.parquet')
+
+    print (f'Calculating per 500,000 stats ({print_runtime()})')
+    rolling_stats_500k = rolling_stats(ideogram_variants, window_size=500000, smoothing_factor=50)
+    rolling_stats_500k = make_r_compatible(rolling_stats_500k)
+    rolling_stats_500k.write_parquet(f'{summary_statistics_folder}/rolling_stats_500k_window.parquet')
+
+    print (f'Calculating per 1,000,000 stats ({print_runtime()})')
+    rolling_stats_1m = rolling_stats(ideogram_variants, window_size=1000000, smoothing_factor=100)
+    rolling_stats_1m = make_r_compatible(rolling_stats_1m)
+    rolling_stats_1m.write_parquet(f'{summary_statistics_folder}/rolling_stats_1m_window.parquet')
+
+    del MAF_performance_variant_df
+    del ideogram_variants
 
 ### gather chrom and sample specific data
-del MAF_performance_variant_df
-del total_phasing_stats_datasets['variant_switch']
-del ideogram_variants
+total_phasing_stats_datasets.pop('variant_switch', None)
 
 print (f'Calculating per contig and per sample phasing statistics ({print_runtime()})')
 # for samples that weren't analyzed, gt errors are reported as nan and gt_checked is reported as total gts. I want the reverse- 0 errors, 0 checked.
@@ -887,7 +913,7 @@ all_chroms = all_chroms.drop([x for x in all_chroms.columns if '_right' in x]
                                            true_switch_error_rate=(pl.col('n_true_switch_errors')/pl.col('n_total_hets')) * 100,
                                            trio_phased=(pl.col('sample_id').is_in(trio_phased_samples)))
 
-all_samples = group_phasing_statistics(all_chroms, ['sample_id','genome','population','superpopulation','sex','trio_phased'] + expt_columns).drop('chrom')
+all_samples = group_phasing_statistics(all_chroms, ['sample_id','genome','population','superpopulation','sex','trio_phased'] + expt_columns).drop('chrom', strict=False)
 
 
 HGSVC_samples_nontrios_only = all_samples.filter((~pl.col('switch_error_rate').is_nan()), (pl.col('ground_truth_data_source')=='HGSVC_samples_nontrios_only')).select('sample_id').unique().to_numpy().flatten()
@@ -1024,15 +1050,17 @@ per_sample_N50 = (per_contig_N50.group_by(sample_id_columns)             # Group
                                                             .sum()/2))
                                 .with_columns(N50=pl.col('blocksize')
                                                     .list.get(pl.col('L50').list.first()))
+                                .with_columns(pl.col('L50').list.first())
                                 .drop('blocksize'))
 
-per_contig_N50 = (per_contig_N50.drop(['blocksize','chrom_len']))
+per_contig_N50 = (per_contig_N50.drop(['blocksize','chrom_len'])
+                                .with_columns(pl.col('L50').list.first()))
 
 all_chroms = all_chroms.join(per_contig_N50, on=['genome','method_of_phasing','ground_truth_data_source','sample_id','chrom'], how='left')
 all_samples = all_samples.join(per_sample_N50, on=['genome','method_of_phasing','ground_truth_data_source','sample_id'], how='left')
 
-all_ancestries = group_phasing_statistics(all_chroms, ['genome','population','superpopulation'] + expt_columns).drop(['sex','sample_id'])
-all_methods = group_phasing_statistics(all_samples, ['genome'] + expt_columns).drop(['sample_id','sex','population','superpopulation'])
+all_ancestries = group_phasing_statistics(all_chroms, ['genome','population','superpopulation'] + expt_columns).drop(['sex','sample_id'], strict=False)
+all_methods = group_phasing_statistics(all_samples, ['genome'] + expt_columns).drop(['sample_id','sex','population','superpopulation'], strict=False)
 
 
 
@@ -1134,54 +1162,65 @@ for genome in ('T2T','GRCh38'):
                             else:
                                 # raise FileNotFoundError(f'No imputation stats found for {base_report_name} {bin_grouping}')
                                 print(f'No imputation stats found for {base_report_name} {bin_grouping}')
+                                continue
                         if 'index' in per_var_cat.columns:
                             per_var_cat = per_var_cat.drop(columns=['index'])
                         per_var_cat = per_var_cat.drop(columns=[c for c in per_var_cat.columns if c[-2:] == '_y'])
                         per_variant_category_imputation_performance.append(per_var_cat)
 # print (per_variant_category_imputation_performance['Synteny'].unique() for x in per_variant_category_imputation_performance})
 # raise Exception
-per_variant_category_imputation_performance = pd.concat(per_variant_category_imputation_performance)
+if per_variant_category_imputation_performance:
+    per_variant_category_imputation_performance = pd.concat(per_variant_category_imputation_performance)
+    per_variant_category_imputation_performance['non_reference_discordance_percent'] = ((per_variant_category_imputation_performance.num_Aa_mismatches + per_variant_category_imputation_performance.num_aa_mismatches) /
+                                                                                        (per_variant_category_imputation_performance['num_Aa']+per_variant_category_imputation_performance['num_aa']))*100
+    per_variant_category_imputation_performance.to_parquet(f'{summary_statistics_folder}/per_variant_category_imputation_performance.parquet')
+else:
+    print('WARNING: No per-variant imputation performance data found. Skipping parquet write.')
 
-per_sample_imputation_performance = pd.concat(per_sample_imputation_performance)
-per_variant_category_imputation_performance['non_reference_discordance_percent'] = ((per_variant_category_imputation_performance.num_Aa_mismatches + per_variant_category_imputation_performance.num_aa_mismatches) / 
-                                                                                    (per_variant_category_imputation_performance['num_Aa']+per_variant_category_imputation_performance['num_aa']))*100
+if per_sample_imputation_performance:
+    per_sample_imputation_performance = pd.concat(per_sample_imputation_performance)
+    per_sample_imputation_performance.to_parquet(f'{summary_statistics_folder}/per_sample_imputation_performance.parquet')
+else:
+    print('WARNING: No per-sample imputation performance data found. Skipping parquet write.')
 
-per_variant_category_imputation_performance.to_parquet(f'{summary_statistics_folder}/per_variant_category_imputation_performance.parquet')
-per_sample_imputation_performance.to_parquet(f'{summary_statistics_folder}/per_sample_imputation_performance.parquet')
+print (f'Calculating variant filtering statistics ({print_runtime()})')
 
-# print (f'Calculating variant filtering statistics {print_runtime()}')
+maf_parquet = f"{summary_statistics_folder}/MAF_performance_variants.parquet"
+variant_parquet = f"{summary_statistics_folder}/bcftools_query_variant_data.parquet"
+if os.path.exists(maf_parquet) and os.path.exists(variant_parquet):
+    grch38_ids = set(list(pl.scan_parquet(maf_parquet).select(['variant_id','genome']).filter(pl.col('genome')=='GRCh38').select('variant_id').unique().collect().to_numpy().flatten()))
+    chm13_ids = set(list(pl.scan_parquet(maf_parquet).select(['variant_id','genome']).filter(pl.col('genome')=='CHM13v2.0').select('variant_id').unique().collect().to_numpy().flatten()))
+    SV_cutoff = 50
+    summary = pl.scan_parquet(variant_parquet
+       ).with_columns(MAC=pl.min_horizontal(pl.col('AC_original_panel'), pl.col('AN_original_panel')-pl.col('AC_original_panel')),
+       ).with_columns(VQSLOD_filter=(pl.col('VQSLOD')<0).cast(pl.Boolean),
+                      MERR_filter=(pl.col('MERR')>pl.col('AN_original_panel')*0.05).cast(pl.Boolean),
+                      HWE_pop_filter=((pl.col('HWE_EUR')<1e-10) & (pl.col('HWE_AFR')<1e-10) & (pl.col('HWE_EAS')<1e-10) & (pl.col('HWE_AMR')<1e-10) & (pl.col('HWE_SAS')<1e-10)).cast(pl.Boolean),
+                      MAC_filter=(pl.col('MAC')==0).cast(pl.Boolean),
+                      AC_filter=(pl.col('AC_original_panel')<=1),
+                      f_missing_filter=(pl.col('F_MISSING')>0.05).cast(pl.Boolean),
+                      var_len_filter=((pl.col('ID').str.split('_').list[2].str.len_chars().cast(pl.Int64)
+                                       -
+                                       pl.col('ID').str.split('_').list[3].str.len_chars().cast(pl.Int64)
+                                      ).abs() >= SV_cutoff-1).cast(pl.Boolean),
+                                      # minus 1 because bcftools ILEN does not count the anchor base
+                      alt_star_filter=(pl.col('ALT') == '*').cast(pl.Boolean),
+                      singleton=(pl.col('MAC')==1).cast(pl.Boolean),
+                      pass_filter = (pl.col('FILTER') != 'PASS').cast(pl.Boolean)
+       ).select(['ID','genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter',
+                   'MAC_filter','AC_filter','f_missing_filter','var_len_filter','alt_star_filter','pass_filter']
+       ).with_columns(GRCh38_filtered= ~(pl.col('ID').is_in(grch38_ids) & (pl.col('genome')=='GRCh38')),
+                       CHM13_filtered = ~(pl.col('ID').is_in(chm13_ids) & (pl.col('genome')=='CHM13v2.0')),
+                       GRCh38_criteria_fail=(pl.col('AC_filter')|
+                                                pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean),
+                       CHM13_criteria_fail =(pl.col('MAC_filter')|pl.col('VQSLOD_filter')|
+                                                pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean)
+       ).group_by(['genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter','MAC_filter','AC_filter',
+                         'f_missing_filter','var_len_filter','alt_star_filter','pass_filter','CHM13_filtered','GRCh38_filtered','GRCh38_criteria_fail','CHM13_criteria_fail']
+       ).len().collect()
 
-# grch38_ids = set(list(pl.scan_parquet(f"{summary_statistics_folder}/MAF_performance_variants.parquet").select(['variant_id','genome']).filter(pl.col('genome')=='GRCh38').select('variant_id').unique().collect().to_numpy().flatten()))
-# chm13_ids = set(list(pl.scan_parquet(f"{summary_statistics_folder}/MAF_performance_variants.parquet").select(['variant_id','genome']).filter(pl.col('genome')=='CHM13v2.0').select('variant_id').unique().collect().to_numpy().flatten()))
-# SV_cutoff = 50
-# summary = pl.scan_parquet(f"{summary_statistics_folder}/bcftools_query_variant_data.parquet"
-#    ).with_columns(MAC=pl.min_horizontal(pl.col('AC_original_panel'), pl.col('AN_original_panel')-pl.col('AC_original_panel')),
-#    ).with_columns(VQSLOD_filter=(pl.col('VQSLOD')<0).cast(pl.Boolean),
-#                   MERR_filter=(pl.col('MERR')>pl.col('AN_original_panel')*0.05).cast(pl.Boolean),
-#                   HWE_pop_filter=((pl.col('HWE_EUR')<1e-10) & (pl.col('HWE_AFR')<1e-10) & (pl.col('HWE_EAS')<1e-10) & (pl.col('HWE_AMR')<1e-10) & (pl.col('HWE_SAS')<1e-10)).cast(pl.Boolean),
-#                   MAC_filter=(pl.col('MAC')==0).cast(pl.Boolean),
-#                   AC_filter=(pl.col('AC_original_panel')<=1),
-#                   f_missing_filter=(pl.col('F_MISSING')>0.05).cast(pl.Boolean),
-#                   var_len_filter=((pl.col('ID').str.split('_').list[2].str.len_chars().cast(pl.Int64)
-#                                    - 
-#                                    pl.col('ID').str.split('_').list[3].str.len_chars().cast(pl.Int64)
-#                                   ).abs() >= SV_cutoff-1).cast(pl.Boolean),
-#                                   # minus 1 because bcftools ILEN does not count the anchor base
-#                   alt_star_filter=(pl.col('ALT') == '*').cast(pl.Boolean),
-#                   singleton=(pl.col('MAC')==1).cast(pl.Boolean),
-#                   pass_filter = (pl.col('FILTER') != 'PASS').cast(pl.Boolean)
-#    ).select(['ID','genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter',
-#                'MAC_filter','AC_filter','f_missing_filter','var_len_filter','alt_star_filter','pass_filter']
-#    ).with_columns(GRCh38_filtered= ~(pl.col('ID').is_in(grch38_ids) & (pl.col('genome')=='GRCh38')),
-#                    CHM13_filtered = ~(pl.col('ID').is_in(chm13_ids) & (pl.col('genome')=='CHM13v2.0')),
-#                    GRCh38_criteria_fail=(pl.col('AC_filter')|
-#                                             pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean),
-#                    CHM13_criteria_fail =(pl.col('MAC_filter')|pl.col('VQSLOD_filter')|
-#                                             pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean)
-#    ).group_by(['genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter','MAC_filter','AC_filter',
-#                      'f_missing_filter','var_len_filter','alt_star_filter','pass_filter','CHM13_filtered','GRCh38_filtered','GRCh38_criteria_fail','CHM13_criteria_fail']
-#    ).len().collect()
-
-# summary.write_parquet(f"{summary_statistics_folder}/filter_summary_stats.parquet")
+    summary.write_parquet(f"{summary_statistics_folder}/filter_summary_stats.parquet")
+else:
+    print(f'WARNING: Prerequisite parquet files not found for filter_summary_stats. Skipping.')
 print ('Done!')
 print (f"Total runtime: {print_runtime()}")

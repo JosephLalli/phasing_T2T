@@ -475,7 +475,7 @@ did_run "$lifted_imputed.csi" || exit 1
 
 # 3) Identify variants in common between imputed datasets
 if should_run "$working_dir_ref/common.$chrom.IDs.txt"; then
-    python3.11 $basedir/scripts/get_discordant_multiallelic_sites.py $native_panel $lifted_panel $working_dir_ref/common.$chrom.IDs.txt
+    python3 $basedir/scripts/get_discordant_multiallelic_sites.py $native_panel $lifted_panel $working_dir_ref/common.$chrom.IDs.txt
     did_run "$working_dir_ref/common.$chrom.IDs.txt" || exit 1
 fi
 wait_and_check || exit 1
@@ -525,31 +525,30 @@ echo -e "$whole_chrom $native_panel $reference_dataset $lifted_imputed_base.GWAS
 echo -e "$whole_chrom $native_panel $reference_dataset $working_dir_ref/$reference_genome.$chrom.native.imputed.common.bcf" >  ${working_dir}/native_panel.common_variants.${ref_dataset_name}.$chrom.txt
 echo -e "$whole_chrom $native_panel $reference_dataset $working_dir_ref/$reference_genome.$chrom.lifted.imputed.common.bcf" >  ${working_dir}/lifted_panel.common_variants.${ref_dataset_name}.$chrom.txt
 
-# r2_bins='0 0.00021 0.00042 0.00064 0.001 0.0016 0.0022 0.003 0.004 0.0054 0.0072 0.0094 0.0126 0.0172 0.0244 0.0369 0.0601 0.1018 0.1661 0.2556 0.3724 0.5'
+r2_bins='0 0.00021 0.00042 0.00064 0.001 0.0016 0.0022 0.003 0.004 0.0054 0.0072 0.0094 0.0126 0.0172 0.0244 0.0369 0.0601 0.1018 0.1661 0.2556 0.3724 0.5'
 
-# for infile in ${working_dir}/native_panel.${ref_dataset_name}.$chrom.txt ${working_dir}/lifted_panel.${ref_dataset_name}.$chrom.txt ${working_dir}/native_panel.common_variants.${ref_dataset_name}.$chrom.txt ${working_dir}/lifted_panel.common_variants.${ref_dataset_name}.$chrom.txt
-# do
-#     if should_run "${infile%%.txt}/$(basename ${infile%%.txt}).rsquare.grp.txt.gz"; then
-#         echo "Assessing imputation accuracy for $infile"
-#     else
-#         # echo "Imputation accuracy already assessed for $infile, skipping."
-#         continue
-#     fi
-#     echo $infile
-#     mkdir -p ${infile%%.txt}
-#     $basedir/bin/GLIMPSE2_concordance \
-#         --gt-val \
-#         --bins $r2_bins \
-#         --threads $num_threads \
-#         --af-tag MAF \
-#         --input $infile \
-#         --log ${infile%%.txt}.log \
-#         --out-r2-per-site \
-#         --out-rej-sites	\
-#         --out-conc-sites \
-#         --out-disc-sites \
-#         --output ${infile%%.txt}/$(basename ${infile%%.txt}) &
-# done
+for infile in ${working_dir}/native_panel.${ref_dataset_name}.$chrom.txt ${working_dir}/lifted_panel.${ref_dataset_name}.$chrom.txt ${working_dir}/native_panel.common_variants.${ref_dataset_name}.$chrom.txt ${working_dir}/lifted_panel.common_variants.${ref_dataset_name}.$chrom.txt
+do
+    if should_run "${infile%%.txt}/$(basename ${infile%%.txt}).rsquare.grp.txt.gz"; then
+        echo "Assessing imputation accuracy for $infile"
+    else
+        continue
+    fi
+    echo $infile
+    mkdir -p ${infile%%.txt}
+    $basedir/bin/GLIMPSE2_concordance \
+        --gt-val \
+        --bins $r2_bins \
+        --threads $num_threads \
+        --af-tag MAF \
+        --input $infile \
+        --log ${infile%%.txt}.log \
+        --out-r2-per-site \
+        --out-rej-sites	\
+        --out-conc-sites \
+        --out-disc-sites \
+        --output ${infile%%.txt}/$(basename ${infile%%.txt}) &
+done
 
 wait_and_check || exit 1
 

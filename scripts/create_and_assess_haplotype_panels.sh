@@ -311,7 +311,7 @@ fi
 
 chrom_working_dir=$basedir/working_directories/${chrom}_working${suffix}
 final_panel_dir=$basedir/phased_panels/phased_${genome}_panel${suffix}
-stats_dir=$basedir/bin/SHAPEIT5_switch_output/phasing_stats_${genome}${suffix}
+stats_dir=$basedir/SHAPEIT5_switch_output/phasing_stats_${genome}${suffix}
 lifted_panel_folder=$chrom_working_dir/liftover/lifted_panels
 imputation_results_dir=$basedir/imputation_statistics/imputation_results$suffix
 variant_frequency_stats_dir=$basedir/intermediate_data/variant_frequency_stats/${genome}
@@ -883,13 +883,14 @@ then
 fi
 
 # Identify trio-private singletons
-if should_run "$variant_frequency_stats_dir/${chrom}_private_singletons.txt"; then
+# find_trio_singletons.sh treats -o as a base directory and appends /${genome}/ internally
+if should_run "$variant_frequency_stats_dir/${chrom}_private_singletons.txt.gz"; then
     $basedir/scripts/find_trio_singletons.sh \
         -g $genome \
         -p $duos_and_trios \
         -i $phased_panel_vcf_3202_biallelic \
         -c $chrom \
-        -o $variant_frequency_stats_dir/${chrom}_private_singletons.txt \
+        -o $basedir/intermediate_data/variant_frequency_stats \
         -j $num_threads &
 fi
 
@@ -942,6 +943,11 @@ wait_and_check || exit 1
 did_run "$vcf_to_phase_pangenome_biallelic_HPRC.csi" || exit 1
 did_run "$vcf_to_phase_pangenome_biallelic_1kgp.csi" || exit 1
 
+
+## Copy the fully_annotated.tsv to variant_frequency_stats_dir (gzipped) for the Python ETL
+if should_run "$variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz"; then
+    bgzip -c $fully_annotated_input_variant_report > $variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz &
+fi
 
 ## While doing this, gather AC_AN data to later generate reference MAF tables
 if should_run "$variant_frequency_stats_dir/${chrom}_3202_AC_AN.tsv.gz"; then

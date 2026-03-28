@@ -79,7 +79,7 @@ trap cleanup_tmpfolder EXIT
 tmpfile=$(dirname $out)/temp.$(basename $root_name).bcf
 tmpfolder=$(dirname $out)/tmp
 mkdir -p $tmpfolder
-python3 liftover_indels.py --input-vcf $in --ref-diffs-vcf $diff_vcf --output-vcf $tmpfile --chain $chain --target-fasta $target_fasta && \
+python3 "$(dirname "${BASH_SOURCE[0]}")/liftover_indels.py" --input-vcf $in --ref-diffs-vcf $diff_vcf --output-vcf $tmpfile --chain $chain --target-fasta $target_fasta && \
 bcftools norm -Ou --threads 4 -f $target_fasta -m -any $tmpfile \
 | bcftools annotate -Ou --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
 | bcftools +fill-tags -Ou --threads 2 - -- -t "AN,AC,MAF,MAC:1=MAC" \

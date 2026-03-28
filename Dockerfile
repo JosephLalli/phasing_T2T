@@ -3,21 +3,37 @@
 # No R, Java, or GATK -- only bcftools/samtools/htslib + Python.
 #
 # ── Volume mount requirements ──
-# The following MUST be bind-mounted at runtime (too large for the image):
+# The following MUST be bind-mounted at runtime (too large for the image).
+# They are intentionally not tracked in git and are excluded from the image
+# via .dockerignore. Supply them as bind mounts to the paths listed below.
 #
-#   /phasing_T2T_project/resources/chm13v2.0.fa.gz          (+.fai, +.gzi)
-#   /phasing_T2T_project/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz (+.fai, +.gzi)
-#   /phasing_T2T_project/unphased_variant_calls/            (t2t/ and grch38/ subdirs)
-#   /phasing_T2T_project/resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz (+.tbi)
-#   /phasing_T2T_project/resources/hgsvc3-*                 (all hgsvc3 files)
-#   /phasing_T2T_project/resources/SGDP_variation/          (t2t/ and grch38/ subdirs)
-#   /phasing_T2T_project/phased_panels/                     (grch38/ subdir with precomputed GRCh38 panels)
+# Reference genomes:
+#   -v <chm13_fa>:/phasing_T2T_project/resources/chm13v2.0.fa.gz:ro  (+.fai, +.gzi)
+#   -v <grch38_fa>:/phasing_T2T_project/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz:ro (+.fai, +.gzi)
 #
-# Example invocation:
-#   docker run -v /data/refs:/phasing_T2T_project/resources \
-#              -v /data/vcf:/phasing_T2T_project/unphased_variant_calls \
-#              -v /data/panels:/phasing_T2T_project/phased_panels \
-#              phasing-t2t bash -c "cd scripts && ./create_and_assess_haplotype_panels.sh chr22_test 12 test CHM13v2.0"
+# Unphased variant calls:
+#   -v <unphased_vcfs>:/phasing_T2T_project/unphased_variant_calls:ro
+#
+# Pangenome VCFs (symlinks in resources/ point outside the repo):
+#   -v <hprc_chm13_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz:ro  (+.tbi)
+#   -v <hprc_grch38_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz:ro (+.tbi)
+#   -v <hgsvc3_dir>:/phasing_T2T_project/resources/hgsvc3:ro  (then individual file mounts below)
+#
+# SGDP ground truth (symlinks resolve outside the repo):
+#   -v <sgdp_grch38_dir>:/GRCh38_SGDP_full:ro
+#       (resources/SGDP_variation/grch38 -> ../../../GRCh38_SGDP_full -> /GRCh38_SGDP_full in container)
+#   -v <sgdp_t2t_dir>:/phasing_T2T_project/resources/SGDP_variation/t2t:ro
+#
+# Precomputed GRCh38 panels (read-write: assess_imputation.sh writes filtered BCFs here):
+#   -v <grch38_panels>:/phasing_T2T_project/phased_panels/grch38
+#
+# Persistent working directories:
+#   -v <output_dir>/working_directories:/phasing_T2T_project/working_directories
+#   -v <output_dir>/intermediate_data:/phasing_T2T_project/intermediate_data
+#   -v <output_dir>/imputation_statistics:/phasing_T2T_project/imputation_statistics
+#   -v <output_dir>/SHAPEIT5_switch_output:/phasing_T2T_project/SHAPEIT5_switch_output
+#
+# See scripts/run_docker_smoke_test.sh plus docker.env.example for a complete example.
 
 FROM ubuntu:22.04
 
@@ -85,6 +101,7 @@ RUN bcftools +liftover --help 2>&1 | head -1
 RUN pip3 install --no-cache-dir \
     polars \
     pandas \
+    pyarrow \
     numpy \
     pysam \
     cyvcf2 \
@@ -95,7 +112,13 @@ RUN pip3 install --no-cache-dir \
     scipy \
     scikit-learn \
     matplotlib \
-    seaborn
+    seaborn \
+    statannotations \
+    upsetplot \
+    jupyter \
+    nbconvert \
+    nbformat \
+    ipython
 
 # ── Set up project directory ──
 WORKDIR /phasing_T2T_project
@@ -107,38 +130,30 @@ ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 COPY bin/ bin/
 
 # ── COPY core pipeline scripts ──
-COPY scripts/create_and_assess_haplotype_panels.sh scripts/
-COPY scripts/run_and_assess_imputation.sh scripts/
-COPY scripts/assess_imputation.sh scripts/
-COPY scripts/parameters.sh scripts/
-COPY scripts/find_trio_singletons.sh scripts/
-COPY scripts/liftover_panel.sh scripts/
-COPY scripts/liftover_indels.py scripts/
-COPY scripts/get_discordant_multiallelic_sites.py scripts/
-COPY scripts/generate_regions_for_rare_phasing.py scripts/
-COPY scripts/create_syn_nonsyn_bins.sh scripts/
-COPY scripts/calc_genomewide_imputation_statistics_full.sh scripts/
-COPY scripts/create_summary_phasing_dataframes_polars_regional.py scripts/
+COPY scripts/ scripts/
 
 # ── COPY small resource files ──
-COPY resources/sample_subsets/ resources/sample_subsets/
-COPY resources/pedigrees/ resources/pedigrees/
-COPY resources/recombination_maps/t2t_native_scaled_maps/ resources/recombination_maps/t2t_native_scaled_maps/
-COPY resources/recombination_maps/grch38/ resources/recombination_maps/grch38/
-COPY resources/chm13v2-syntenic_to_hg38.bed resources/
-COPY resources/hg38.GCA_009914755.4.synNet.summary.bed.gz resources/
-COPY resources/chm13v2.0_cytobands_allchrs.bed resources/
-COPY resources/grch38_cytobands_allchrs.bed resources/
-COPY resources/chm13v2-grch38.chain resources/
-COPY resources/grch38-chm13v2.chain resources/
-COPY resources/grch38-chm13v2.sort.vcf.gz resources/
-COPY resources/grch38-chm13v2.sort.vcf.gz.tbi resources/
-COPY resources/chm13v2-grch38.sort.vcf.gz resources/
-COPY resources/chm13v2-grch38.sort.vcf.gz.tbi resources/
-COPY resources/regions.txt resources/
-COPY resources/1000G_omni2.5.hg38.t2t-chm13-v2.0.biallelic.vcf.gz resources/
-COPY resources/1000G_omni2.5.hg38.t2t-chm13-v2.0.biallelic.vcf.gz.tbi resources/
-COPY resources/1000_genomes_meta.tsv resources/
+COPY resources/ resources/
+
+# ── COPY Jupyter notebooks for figure generation ──
+COPY notebooks/ notebooks/
+
+# ── Create mount-point directories for bind-mounted data ──
+# These directories are empty in the image; fill them with -v at runtime.
+RUN mkdir -p \
+    unphased_variant_calls/t2t \
+    unphased_variant_calls/grch38 \
+    phased_panels/grch38 \
+    working_directories \
+    intermediate_data \
+    imputation_statistics \
+    SHAPEIT5_switch_output \
+    figures \
+    resources/SGDP_variation/t2t \
+    /GRCh38_SGDP_full && \
+    # Recreate the relative symlink that scripts expect:
+    #   resources/SGDP_variation/grch38 -> ../../../GRCh38_SGDP_full -> /GRCh38_SGDP_full
+    ln -s ../../../GRCh38_SGDP_full resources/SGDP_variation/grch38
 
 LABEL description="T2T genomic variant phasing pipeline (no R/Java/GATK)"
 LABEL version="2.0"

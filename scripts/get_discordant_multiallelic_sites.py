@@ -53,7 +53,7 @@ print('identifying variants identical between the two files')
 vars = native.merge(lifted, on=['chrom','pos','ID'], how='outer', suffixes=('_native','_lifted'))
 
 samesies = vars.loc[vars.alt_native == vars.alt_lifted]
-samesies[['ID','MAF_native','MAF_lifted','alt_native','alt_lifted']].to_csv(out, index=False, header=False, sep='\t')
+samesies[['ID']].to_csv(out, index=False, header=False, sep='\t')
 print(f'variant IDs exported to {out}')
 
 bad_out='.'.join(out.split('.')[:-1])+'mismatched_num_alleles.txt'
