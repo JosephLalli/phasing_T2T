@@ -38,14 +38,16 @@ inside the Docker container:
 
 - `resources/chm13v2.0.fa.gz`
 - `resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz`
-- `resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz`
-- `resources/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz`
-- `resources/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz`
-- `resources/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz`
-- `resources/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz`
-- `resources/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz`
-- `resources/SGDP_variation/t2t`
-- `resources/SGDP_variation/grch38`
+- `resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz` (+`.tbi`)
+- `resources/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz` (+`.tbi`)
+- `resources/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz` (+`.tbi`)
+- `resources/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz` (+`.tbi`)
+- `resources/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz` (+`.tbi`)
+- `resources/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz` (+`.tbi`)
+- `resources/SGDP_variation/t2t/`
+- `resources/SGDP_variation/grch38/`
+
+All VCF files require their corresponding `.tbi` tabix index at the same path.
 
 ## Source URLs
 
@@ -69,6 +71,36 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 ### HGSVC3 pangenome VCFs
 
 ```bash
-wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 ```
+
+### SGDP ground truth
+
+**T2T-CHM13 coordinates** (downloaded automatically by the script):
+
+```bash
+for chr in {1..22} X; do
+  wget -P resources/SGDP_variation/t2t/ "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
+  wget -P resources/SGDP_variation/t2t/ "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
+done
+```
+
+**GRCh38 coordinates** (manual download):
+Zenodo: [TBD]
+Originally sourced from https://anvil.terra.bio/#workspaces/anvil-datastorage/AnVIL_T2T_CHRY/data
+
+See `SGDP_variation/README.md` for expected file naming.
+
+### Automated download
+
+Run `scripts/utility/download_resources.sh` from the repository root to fetch all
+reference genomes, pangenome VCFs, and T2T SGDP truth data listed above. The
+script skips files that already exist. GRCh38 SGDP data requires manual download
+from Terra/AnVIL.

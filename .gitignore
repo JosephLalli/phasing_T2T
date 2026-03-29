@@ -91,7 +91,12 @@ pangenie_v2.*.bcf.csi
 # ── Non-core script subdirectories ──
 scripts/deprecated/
 scripts/investigation/
-scripts/utility/
+scripts/utility/calc_per_contig_per_variant_r2.sh
+scripts/utility/compare_callsets.py
+scripts/utility/plot_per_variant_r2.py
+scripts/utility/regen_2430.sh
+scripts/utility/rerun_no_singletons_imputation.sh
+scripts/utility/run_parent_uninformative_chr22.py
 
 # ── Entire liftover_indels_review/ directory ──
 scripts/liftover_indels_review/
