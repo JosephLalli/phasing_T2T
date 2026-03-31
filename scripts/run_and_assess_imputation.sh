@@ -13,8 +13,6 @@ usage() {
 }
 
 force_imputation=false
-input_max_age_hours=172
-max_age_hours=$input_max_age_hours
 
 positional=()
 while [[ $# -gt 0 ]]; do
@@ -26,11 +24,6 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             usage
             exit 0
-            ;;
-        -a|--max-age-hours)
-            input_max_age_hours=$2
-            max_age_hours=$2
-            shift 2
             ;;
         --)
             shift
@@ -74,28 +67,16 @@ if [[ -z "$BASH_XTRACEFD" || "$BASH_XTRACEFD" != "19" ]]; then
     set -x # writes commands to logfile
 fi
 
-file_mtime_epoch() {
-    # GNU stat: -c %Y, BSD/macOS stat: -f %m
-    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
-}
-
 should_run() {
     local target=$1
     if [[ $force_imputation == true ]]; then
-        echo "$target will be regenerated (force mode)."
         return 0
     fi
     # If file doesn't exist or is empty, needs to run
     if [[ ! -s "$target" ]]; then
-        echo "$target is missing and will be regenerated."
         return 0
     fi
-    # If file exists but is zero-sized, needs to run
-    if [[ -f "$target" && ! -s "$target" ]]; then
-        echo "$target is missing and will be regenerated."
-        return 0
-    fi
-    # If target is an vcf/bcf (or index of one), check the underlying VCF/BCF
+    # If target is a VCF/BCF (or index of one), check the underlying file
     if [[ "$target" == *.vcf* || "$target" == *.bcf* ]]; then
         target="${target%.csi}"
         target="${target%.tbi}"
@@ -105,32 +86,13 @@ should_run() {
         fi
         if [[ "$target" == *.vcf || "$target" == *.vcf.gz || "$target" == *.bcf ]]; then
             local variant_count
-            variant_count=$(bcftools index -n "$target" 2>/dev/null) || { echo "$target is missing and will be regenerated."; return 0; }
+            variant_count=$(bcftools index -n "$target" 2>/dev/null) || return 0
             if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
-                echo "$target is missing and will be regenerated."
                 return 0
             fi
         fi
     fi
-    echo "Checking age of $target with max_age_hours=$max_age_hours..."
-    if [[ -z ${max_age_hours:-} ]]; then
-        echo "$target has no age limit set; skipping age check."
-    fi
-    ## Finally, if the target is older than max_age_hours, return 0 to ensure regeneration
-    if [[ ! -z ${max_age_hours:-} ]]; then
-        local now mtime age_seconds max_age_seconds
-        now=$(date +%s)
-        mtime=$(file_mtime_epoch "$target") || { echo "$target mtime unavailable; will be regenerated."; return 0; }
-
-        age_seconds=$(( now - mtime ))
-        max_age_seconds=$(( max_age_hours * 3600 ))
-
-        if (( age_seconds > max_age_seconds )); then
-            echo "$target is older than ${max_age_hours}h and will be regenerated."
-            return 0
-        fi
-    fi
-    ## If all that passes, then file exists and is valid and can be skipped
+    # File exists and is valid
     return 1
 }
 
@@ -214,13 +176,6 @@ wait_and_check() {
 if [[ $force_imputation == true ]]; then
     echo "Force mode enabled: existing outputs will be regenerated where applicable."
 fi
-if ! [[ "$max_age_hours" =~ ^[0-9]+$ ]]; then
-    if [[ -n "$max_age_hours" ]]; then
-        echo "ERROR: --max-age-hours must be a non-negative integer (got: $max_age_hours)" >&2
-        exit 2
-    fi
-fi
-
 chrom=$chrom_arg
 suffix=$suffix_base
 
@@ -498,7 +453,6 @@ T2T_native_panel_confident_singletons=$chrom_working_dir/1KGP.CHM13v2.0.${chrom}
 GRCh38_lifted_panel_confident_singletons_no_pangenome=$lifted_panel_folder/1KGP.GRCh38.lifted_from_CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.nopangenome.confident_singletons.biallelic.2504.bcf
 T2T_native_panel_confident_singletons_no_pangenome=$chrom_working_dir/1KGP.CHM13v2.0.${chrom}.recalibrated.snp_indel.pass.phased.nopangenome.confident_singletons.biallelic.2504.bcf
 
-max_age_hours=''
 if should_run $phased_panel_no_pangenome_biallelic.csi ; then
     echo "Making $phased_panel_no_pangenome_biallelic"
     bcftools view -Ou --threads 8 -S ^$pangenome_and_parents --force-samples $phased_panel_vcf_2504_biallelic 2> /dev/null \
@@ -516,7 +470,6 @@ if should_run "$T2T_native_panel.csi" && [[ -s $rare_variants_phased_ped_biallel
     bcftools view -Ob --threads 4 -S $unrelated_samples $rare_variants_phased_ped_biallelic > $T2T_native_panel && bcftools index -f --threads 4 $T2T_native_panel \
     && did_run $T2T_native_panel.csi
 fi
-max_age_hours=$input_max_age_hours
 
 if should_run "$GRCh38_lifted_panel.csi"; then
     echo "lifting $T2T_native_panel to $GRCh38_lifted_panel"
@@ -539,7 +492,6 @@ if should_run "$T2T_lifted_panel.csi"; then
                                         -d $GRCh38_to_t2t_diffs \
                                         -r $grch38_region && did_run $T2T_lifted_panel &
 fi
-max_age_hours=''
 
 wait_and_check || echo "WARNING: Some liftover jobs failed (non-fatal; lifted panels may be incomplete)" >&2
 
@@ -565,7 +517,6 @@ if should_run "$T2T_native_panel_no_singletons.csi"; then
     && echo "Created $T2T_native_panel_no_singletons, $(bcftools index -n $T2T_native_panel_no_singletons) variants"
 fi
 
-max_age_hours=$input_max_age_hours
 if should_run "$GRCh38_lifted_panel_no_singletons.csi"; then
     echo "lifting $T2T_native_panel_no_singletons to $GRCh38_lifted_panel_no_singletons"
     $basedir/scripts/liftover_panel.sh -i $T2T_native_panel_no_singletons \
@@ -577,7 +528,6 @@ if should_run "$GRCh38_lifted_panel_no_singletons.csi"; then
                                         -r $whole_chrom  && did_run $GRCh38_lifted_panel_no_singletons &
 
 fi
-max_age_hours=''
 
 # if should_run "$GRCh38_lifted_panel_no_singletons.csi"; then
 #     echo "lifting $T2T_native_panel_no_singletons to $GRCh38_lifted_panel_no_singletons"
@@ -648,8 +598,6 @@ wait_and_check || exit 1
 
 
 ### SGDP Imputation Accuracy ###
-# Assess imputation accuracy
-max_age_hours=$input_max_age_hours
 
 #if should_run "$chrom_working_dir/GRCh38_imputation_workspace/GRCh38_space_filtered/lifted_panel.SGDP.${chrom}.txt"; then
     $basedir/scripts/assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel false false SGDP $num_threads &
@@ -674,8 +622,6 @@ wait_and_check || exit 1
 #if should_run "$chrom_working_dir/T2T_no_singletons_imputation_workspace/T2T_space_filtered_no_singletons/lifted_panel.SGDP.${chrom}.txt"; then
     $basedir/scripts/assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_no_singletons_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel_no_singletons $T2T_lifted_panel false true SGDP $num_threads &
 #fi
-max_age_hours=''
-
 # # Assess imputation accuracy only when imputing with SNPs only, removing singletons
 # if should_run "$chrom_working_dir/GRCh38_no_singletons_snps_imputation_workspace/GRCh38_space_filtered_snpsOnly_no_singletons/SGDP/GRCh38.${chrom}.native.imputed.common.bcf"; then # lifted_panel.SGDP.${chrom}.txt"; then
 #     $basedir/scripts/assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_no_singletons_snps_imputation_workspace $SGDP_ground_truth_GRCh38 $GRCh38_native_panel $GRCh38_lifted_panel_no_singletons true true SGDP  $num_threads &
@@ -700,7 +646,6 @@ wait_and_check || exit 1
 #     $basedir/scripts/assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_no_coinflips_imputation_workspace $SGDP_ground_truth_T2T $T2T_native_panel_confident_singletons $T2T_lifted_panel true confident SGDP  $num_threads &
 # fi
 # 
-max_age_hours=20000
 if should_run "$GRCh38_lifted_panel_no_pangenome.csi"; then
     echo $chrom "GRCh38_lifted_panel_no_pangenome"
     bcftools view -Ob --threads 6 --force-samples -S ^$pangenome_and_parents $GRCh38_lifted_panel > $GRCh38_lifted_panel_no_pangenome && \
@@ -743,7 +688,6 @@ wait_and_check || exit 1
 wait
 # ### Pangenome Imputation Accuracy ###
 # # Assess imputation accuracy
-max_age_hours=$input_max_age_hours
 #if should_run "$chrom_working_dir/GRCh38_imputation_pangenome_workspace/GRCh38_space_filtered/pangenome/GRCh38.${chrom}.native.imputed.common.bcf"; then
     $basedir/scripts/assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_imputation_pangenome_workspace      $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_pangenome false false pangenome  $num_threads &
 #fi
@@ -766,8 +710,6 @@ max_age_hours=$input_max_age_hours
 #if should_run "$chrom_working_dir/T2T_no_singletons_imputation_pangenome_workspace/T2T_space_filtered_no_singletons/pangenome/T2T.${chrom}.native.imputed.common.bcf"; then
     $basedir/scripts/assess_imputation.sh T2T $chrom $chrom_working_dir/T2T_no_singletons_imputation_pangenome_workspace $pangenome_ground_truth_T2T $T2T_native_panel_no_singletons_no_pangenome $T2T_lifted_panel_no_pangenome false true pangenome $num_threads &
 #fi
-max_age_hours=''
-
 # # Assess imputation accuracy only when removing singletons and indels (snpsOnly)
 # if should_run "$chrom_working_dir/GRCh38_no_singletons_snps_imputation_pangenome_workspace/GRCh38_space_filtered_snpsOnly_no_singletons/pangenome/GRCh38.${chrom}.native.imputed.common.bcf"; then
 #     $basedir/scripts/assess_imputation.sh GRCh38 $chrom $chrom_working_dir/GRCh38_no_singletons_snps_imputation_pangenome_workspace $pangenome_ground_truth_GRCh38 $GRCh38_native_panel_no_pangenome $GRCh38_lifted_panel_no_singletons_no_pangenome true true pangenome  $num_threads &

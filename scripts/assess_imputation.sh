@@ -28,8 +28,6 @@ no_singletons=$8
 ref_dataset_name=$9
 num_threads=${10}
 
-input_max_age_hours=12
-max_age_hours=$input_max_age_hours
 force_imputation=false
 
 if [[ -z $num_threads ]]; then
@@ -37,28 +35,16 @@ if [[ -z $num_threads ]]; then
 fi
 
 
-file_mtime_epoch() {
-    # GNU stat: -c %Y, BSD/macOS stat: -f %m
-    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
-}
-
 should_run() {
     local target=$1
     if [[ $force_imputation == true ]]; then
-        # echo "$target will be regenerated (force mode)."
         return 0
     fi
     # If file doesn't exist or is empty, needs to run
     if [[ ! -s "$target" ]]; then
-        # echo "$target is missing and will be regenerated."
         return 0
     fi
-    # If file exists but is zero-sized, needs to run
-    if [[ -f "$target" && ! -s "$target" ]]; then
-        # echo "$target is missing and will be regenerated."
-        return 0
-    fi
-    # If target is an vcf/bcf (or index of one), check the underlying VCF/BCF
+    # If target is a VCF/BCF (or index of one), check the underlying file
     if [[ "$target" == *.vcf* || "$target" == *.bcf* ]]; then
         target="${target%.csi}"
         target="${target%.tbi}"
@@ -68,31 +54,12 @@ should_run() {
         fi
         if [[ "$target" == *.vcf || "$target" == *.vcf.gz || "$target" == *.bcf ]]; then
             local variant_count
-            variant_count=$(bcftools index -n "$target" 2>/dev/null) || { echo "$target is missing and will be regenerated."; return 0; }
+            variant_count=$(bcftools index -n "$target" 2>/dev/null) || return 0
             if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
-                # echo "$target is missing and will be regenerated."
                 return 0
             fi
         fi
     fi
-    echo "Checking age of $target with max_age_hours=$max_age_hours..."
-    # if [[ -z ${max_age_hours:-} ]]; then
-    #     echo "$target has no age limit set; skipping age check."
-    # fi
-    if [[ ! -z ${max_age_hours:-} ]]; then    ## Finally, if the target is older than max_age_hours, return 0 to ensure regeneration
-        local now mtime age_seconds max_age_seconds
-        now=$(date +%s)
-        mtime=$(file_mtime_epoch "$target") || { echo "$target mtime unavailable; will be regenerated."; return 0; }
-
-        age_seconds=$(( now - mtime ))
-        max_age_seconds=$(( max_age_hours * 3600 ))
-
-        if (( age_seconds > max_age_seconds )); then
-            echo "$target is older than ${max_age_hours}h and will be regenerated."
-            return 0
-        fi
-    fi
-
     # File exists and is valid
     return 1
 }
@@ -298,8 +265,6 @@ working_dir_ref=$working_dir/${ref_dataset_name}
     base_groundtruth_name=${reference_dataset%%.gz}
     base_groundtruth_name=${base_groundtruth_name%%.bcf}
     base_groundtruth_name=${base_groundtruth_name%%.vcf}
-    ## These long panel filtering jobs can be done once for now
-    max_age_hours=10000000 # disable age-based regeneration for these steps
     if should_run "$base_groundtruth_name.$ground_truth_filtered_suffix.bcf.csi"; then
         if [[ $ref_dataset_name != 'pangenome' ]]; then
             bcftools view --threads 2 -Ou -i "$ground_truth_filter_string" $subsample $reference_dataset \
@@ -346,8 +311,6 @@ working_dir_ref=$working_dir/${ref_dataset_name}
         lifted_filter=$variant_quality_filter_string
     fi 
     
-    # max_age_hours=$input_max_age_hours # restore age-based regeneration for lifted panel
-
     base_lifted_panel_name=${lifted_panel%%.gz}
     base_lifted_panel_name=${base_lifted_panel_name%%.bcf}
     base_lifted_panel_name=${base_lifted_panel_name%%.vcf}
@@ -374,9 +337,6 @@ working_dir_ref=$working_dir/${ref_dataset_name}
     wait_and_check || exit 1
 wait
 # 1) Downsample ground truth variants
-    # max_age_hours='' # disable age-based regeneration for these steps
-#$lifted_panel $native_panel \
-    max_age_hours=48
     ground_truth_downsampled=${reference_dataset%%.bcf}.downsampled.bcf
     ground_truth_downsampled=$working_dir/$(basename $ground_truth_downsampled)
     if should_run "$ground_truth_downsampled.csi"; then
@@ -389,8 +349,6 @@ wait
     fi
     
 wait_and_check || exit 1
-
-    # max_age_hours=$input_max_age_hours # restore age-based regeneration for lifted panel
 
 # trap - ERR EXIT
 # exit 0

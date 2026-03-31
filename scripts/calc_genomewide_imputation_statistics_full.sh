@@ -13,41 +13,16 @@ test_run=false
 force_imputation=false
 
 
-file_mtime_epoch() {
-    # GNU stat: -c %Y, BSD/macOS stat: -f %m
-    stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"
-}
-
-
-should_run() {
-    local target=$1
-    # If file doesn't exist or is empty, needs to run
-    if [[ ! -s "$target" || $force_imputation == true ]]; then
-        echo "$target is missing and will be regenerated."
-        return 0
-    fi
-    # File exists and is valid
-    return 1
-}
-
-max_age_hours=72
 should_run() {
     local target=$1
     if [[ $force_imputation == true ]]; then
-        # echo "$target will be regenerated (force mode)."
         return 0
     fi
     # If file doesn't exist or is empty, needs to run
     if [[ ! -s "$target" ]]; then
-        # echo "$target is missing and will be regenerated."
         return 0
     fi
-    # If file exists but is zero-sized, needs to run
-    if [[ -f "$target" && ! -s "$target" ]]; then
-        # echo "$target is missing and will be regenerated."
-        return 0
-    fi
-    # If target is an vcf/bcf (or index of one), check the underlying VCF/BCF
+    # If target is a VCF/BCF (or index of one), check the underlying file
     if [[ "$target" == *.vcf* || "$target" == *.bcf* ]]; then
         target="${target%.csi}"
         target="${target%.tbi}"
@@ -57,31 +32,12 @@ should_run() {
         fi
         if [[ "$target" == *.vcf || "$target" == *.vcf.gz || "$target" == *.bcf ]]; then
             local variant_count
-            variant_count=$(bcftools index -n "$target" 2>/dev/null) || { echo "$target is missing and will be regenerated."; return 0; }
+            variant_count=$(bcftools index -n "$target" 2>/dev/null) || return 0
             if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
-                # echo "$target is missing and will be regenerated."
                 return 0
             fi
         fi
     fi
-    echo "Checking age of $target with max_age_hours=$max_age_hours..."
-    if [[ -z ${max_age_hours:-} ]]; then
-        echo "$target has no age limit set; skipping age check."
-    fi
-    if [[ ! -z ${max_age_hours:-} ]]; then    ## Finally, if the target is older than max_age_hours, return 0 to ensure regeneration
-        local now mtime age_seconds max_age_seconds
-        now=$(date +%s)
-        mtime=$(file_mtime_epoch "$target") || { echo "$target mtime unavailable; will be regenerated."; return 0; }
-
-        age_seconds=$(( now - mtime ))
-        max_age_seconds=$(( max_age_hours * 3600 ))
-
-        if (( age_seconds > max_age_seconds )); then
-            echo "$target is older than ${max_age_hours}h and will be regenerated."
-            return 0
-        fi
-    fi
-
     # File exists and is valid
     return 1
 }
