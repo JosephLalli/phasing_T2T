@@ -98,27 +98,8 @@ RUN wget -q https://github.com/samtools/bcftools/releases/download/1.22/bcftools
 RUN bcftools +liftover --help 2>&1 | head -1
 
 # ── Python packages ──
-RUN pip3 install --no-cache-dir \
-    polars \
-    pandas \
-    pyarrow \
-    numpy \
-    pysam \
-    cyvcf2 \
-    intervaltree \
-    tqdm \
-    pyliftover \
-    biopython \
-    scipy \
-    scikit-learn \
-    matplotlib \
-    seaborn \
-    statannotations \
-    upsetplot \
-    jupyter \
-    nbconvert \
-    nbformat \
-    ipython
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 # ── Set up project directory ──
 WORKDIR /phasing_T2T_project
