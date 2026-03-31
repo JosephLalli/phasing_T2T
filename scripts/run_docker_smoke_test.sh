@@ -165,7 +165,7 @@ docker run --rm \
         if [[ "${RUN_NOTEBOOKS}" == "1" ]]; then
             echo "=== Stage 3: notebook execution ==="
             cd notebooks
-            for nb in calc_figures_for_paper.ipynb calc_per_variant_figures_for_paper.ipynb make_plots.ipynb paper_inline_statistics.ipynb; do
+            for nb in calc_figures_for_paper.ipynb calc_per_variant_figures_for_paper.ipynb make_plots.ipynb; do
                 echo "Executing ${nb}"
                 jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 "${nb}"
             done
