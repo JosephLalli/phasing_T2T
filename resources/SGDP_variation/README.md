@@ -20,10 +20,13 @@ done
 
 ## GRCh38 coordinates
 
-Download from Zenodo: [TBD]
+Download from Zenodo: https://zenodo.org/records/19371182
 
 Originally sourced from Terra/AnVIL:
 https://anvil.terra.bio/#workspaces/anvil-datastorage/AnVIL_T2T_CHRY/data
 
-Place (or symlink) per-chromosome VCFs at `resources/SGDP_variation/grch38/`.
+Run `scripts/utility/download_resources.sh` to download automatically, or for
+test regions only: `scripts/utility/download_resources.sh --test`
+
+Expected location: `resources/SGDP_variation/grch38/`
 Expected naming: `chr{N}.recalibrated.snp_indel.pass.vcf.gz` (with `.tbi` indexes).
