@@ -39,10 +39,9 @@ else:
     grch38_suffix = ''
 
 # Ensure we are in the project root directory
-if os.getcwd().split('/')[-1] == 'phasing_T2T_project':
-    pass
-elif os.getcwd().split('/')[-1] == 'scripts':
-    os.chdir('..')
+# Derive from script location rather than cwd, so the repo name doesn't matter
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(os.path.join(_script_dir, '..', '..'))
 
 # -------- Define folder and file locations --------
 # File locations

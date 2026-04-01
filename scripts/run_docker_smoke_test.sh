@@ -139,7 +139,7 @@ docker run --rm \
     -v "${HGSVC3_HPRC_CHM13_VCF}.tbi:/phasing_T2T_project/resources/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi:ro" \
     -v "${HGSVC3_HPRC_CHM13_GRCH38_VCF}:/phasing_T2T_project/resources/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz:ro" \
     -v "${HGSVC3_HPRC_CHM13_GRCH38_VCF}.tbi:/phasing_T2T_project/resources/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi:ro" \
-    -v "${SGDP_GRCH38_DIR}:/GRCh38_SGDP_full:ro" \
+    -v "${SGDP_GRCH38_DIR}:/phasing_T2T_project/resources/SGDP_variation/grch38:ro" \
     -v "${SGDP_T2T_DIR}:/phasing_T2T_project/resources/SGDP_variation/t2t:ro" \
     -v "${GRCH38_PANELS_DIR}:/phasing_T2T_project/phased_panels/grch38" \
     -v "${OUTPUT_DIR}/working_directories:/phasing_T2T_project/working_directories" \

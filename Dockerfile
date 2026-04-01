@@ -14,14 +14,12 @@
 # Unphased variant calls:
 #   -v <unphased_vcfs>:/phasing_T2T_project/unphased_variant_calls:ro
 #
-# Pangenome VCFs (symlinks in resources/ point outside the repo):
+# Pangenome VCFs:
 #   -v <hprc_chm13_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz:ro  (+.tbi)
 #   -v <hprc_grch38_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz:ro (+.tbi)
-#   -v <hgsvc3_dir>:/phasing_T2T_project/resources/hgsvc3:ro  (then individual file mounts below)
 #
-# SGDP ground truth (symlinks resolve outside the repo):
-#   -v <sgdp_grch38_dir>:/GRCh38_SGDP_full:ro
-#       (resources/SGDP_variation/grch38 -> ../../../GRCh38_SGDP_full -> /GRCh38_SGDP_full in container)
+# SGDP ground truth:
+#   -v <sgdp_grch38_dir>:/phasing_T2T_project/resources/SGDP_variation/grch38:ro
 #   -v <sgdp_t2t_dir>:/phasing_T2T_project/resources/SGDP_variation/t2t:ro
 #
 # Precomputed GRCh38 panels (read-write: assess_imputation.sh writes filtered BCFs here):
@@ -131,10 +129,7 @@ RUN mkdir -p \
     SHAPEIT5_switch_output \
     figures \
     resources/SGDP_variation/t2t \
-    /GRCh38_SGDP_full && \
-    # Recreate the relative symlink that scripts expect:
-    #   resources/SGDP_variation/grch38 -> ../../../GRCh38_SGDP_full -> /GRCh38_SGDP_full
-    ln -s ../../../GRCh38_SGDP_full resources/SGDP_variation/grch38
+    resources/SGDP_variation/grch38
 
 LABEL description="T2T genomic variant phasing pipeline (no R/Java/GATK)"
 LABEL version="2.0"
