@@ -107,17 +107,20 @@ if [[ ! -f "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz" ]]; then
 else
     echo "    GRCh38 FASTA already present, skipping."
 fi
-fetch "${RESOURCES}" \
-    "https://42basepairs.com/download/s3/1000genomes/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai"
-
-# Index reference FASTAs if samtools is available
+# Index reference FASTAs (creates .fa.gz.fai and .fa.gz.gzi)
+# Note: the upstream .fa.fai from 42basepairs is for uncompressed FASTA and
+# cannot be used with the bgzipped version. samtools faidx must re-index.
 if command -v samtools &>/dev/null; then
     for fasta in "${RESOURCES}/chm13v2.0.fa.gz" "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"; do
         if [[ -f "${fasta}" && ! -f "${fasta}.fai" ]]; then
-            echo "    Indexing $(basename "${fasta}")..."
+            echo "    Indexing $(basename "${fasta}") (generates .fai and .gzi)..."
             samtools faidx "${fasta}"
         fi
     done
+else
+    echo "WARNING: samtools not found. Reference FASTAs will need manual indexing:" >&2
+    echo "  samtools faidx resources/chm13v2.0.fa.gz" >&2
+    echo "  samtools faidx resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz" >&2
 fi
 
 # ── Unphased variant calls ───────────────────────────────────────────────────
