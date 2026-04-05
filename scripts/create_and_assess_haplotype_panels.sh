@@ -111,9 +111,13 @@ should_run_fully_annotated_report_gz() {
 
 get_excesshet_query_tag() {
     local vcf="$1"
-    if bcftools view -h "$vcf" | grep -q '^##INFO=<ID=ExcessHet,'; then
+    local header
+    # Avoid grep -q on a live pipe under pipefail: an early match can SIGPIPE bcftools
+    # and make the pipeline look like a failure even when the tag is present.
+    header=$(bcftools view -h "$vcf") || return 1
+    if grep -q '^##INFO=<ID=ExcessHet,' <<<"$header"; then
         printf 'ExcessHet'
-    elif bcftools view -h "$vcf" | grep -q '^##INFO=<ID=ExcHet,'; then
+    elif grep -q '^##INFO=<ID=ExcHet,' <<<"$header"; then
         printf 'ExcHet'
     else
         echo "ERROR: Neither INFO/ExcessHet nor INFO/ExcHet is present in $vcf" >&2
