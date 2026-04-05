@@ -249,7 +249,7 @@ set -u
 if [[ $genome == 'GRCh38' ]]; then
     drop_reference='CHM13'
     native_maps_insert=''
-    chrom_map=$basedir/resources/recombination_maps/grch38/${chrom}.b38.gmap.gz
+    chrom_map=$basedir/resources/recombination_maps/grch38/$(echo $chrom | cut -f 1 -d '_').b38.gmap.gz
     initial_vcf_calls_folder=$basedir/unphased_variant_calls/grch38
 
     ref_fasta=$basedir/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
@@ -329,19 +329,27 @@ then
 elif [[ $chrom == 'chr22_test' ]]
 then
     chrom='chr22_test'
-    region="chr22:18671427-25461594"
-    whole_chrom=$region
+    chm13_region="chr22:18671427-25461594"
     grch38_region="chr22:18000000-25000000"
-    chrom_map=$basedir/resources/recombination_maps/t2t_native_scaled_maps/chr22.t2t.scaled.gmap.gz
-    end_chrom=25461594
+    if [[ $genome == 'GRCh38' ]]; then
+        region=$grch38_region
+    else
+        region=$chm13_region
+    fi
+    whole_chrom=$region
+    end_chrom=$(echo "$region" | grep -oE '[0-9]+$')
 elif [[ $chrom == 'chr15_test' ]]
 then
     chrom='chr15_test'
-    region="chr15:17904139-25242443"
-    whole_chrom=$region
+    chm13_region="chr15:17904139-25242443"
     grch38_region="chr15:20000000-27500000"
-    chrom_map=$basedir/resources/recombination_maps/t2t_native_scaled_maps/chr15.t2t.scaled.gmap.gz
-    end_chrom=25242443
+    if [[ $genome == 'GRCh38' ]]; then
+        region=$grch38_region
+    else
+        region=$chm13_region
+    fi
+    whole_chrom=$region
+    end_chrom=$(echo "$region" | grep -oE '[0-9]+$')
 elif [[ $chrom == 'chrX' ]]
 then
     region="chrX:$(($PAR1_end+1))-$PAR2_start"
