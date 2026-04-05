@@ -82,12 +82,12 @@ To avoid dependency conflicts and ensure reproducible results, users can run the
 **Run in Docker container:**
 ```bash
 # Pull the container
-docker pull jlalli/phasing_T2T
+docker pull jlalli/phasing_t2t_dep_container:v2.0
 
 # Start an interactive session with the project mounted
 docker run -it -v /path/to/your/phasing_T2T_project:/workspace/phasing_T2T_project \
     -w /workspace/phasing_T2T_project \
-    jlalli/phasing_T2T
+    jlalli/phasing_t2t_dep_container:v2.0
 
 # Once inside the container, you can run any pipeline commands
 cd scripts
@@ -408,7 +408,7 @@ and the repo entrypoints on the `chr22_test` and `chr15_test` regions.
 git clone https://github.com/JosephLalli/phasing_T2T.git
 cd phasing_T2T
 
-docker build -t phasing-t2t .
+docker pull jlalli/phasing_t2t_dep_container:v2.0
 cp docker.env.example docker.env
 
 ./scripts/run_docker_smoke_test.sh docker.env

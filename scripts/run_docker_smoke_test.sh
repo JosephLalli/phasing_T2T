@@ -34,7 +34,7 @@ fi
 # shellcheck disable=SC1090
 source "${ENV_FILE}"
 
-IMAGE_NAME="${IMAGE_NAME:-phasing-t2t}"
+IMAGE_NAME="${IMAGE_NAME:-jlalli/phasing_t2t_dep_container:v2.0}"
 CONTAINER_NAME="${CONTAINER_NAME:-phasing-t2t-smoke}"
 NUM_THREADS="${NUM_THREADS:-12}"
 RUN_SUFFIX="${RUN_SUFFIX:-smoke}"
