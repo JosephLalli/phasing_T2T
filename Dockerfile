@@ -1,6 +1,7 @@
 # Phasing T2T Project Docker Container
 # Runs the phasing pipeline test cases (chr22_test, chr15_test).
-# No R, Java, or GATK -- only bcftools/samtools/htslib + Python.
+# Includes bcftools/samtools/htslib, Python, and the R stack needed for Figure 6.
+# No Java or GATK.
 #
 # ── Volume mount requirements ──
 # The following MUST be bind-mounted at runtime (too large for the image).
@@ -58,9 +59,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libncurses5-dev \
     libtbb-dev \
     libcurl4-openssl-dev \
+    libcairo2-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libxml2-dev \
     python3 \
     python3-pip \
     python3-dev \
+    r-base \
+    r-base-dev \
+    cmake \
+    fonts-liberation2 \
     parallel \
     && rm -rf /var/lib/apt/lists/*
 
@@ -99,6 +113,10 @@ RUN bcftools +liftover --help 2>&1 | head -1
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
+# ── R packages for Figure 6 generation ──
+RUN R -q -e "install.packages(c('BiocManager', 'arrow', 'PlotTools', 'tidyverse', 'svglite'), repos='https://cloud.r-project.org')" && \
+    R -q -e "BiocManager::install(c('GenomicRanges', 'rtracklayer', 'karyoploteR'), ask=FALSE, update=FALSE)"
+
 # ── Set up project directory ──
 WORKDIR /phasing_T2T_project
 
@@ -128,10 +146,12 @@ RUN mkdir -p \
     imputation_statistics \
     SHAPEIT5_switch_output \
     figures \
+    tables \
+    notebook_runs \
     resources/SGDP_variation/t2t \
     resources/SGDP_variation/grch38
 
-LABEL description="T2T genomic variant phasing pipeline (no R/Java/GATK)"
+LABEL description="T2T genomic variant phasing pipeline with Python and R analysis support"
 LABEL version="2.0"
 
 CMD ["/bin/bash"]

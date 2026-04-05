@@ -92,8 +92,22 @@ for chr in {1..22} X; do
 done
 ```
 
-**GRCh38 coordinates** (manual download):
-Zenodo: [TBD]
+**GRCh38 coordinates**:
+The smoke test and full reproduction use Zenodo tarballs that are unpacked into
+`resources/SGDP_variation/grch38/`.
+
+Smoke-test tarball:
+```bash
+wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_test_regions.tar.gz \
+  "https://zenodo.org/records/19371182/files/SGDP_GRCh38_test_regions.tar.gz?download=1"
+```
+
+Whole-genome tarball:
+```bash
+wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_all_chromosomes.tar.gz \
+  "https://zenodo.org/records/19371182/files/SGDP_GRCh38_all_chromosomes.tar.gz?download=1"
+```
+
 Originally sourced from https://anvil.terra.bio/#workspaces/anvil-datastorage/AnVIL_T2T_CHRY/data
 
 See `SGDP_variation/README.md` for expected file naming.
@@ -101,6 +115,12 @@ See `SGDP_variation/README.md` for expected file naming.
 ### Automated download
 
 Run `scripts/utility/download_resources.sh` from the repository root to fetch all
-reference genomes, pangenome VCFs, and T2T SGDP truth data listed above. The
-script skips files that already exist. GRCh38 SGDP data requires manual download
-from Terra/AnVIL.
+reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and the
+required FASTA indexes (`.fai` and `.gzi`). The script skips files that already
+exist.
+
+For the Docker smoke test, prefer:
+
+```bash
+bash scripts/utility/download_resources.sh --test
+```

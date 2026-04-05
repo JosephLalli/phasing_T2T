@@ -108,7 +108,18 @@ cd phasing_T2T
 
 ### 2) Obtain primary data sources
 
-If your goal is to run this pipeline on a test dataset, please jump to step 3. All files necessary to phase the two test regions (A region flanking the 22q11 duplication/deletion region, and a second flanking the Angelmans/Prader Willi critical region in 15q11.2-13) are included in this github.
+If your goal is to run the Docker smoke test or the chr15/chr22 test regions,
+do not skip this section. The repository includes the scripts and region
+definitions for those test cases, but the biological inputs are still external.
+The fastest supported setup path is:
+
+```bash
+bash scripts/utility/download_resources.sh --test
+```
+
+That helper downloads the canonical test inputs into the repo, converts and
+indexes the FASTA files (including the required `.gzi` files), and populates
+the SGDP truth data needed by the smoke test.
 
 If you are interested in replicating our work completely, the necessary data that is too large to store on github can be obtained by following the instructions below.
 
@@ -181,7 +192,7 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 ```
 
-Alternatively, run `scripts/utility/download_resources.sh` from the repository root to fetch all reference genomes and pangenome VCFs at once.
+Alternatively, run `scripts/utility/download_resources.sh` from the repository root to fetch the canonical runtime inputs, including reference genomes, pangenome VCFs, SGDP truth data, and the required FASTA indexes. Use `--test` to fetch only the chr15/chr22 smoke-test inputs.
 
 #### Make binaries executable 
 
@@ -232,11 +243,18 @@ If you are interesting in replicating our work from scratch, please continue fro
 Please note: These scripts can easily take up over 350GB of ram as written.
 
 ```bash
+# Build the syntenic/nonsyntenic label files used by the concordance aggregation.
+./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 $CHM13_suffix imputation_statistics/imputation_results_${CHM13_suffix} true
+./scripts/create_syn_nonsyn_bins.sh GRCh38 $GRCh38_suffix imputation_statistics/imputation_results_${CHM13_suffix} true
+
 # Collect imputation statistics in one place:
-./calc_genomewide_imputation_statistics_full.sh $GRCh38_suffix $CHM13_suffix $num_threads true
+./scripts/calc_genomewide_imputation_statistics_full.sh $GRCh38_suffix $CHM13_suffix $num_threads true
 
 # Collect all data into a series of summary parquet files
-python3 create_summary_phasing_dataframes_polars_regional.py
+python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py \
+    --CHM13_run_suffix $CHM13_suffix \
+    --GRCh38_run_suffix $GRCh38_suffix \
+    --test
 ```
 
 GLIMPSE2_concordance output (Both GRCh38 and CHM13v2.0) will be found in imputation_statistics/imputation_results_${CHM13_suffix}
@@ -260,6 +278,8 @@ Run scripts/figure6/Figure_6_script.R, which produces the karyotype plots used i
 
 ```bash
 Rscript scripts/figure6/Figure_6_script.R
+python3 scripts/figure6/stitch_svgs.py --batch figures/figure6
+python3 scripts/figure6/stitch_svgs.py --grid figures/figure6
 ```
 
 
@@ -397,17 +417,22 @@ See `resources/README.md` for the canonical runtime paths and source URLs.
 ### 1. Docker smoke test
 
 This is the recommended first run. It validates the containerized environment
-and the repo entrypoints on the `chr22_test` and `chr15_test` regions.
+and the repo entrypoints by running the `chr22_test` and `chr15_test` regions
+for both CHM13v2.0 and GRCh38, then performing the downstream aggregation,
+notebook execution, and Figure 6 generation steps inside the container.
 
 1. Clone the repository.
-2. Build the image.
-3. Copy `docker.env.example` to `docker.env` and edit the host paths.
-4. Run the smoke test.
+2. Download the canonical test inputs.
+3. Pull the smoke-test image.
+4. Copy `docker.env.example` to `docker.env`. If you used the helper download
+   script and kept the default repo layout, the paths already match.
+5. Run the smoke test.
 
 ```bash
 git clone https://github.com/JosephLalli/phasing_T2T.git
 cd phasing_T2T
 
+bash scripts/utility/download_resources.sh --test
 docker pull jlalli/phasing_t2t_dep_container:v2.0
 cp docker.env.example docker.env
 
@@ -417,8 +442,10 @@ cp docker.env.example docker.env
 Notes:
 
 - The smoke test is not self-contained; it still requires external biological inputs.
-- Notebook execution is off by default. Set `RUN_NOTEBOOKS=1` in `docker.env` if you want the notebooks executed in the container.
+- `download_resources.sh --test` is the supported way to fetch those inputs into the canonical repo-local paths used by `docker.env.example`.
+- Notebook execution and Figure 6 generation are on by default. Set `RUN_NOTEBOOKS=0` in `docker.env` if you want to skip them.
 - Outputs are written to `OUTPUT_DIR`, which defaults to `./docker_smoke_output`.
+- Generated figures, tables, and executed notebooks are written to `OUTPUT_DIR/figures`, `OUTPUT_DIR/tables`, and `OUTPUT_DIR/notebook_runs`.
 
 ### 2. Full reproduction
 
@@ -428,7 +455,13 @@ chromosomes or regions, then aggregate the outputs and execute the notebooks.
 ```bash
 # Example test-region runs
 ./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 test_CHM13 CHM13v2.0
+./scripts/create_and_assess_haplotype_panels.sh chr15_test 12 test_CHM13 CHM13v2.0
 ./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 test_GRCh38 GRCh38
+./scripts/create_and_assess_haplotype_panels.sh chr15_test 12 test_GRCh38 GRCh38
+
+# Build the syntenic/nonsyntenic label files used by the concordance aggregation
+./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 test_CHM13 imputation_statistics/imputation_results_test_CHM13 true
+./scripts/create_syn_nonsyn_bins.sh GRCh38 test_GRCh38 imputation_statistics/imputation_results_test_CHM13 true
 
 # Aggregate genome-wide imputation outputs
 ./scripts/calc_genomewide_imputation_statistics_full.sh test_GRCh38 test_CHM13 12 true
@@ -436,7 +469,19 @@ chromosomes or regions, then aggregate the outputs and execute the notebooks.
 # Build summary parquet files
 python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py \
     --CHM13_run_suffix test_CHM13 \
-    --GRCh38_run_suffix test_GRCh38
+    --GRCh38_run_suffix test_GRCh38 \
+    --test
+
+# Run notebooks and Figure 6 generation
+cd notebooks
+jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 calc_figures_for_paper.ipynb
+jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 calc_per_variant_figures_for_paper.ipynb
+jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 make_plots.ipynb
+cd ..
+
+Rscript ./scripts/figure6/Figure_6_script.R
+python3 ./scripts/figure6/stitch_svgs.py --batch ./figures/figure6
+python3 ./scripts/figure6/stitch_svgs.py --grid ./figures/figure6
 ```
 
 The main output locations are:

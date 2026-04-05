@@ -10,12 +10,16 @@ Usage:
   scripts/run_docker_smoke_test.sh [docker.env]
 
 Description:
-  Run the chr22_test and chr15_test publication smoke test inside Docker.
-  This validates the containerized software stack and the repo entrypoints,
+  Run the chr22_test and chr15_test smoke workflow for both CHM13v2.0
+  and GRCh38 inside Docker, then aggregate the test outputs and execute
+  the downstream analysis notebooks and Figure 6 generation.
+  This validates the containerized software stack and repo entrypoints,
   but still requires externally provided biological inputs.
 
 Environment:
-  Copy docker.env.example to docker.env, edit the paths, and pass it here.
+  Copy docker.env.example to docker.env, then review the settings.
+  If you used scripts/utility/download_resources.sh, the canonical repo-local
+  paths in docker.env.example should work without edits.
 EOF
 }
 
@@ -28,6 +32,8 @@ fi
 if [[ ! -f "${ENV_FILE}" ]]; then
     echo "ERROR: environment file not found: ${ENV_FILE}" >&2
     echo "Create it from docker.env.example." >&2
+    echo "For the canonical test-data setup, run:" >&2
+    echo "  bash scripts/utility/download_resources.sh --test" >&2
     exit 1
 fi
 
@@ -38,7 +44,7 @@ IMAGE_NAME="${IMAGE_NAME:-jlalli/phasing_t2t_dep_container:v2.0}"
 CONTAINER_NAME="${CONTAINER_NAME:-phasing-t2t-smoke}"
 NUM_THREADS="${NUM_THREADS:-12}"
 RUN_SUFFIX="${RUN_SUFFIX:-smoke}"
-RUN_NOTEBOOKS="${RUN_NOTEBOOKS:-0}"
+RUN_NOTEBOOKS="${RUN_NOTEBOOKS:-1}"
 OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_DIR}/docker_smoke_output}"
 
 require_var() {
@@ -112,7 +118,10 @@ mkdir -p \
     "${OUTPUT_DIR}/intermediate_data" \
     "${OUTPUT_DIR}/imputation_statistics" \
     "${OUTPUT_DIR}/SHAPEIT5_switch_output" \
-    "${OUTPUT_DIR}/phased_panels"
+    "${OUTPUT_DIR}/phased_panels" \
+    "${OUTPUT_DIR}/figures" \
+    "${OUTPUT_DIR}/tables" \
+    "${OUTPUT_DIR}/notebook_runs"
 
 docker run --rm \
     --name "${CONTAINER_NAME}" \
@@ -141,34 +150,69 @@ docker run --rm \
     -v "${HGSVC3_HPRC_CHM13_GRCH38_VCF}.tbi:/phasing_T2T_project/resources/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi:ro" \
     -v "${SGDP_GRCH38_DIR}:/phasing_T2T_project/resources/SGDP_variation/grch38:ro" \
     -v "${SGDP_T2T_DIR}:/phasing_T2T_project/resources/SGDP_variation/t2t:ro" \
-    -v "${GRCH38_PANELS_DIR}:/phasing_T2T_project/phased_panels/grch38" \
     -v "${OUTPUT_DIR}/working_directories:/phasing_T2T_project/working_directories" \
     -v "${OUTPUT_DIR}/intermediate_data:/phasing_T2T_project/intermediate_data" \
     -v "${OUTPUT_DIR}/imputation_statistics:/phasing_T2T_project/imputation_statistics" \
     -v "${OUTPUT_DIR}/SHAPEIT5_switch_output:/phasing_T2T_project/SHAPEIT5_switch_output" \
-    -v "${OUTPUT_DIR}/phased_panels:/phasing_T2T_project/phased_panels/phased_CHM13v2.0_panel_${RUN_SUFFIX}" \
+    -v "${OUTPUT_DIR}/phased_panels:/phasing_T2T_project/phased_panels" \
+    -v "${GRCH38_PANELS_DIR}:/phasing_T2T_project/phased_panels/grch38" \
+    -v "${OUTPUT_DIR}/figures:/phasing_T2T_project/figures" \
+    -v "${OUTPUT_DIR}/tables:/phasing_T2T_project/tables" \
+    -v "${OUTPUT_DIR}/notebook_runs:/phasing_T2T_project/notebook_runs" \
     "${IMAGE_NAME}" \
     bash -lc '
         set -euo pipefail
 
-        echo "=== Stage 1: chr22_test ==="
-        ./scripts/create_and_assess_haplotype_panels.sh chr22_test "${NUM_THREADS}" "${RUN_SUFFIX}" CHM13v2.0
+        run_panel_test() {
+            local chrom="$1"
+            local genome="$2"
+            echo "=== Stage 1: ${genome} ${chrom} ==="
+            ./scripts/create_and_assess_haplotype_panels.sh "${chrom}" "${NUM_THREADS}" "${RUN_SUFFIX}" "${genome}"
+        }
 
-        echo "=== Stage 1: chr15_test ==="
-        ./scripts/create_and_assess_haplotype_panels.sh chr15_test "${NUM_THREADS}" "${RUN_SUFFIX}" CHM13v2.0
+        run_panel_test chr22_test CHM13v2.0
+        run_panel_test chr15_test CHM13v2.0
+        run_panel_test chr22_test GRCh38
+        run_panel_test chr15_test GRCh38
 
-        echo "=== Stage 2: summary parquet generation ==="
+        IMPUTATION_RESULTS_DIR="./imputation_statistics/imputation_results_${RUN_SUFFIX}"
+
+        echo "=== Stage 2: syntenic/nonsyntenic bin generation ==="
+        ./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 "${RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
+        ./scripts/create_syn_nonsyn_bins.sh GRCh38 "${RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
+
+        echo "=== Stage 3: genome-wide imputation aggregation ==="
+        ./scripts/calc_genomewide_imputation_statistics_full.sh \
+            "${RUN_SUFFIX}" \
+            "${RUN_SUFFIX}" \
+            "${NUM_THREADS}" \
+            true
+
+        echo "=== Stage 4: summary parquet generation ==="
         python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py \
             --CHM13_run_suffix "${RUN_SUFFIX}" \
+            --GRCh38_run_suffix "${RUN_SUFFIX}" \
             --test
 
         if [[ "${RUN_NOTEBOOKS}" == "1" ]]; then
-            echo "=== Stage 3: notebook execution ==="
-            cd notebooks
-            for nb in calc_figures_for_paper.ipynb calc_per_variant_figures_for_paper.ipynb make_plots.ipynb; do
-                echo "Executing ${nb}"
-                jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 "${nb}"
-            done
+            echo "=== Stage 5: notebook execution ==="
+            (
+                cd notebooks
+                for nb in calc_figures_for_paper.ipynb calc_per_variant_figures_for_paper.ipynb make_plots.ipynb; do
+                    echo "Executing ${nb}"
+                    jupyter nbconvert \
+                        --to notebook \
+                        --execute \
+                        --ExecutePreprocessor.timeout=600 \
+                        --output-dir /phasing_T2T_project/notebook_runs \
+                        "${nb}"
+                done
+            )
+
+            echo "=== Stage 6: Figure 6 generation ==="
+            Rscript ./scripts/figure6/Figure_6_script.R
+            python3 ./scripts/figure6/stitch_svgs.py --batch ./figures/figure6
+            python3 ./scripts/figure6/stitch_svgs.py --grid ./figures/figure6
         fi
 
         echo "=== Smoke test complete ==="

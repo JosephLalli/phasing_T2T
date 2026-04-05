@@ -16,7 +16,36 @@ library(GenomicRanges)
 library(rtracklayer)
 library(svglite)
 
-setwd('..')
+get_script_path <- function() {
+  cmd_args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=", cmd_args, value = TRUE)
+  if (length(file_arg) > 0) {
+    return(normalizePath(sub("^--file=", "", file_arg[[1]])))
+  }
+
+  if (!is.null(sys.frames()[[1]]$ofile)) {
+    return(normalizePath(sys.frames()[[1]]$ofile))
+  }
+
+  stop("Could not determine the Figure 6 script path.")
+}
+
+script_path <- get_script_path()
+script_dir <- dirname(script_path)
+project_dir <- normalizePath(file.path(script_dir, "..", ".."))
+setwd(project_dir)
+
+rolling_data_candidates <- c(
+  "intermediate_data_whole_genome/rolling_stats_500k_window.parquet",
+  "intermediate_data/rolling_stats_500k_window.parquet"
+)
+rolling_data_matches <- rolling_data_candidates[file.exists(rolling_data_candidates)]
+
+if (length(rolling_data_matches) == 0) {
+  stop(
+    "Could not find rolling_stats_500k_window.parquet in intermediate_data_whole_genome/ or intermediate_data/."
+  )
+}
 
 # ============================================================================
 # CONFIGURATION SECTION
@@ -25,17 +54,17 @@ setwd('..')
 # File paths
 CONFIG <- list(
   # Input data files
-  rolling_data_file = '../intermediate_data_whole_genome/rolling_stats_500k_window.parquet',
-  t2t_cytobands_file = '../resources/chm13v2.0_cytobands_allchrs.bed',
-  grch38_cytobands_file = '../resources/grch38_cytobands_allchrs.bed',
-  t2t_cytobands_header_file = "../resources/chm13v2.0_cytobands_allchrs.w_header.bed",
-  grch38_cytobands_header_file = "../resources/grch38_cytobands_allchrs.w_header.bed",
-  cnv_file = '../resources/decipher_syndromes.txt',
-  t2t_segdup_file = "../resources/CHM13_segdups_gt10kb.bed",
-  grch38_segdup_file = "../resources/GRCh38_segdups_gt10kb.bed",
+  rolling_data_file = rolling_data_matches[[1]],
+  t2t_cytobands_file = 'resources/chm13v2.0_cytobands_allchrs.bed',
+  grch38_cytobands_file = 'resources/grch38_cytobands_allchrs.bed',
+  t2t_cytobands_header_file = "resources/chm13v2.0_cytobands_allchrs.w_header.bed",
+  grch38_cytobands_header_file = "resources/grch38_cytobands_allchrs.w_header.bed",
+  cnv_file = 'resources/decipher_syndromes.txt',
+  t2t_segdup_file = "resources/CHM13_segdups_gt10kb.bed",
+  grch38_segdup_file = "resources/GRCh38_segdups_gt10kb.bed",
 
   # Output directory
-  output_dir = '../figures/figure6',
+  output_dir = 'figures/figure6',
 
   # Plot parameters
   plot = list(
