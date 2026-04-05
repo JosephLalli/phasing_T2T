@@ -37,16 +37,16 @@ basedir=$PWD/..
 mkdir -p $outdir/${genome}
 
 if [[ ! -s $outdir/${genome}/${chrom}_private_singletons.txt.gz ]]; then
-    mkdir -p $outdir/../singleton_tmp/${genome}
+    mkdir -p $outdir/../singleton_tmp/${genome}_${chrom}
     # /${short_genome}/1KGP.${genome}.${chrom}.recalibrated.snp_indel.pass.phased.native_maps.biallelic.3202.bcf
     cat $pedigree \
         | parallel -j $n_singleton_jobs "bcftools view --force-samples -H -G -s {} -x -c 2 \
         $infile | \
-        cut -f 3 > $outdir/../singleton_tmp/${genome}/{#}.txt" \
+        cut -f 3 > $outdir/../singleton_tmp/${genome}_${chrom}/{#}.txt" \
     && \
-    cat $outdir/../singleton_tmp/${genome}/*.txt | sort | uniq | bgzip \
+    cat $outdir/../singleton_tmp/${genome}_${chrom}/*.txt | sort | uniq | bgzip \
         > $outdir/${genome}/${chrom}_private_singletons.txt.gz \
     && \
-    rm -rf $outdir/../singleton_tmp/${genome}
+    rm -rf $outdir/../singleton_tmp/${genome}_${chrom}
 fi
 

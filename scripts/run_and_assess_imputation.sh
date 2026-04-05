@@ -329,13 +329,17 @@ echo $chrom
 if [[ $chrom == *PAR* ]]
 then
     echo $region > $chrom_regions
+    grch38_liftover_source_region=$grch38_region
 elif [[ $is_test_run == true ]]
 then
     echo $region > $chrom_regions
     chrom=$(echo $chrom | cut -f 1 -d '_')
+    grch38_liftover_source_region=$chrom
 else
     grep $chrom: $chrom_chunking_coords > $chrom_regions
+    grch38_liftover_source_region=$grch38_region
 fi
+t2t_liftover_source_region=$whole_chrom
 
 if [[ $chrom == 'chrX' ]]
 then
@@ -423,7 +427,7 @@ GRCh38_to_t2t_diffs=$basedir/resources/chm13v2-grch38.sort.vcf.gz
 grch38_syntenic_site_location="$basedir/resources/hg38.GCA_009914755.4.synNet.summary.bed.gz"
 t2t_syntenic_site_location="$basedir/resources/chm13v2-syntenic_to_hg38.bed"
 
-grch38_chrom_working_dir=$basedir/working_directories/${chrom_arg}_working$(echo $suffix | sed 's/CHM13v2.0/GRCh38/')
+grch38_chrom_working_dir=$basedir/working_directories/${chrom_arg}_working$(echo $suffix | sed 's/CHM13v2\.0/GRCh38/; s/CHM13\b/GRCh38/')
 
 GRCh38_lifted_panel=$lifted_panel_folder/$(echo $(basename $phased_panel_vcf_2504_biallelic) | sed 's/CHM13v2.0/GRCh38.lifted_from_CHM13v2.0/' | sed 's/native_maps.//' )
 GRCh38_native_panel=$basedir/phased_panels/grch38/1KGP.GRCh38.${chrom}.recalibrated.snp_indel.pass.phased.biallelic.2504.bcf
@@ -479,7 +483,7 @@ if should_run "$GRCh38_lifted_panel.csi"; then
                                         -s $T2T_fasta \
                                         -c $t2t_to_GRCh38_chain \
                                         -d $T2T_to_GRCh38_diffs \
-                                        -r $whole_chrom  && did_run $GRCh38_lifted_panel &
+                                        -r $t2t_liftover_source_region  && did_run $GRCh38_lifted_panel &
 fi
 
 if should_run "$T2T_lifted_panel.csi"; then
@@ -490,7 +494,7 @@ if should_run "$T2T_lifted_panel.csi"; then
                                         -s $GRCh38_fasta \
                                         -c $GRCh38_to_t2t_chain \
                                         -d $GRCh38_to_t2t_diffs \
-                                        -r $grch38_region && did_run $T2T_lifted_panel &
+                                        -r $grch38_liftover_source_region && did_run $T2T_lifted_panel &
 fi
 
 wait_and_check || echo "WARNING: Some liftover jobs failed (non-fatal; lifted panels may be incomplete)" >&2
@@ -525,7 +529,7 @@ if should_run "$GRCh38_lifted_panel_no_singletons.csi"; then
                                         -s $T2T_fasta \
                                         -c $t2t_to_GRCh38_chain \
                                         -d $T2T_to_GRCh38_diffs \
-                                        -r $whole_chrom  && did_run $GRCh38_lifted_panel_no_singletons &
+                                        -r $t2t_liftover_source_region  && did_run $GRCh38_lifted_panel_no_singletons &
 
 fi
 

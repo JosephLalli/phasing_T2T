@@ -253,21 +253,17 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
         upstream_name="1kGP_high_coverage_Illumina.chr${chr}.filtered.SNV_INDEL_SV_phased_panel.vcf.gz"
         local_name="1KGP.GRCh38.chr${chr}.recalibrated.snp_indel.pass.phased.3202.vcf.gz"
 
-        if [[ "${TEST_MODE}" == true && -n "${GRCH38_TEST_REGIONS[${chr}]:-}" ]]; then
-            echo "  chr${chr}: streaming test region -> ${local_name}"
-            fetch_region "${GRCH38_PANEL_DIR}/${local_name}" \
-                "${GRCH38_PANEL_BASE}/${upstream_name}" \
-                "${GRCH38_TEST_REGIONS[${chr}]}" &
-            BGPIDS+=($!)
-        else
-            echo "  chr${chr}: ${upstream_name} -> ${local_name}"
-            fetch_as "${GRCH38_PANEL_DIR}/${local_name}" \
-                "${GRCH38_PANEL_BASE}/${upstream_name}" &
-            BGPIDS+=($!)
-            fetch_as "${GRCH38_PANEL_DIR}/${local_name}.tbi" \
-                "${GRCH38_PANEL_BASE}/${upstream_name}.tbi" &
-            BGPIDS+=($!)
-        fi
+        # Always download the full chromosome panel even in test mode.
+        # The GRCh38->T2T liftover requires variants from outside the T2T test
+        # window (e.g. pericentromeric T2T sequence has no GRCh38 counterpart),
+        # so a region-restricted panel produces an empty lifted panel there.
+        echo "  chr${chr}: ${upstream_name} -> ${local_name}"
+        fetch_as "${GRCH38_PANEL_DIR}/${local_name}" \
+            "${GRCH38_PANEL_BASE}/${upstream_name}" &
+        BGPIDS+=($!)
+        fetch_as "${GRCH38_PANEL_DIR}/${local_name}.tbi" \
+            "${GRCH38_PANEL_BASE}/${upstream_name}.tbi" &
+        BGPIDS+=($!)
     done
     bg_wait
 

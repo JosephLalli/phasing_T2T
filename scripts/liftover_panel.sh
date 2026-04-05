@@ -13,7 +13,7 @@ Options:
     -t TARGET      target fasta (required)
     -c CHAIN       chain file for liftover (required)
     -s SRC_FASTA   source fasta used by liftover (required)
-    -r REGION      optional region to limit processing (e.g. chr1:100000-200000)
+    -r REGION      optional source-assembly region to limit processing
     -d DIFF        vcf that has differences between fastas (variation from src)
     -h             show this help and exit
 USAGE
@@ -79,7 +79,12 @@ trap cleanup_tmpfolder EXIT
 tmpfile=$(dirname $out)/temp.$(basename $root_name).bcf
 tmpfolder=$(dirname $out)/tmp
 mkdir -p $tmpfolder
-python3 "$(dirname "${BASH_SOURCE[0]}")/liftover_indels.py" --input-vcf $in --ref-diffs-vcf $diff_vcf --output-vcf $tmpfile --chain $chain --target-fasta $target_fasta && \
+region_args=()
+if [ -n "$region" ]; then
+    region_args=(--region "$region")
+fi
+
+python3 "$(dirname "${BASH_SOURCE[0]}")/liftover_indels.py" --input-vcf "$in" --ref-diffs-vcf $diff_vcf --output-vcf $tmpfile --chain $chain --target-fasta $target_fasta "${region_args[@]}" && \
 bcftools norm -Ou --threads 4 -f $target_fasta -m -any $tmpfile \
 | bcftools annotate -Ou --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
 | bcftools +fill-tags -Ou --threads 2 - -- -t "AN,AC,MAF,MAC:1=MAC" \

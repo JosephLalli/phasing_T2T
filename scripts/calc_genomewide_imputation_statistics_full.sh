@@ -104,6 +104,8 @@ outfolder=$basedir/imputation_statistics/imputation_results_${CHM13v2_run_suffix
 logfolder=$outfolder/logs
 mkdir -p $outfolder
 mkdir -p $logfolder
+mkdir -p $outfolder/ancestry_specific
+mkdir -p $outfolder/ancestry_specific/logs
 
 
 for genome in GRCh38 CHM13v2.0; do
@@ -133,12 +135,12 @@ do
         for run in native_panel "native_panel.common_variants" lifted_panel "lifted_panel.common_variants"
         do
             if [[ $genomic_variants != *GRCh38* ]]; then
-                genome="CHM13v2.0"
                 genome='T2T'
+                group_genome='CHM13v2.0'
                 suffix=$CHM13v2_run_suffix
             else
                 genome=GRCh38
-                genome=GRCh38
+                group_genome='GRCh38'
                 suffix=$CHM13v2_run_suffix
             fi
 
@@ -146,7 +148,6 @@ do
             rm -f $outfolder/$genomic_variants.$dataset.$run.txt 
 
             cat $basedir/working_directories/*_working_${suffix}/${genomic_variants}_imputation*_workspace/*/$run.$dataset.*.txt | sort > $outfolder/$genomic_variants.$dataset.$run.txt
-            local n_contigs
             n_contigs=$(wc -l < $outfolder/$genomic_variants.$dataset.$run.txt)
             if [[ "$n_contigs" == "0" ]]; then
                 echo "WARNING: No files found for $outfolder/$genomic_variants.$dataset.$run.txt, skipping." >&2
@@ -175,7 +176,7 @@ do
             if should_run "$run_prefix.glimpse2_concordance_syntenic_maf_overall_bins.rsquare.grp.txt.gz"; then
                 $basedir/bin/GLIMPSE2_concordance \
                     --gt-val \
-                    --groups $outfolder/${genome}_syntenic-nonsyntenic_overall.tsv \
+                    --groups $outfolder/${group_genome}_syntenic-nonsyntenic_overall.tsv \
                     --threads $num_threads \
                     --af-tag MAF \
                     --input $run_prefix.txt \
@@ -185,7 +186,7 @@ do
             if should_run "$run_prefix.glimpse2_concordance_syntenic_maf_vartype_bins.rsquare.grp.txt.gz"; then
                 $basedir/bin/GLIMPSE2_concordance \
                     --gt-val \
-                    --groups $outfolder/${genome}_syntenic-nonsyntenic_vartype.tsv \
+                    --groups $outfolder/${group_genome}_syntenic-nonsyntenic_vartype.tsv \
                     --threads $num_threads \
                     --af-tag MAF \
                     --input $run_prefix.txt \

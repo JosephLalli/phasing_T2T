@@ -36,6 +36,8 @@ def parse_args():
 
     parser.add_argument("--chrom", nargs="+", default=None,
         help="Restrict liftover to these contigs (e.g. --chrom chr1 chr22)")
+    parser.add_argument("--region", default=None,
+        help="Restrict input liftover to source-assembly region(s); comma-separated regions are allowed")
 
     realign = parser.add_argument_group("haplotype realignment")
     realign.add_argument("--no-realign", action="store_true", default=False,
@@ -91,12 +93,28 @@ def check_var_ref(var):
         return var
     raise ValueError
 
-def get_num_vars(vcf_file):
-    out = subprocess.run(f'bcftools index -n {vcf_file}'.split(' '), capture_output = True, text=True)
-    if out.returncode == 0 and out.stdout.strip().isdigit():
-        return int(out.stdout.strip())
+def parse_regions(region_arg):
+    if region_arg is None:
+        return None
+    regions = [region.strip() for region in region_arg.split(",") if region.strip()]
+    return regions or None
+
+
+def iter_variants(vcf, regions=None):
+    if regions is None:
+        yield from vcf
+        return
+    for region in regions:
+        yield from vcf(region)
+
+
+def get_num_vars(vcf_file, regions=None):
+    if regions is None:
+        out = subprocess.run(f'bcftools index -n {vcf_file}'.split(' '), capture_output = True, text=True)
+        if out.returncode == 0 and out.stdout.strip().isdigit():
+            return int(out.stdout.strip())
     vcf = VCF(vcf_file, threads=THREADS)
-    return sum(1 for _ in vcf)
+    return sum(1 for _ in iter_variants(vcf, regions))
 
 def add_original_info_tags(var):
     var.INFO["SRC_CHROM"] = var.CHROM
@@ -550,12 +568,16 @@ def convert_VCF_to_intervaltree(vcf_file):
     return tree_dict
 
 
-def iterate_over_positions(vcf):
-    var = next(vcf)
+def iterate_over_positions(variants):
+    iterator = iter(variants)
+    try:
+        var = next(iterator)
+    except StopIteration:
+        return
     current_position = var.POS-1
     current_chrom = var.CHROM
     poslist = [var]
-    for var in vcf:
+    for var in iterator:
         pos = var.POS-1
         if pos != current_position:
             assert (pos > current_position) or (var.CHROM != current_chrom) , f'Variant at position {pos} is after a variant at {current_position}. Input variant file must be sorted before liftover.'
@@ -622,18 +644,24 @@ else:
 
 def get_num_unique_positions(vcf_file: str) -> int:
     vcf = VCF(vcf_file, threads=THREADS)
-    positions = {x.POS for x in vcf}
+    positions = {(x.CHROM, x.POS) for x in iter_variants(vcf, source_regions)}
     return len(positions)
 
 degenerate_nucleotides='UWSMKRYBDHV*'
+source_regions = parse_regions(args.region)
 
-if args.chrom is None:
+chrom_filter = set()
+if args.chrom is not None:
+    chrom_filter.update(args.chrom)
+if source_regions is not None:
+    chrom_filter.update(region.split(":", 1)[0] for region in source_regions)
+if not chrom_filter:
     chrom_filter = None
-else:
-    chrom_filter = set(args.chrom)
 
 if chrom_filter is not None:
     debug(f"restricting to contigs: {sorted(chrom_filter)}")
+if source_regions is not None:
+    debug(f"restricting source input to regions: {source_regions}")
 
 sys.stderr.write ('Loading target reference genome...\n')
 
@@ -686,7 +714,7 @@ sys.stderr.write ('Lifting...\n')
 unliftable = defaultdict(list)
 multiple_overlaps = defaultdict(list)
 ref_seq_problem_liftovers = defaultdict(list)
-for pos, variants in tqdm(iterate_over_positions(invcf), total=get_num_unique_positions(unlifted_vcf), disable=QUIET):
+for pos, variants in tqdm(iterate_over_positions(iter_variants(invcf, source_regions)), total=get_num_unique_positions(unlifted_vcf), disable=QUIET):
     lifted_records = []
     lifted_variants = []
     for var in variants:

@@ -102,10 +102,21 @@ do
 done
 wait
 
-# Once done, concat and sort all per-bin, per-contig labels into one whole-genome label tsv
-cat $basedir/working_directories/*working*_${run_suffix}/syntenic-nonsyntenic_vartype.*.tsv | sort -k1,1 -k2,2n > ${outfolder}/${genome}_syntenic-nonsyntenic_vartype.tsv &
-# cat $basedir/working_directories/*working*_${run_suffix}/syntenic-nonsyntenic_overall.*.tsv | sort -k1,1 -k2,2n > ${outfolder}/${genome}_syntenic-nonsyntenic_overall.tsv &
-wait
+# Once done, concat and sort all per-bin, per-contig labels into one whole-genome label TSV.
+# The aggregation step needs both the variant-type-specific bins and an "overall"
+# version that drops the SNP/INDEL subtype from the label.
+cat $basedir/working_directories/*working*_${run_suffix}/syntenic-nonsyntenic_vartype.*.tsv \
+    | sort -k1,1 -k2,2n > ${outfolder}/${genome}_syntenic-nonsyntenic_vartype.tsv
+
+awk 'BEGIN { FS = OFS = "\t" }
+{
+    label = $5
+    sub(/^SYNTENIC_[^_]+_/, "SYNTENIC_", label)
+    sub(/^NONSYNTENIC_[^_]+_/, "NONSYNTENIC_", label)
+    $5 = label
+    print
+}' ${outfolder}/${genome}_syntenic-nonsyntenic_vartype.tsv \
+    > ${outfolder}/${genome}_syntenic-nonsyntenic_overall.tsv
 
 # Remove intermediate files
 # rm -f $basedir/working_directories/*working*_${run_suffix}/syntenic-nonsyntenic_overall.*.tsv

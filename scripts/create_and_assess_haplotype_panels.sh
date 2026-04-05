@@ -77,6 +77,50 @@ should_run() {
     return 1
 }
 
+should_run_fully_annotated_report() {
+    local target="$1"
+    if should_run "$target"; then
+        return 0
+    fi
+
+    local line_count
+    line_count=$(awk 'END{print NR}' "$target" 2>/dev/null || echo 0)
+    if [[ -z "$line_count" || "$line_count" -le 1 ]]; then
+        echo "$target contains only a header and will be regenerated."
+        return 0
+    fi
+
+    return 1
+}
+
+should_run_fully_annotated_report_gz() {
+    local target="$1"
+    if should_run "$target"; then
+        return 0
+    fi
+
+    local line_count
+    line_count=$(gzip -cd "$target" 2>/dev/null | awk 'END{print NR}' || echo 0)
+    if [[ -z "$line_count" || "$line_count" -le 1 ]]; then
+        echo "$target contains only a header and will be regenerated."
+        return 0
+    fi
+
+    return 1
+}
+
+get_excesshet_query_tag() {
+    local vcf="$1"
+    if bcftools view -h "$vcf" | grep -q '^##INFO=<ID=ExcessHet,'; then
+        printf 'ExcessHet'
+    elif bcftools view -h "$vcf" | grep -q '^##INFO=<ID=ExcHet,'; then
+        printf 'ExcHet'
+    else
+        echo "ERROR: Neither INFO/ExcessHet nor INFO/ExcHet is present in $vcf" >&2
+        return 1
+    fi
+}
+
 # Confirm an expected output exists and is valid
 did_run() {
     local target="$1"
@@ -611,7 +655,7 @@ wait_and_check || exit 1
 did_run "$vcf_to_phase.csi" || exit 1
 
 # While the phasing is running, create a tsv table of the to-be-phased variants and quality metrics for downstream QC
-if should_run "$fully_annotated_input_variant_report"
+if should_run_fully_annotated_report "$fully_annotated_input_variant_report"
 then
     echo "making variant report"
     if should_run "${fully_annotated_input_variants%%.bcf}.vcf.gz.tbi"
@@ -631,11 +675,13 @@ then
         && bcftools index --threads 8 -f -t ${fully_annotated_input_variants%%.bcf}.vcf.gz \
         && bcftools index --threads 8 -f $fully_annotated_input_variants
     fi
+
+    excesshet_query_tag=$(get_excesshet_query_tag "${fully_annotated_input_variants%%.bcf}.vcf.gz") || exit 1
     {
         printf 'ID\tCHROM\tPOS\tALT\tQUAL\tNEGATIVE_TRAIN_SITE\tVQSLOD\tMERR\tHWE\tHWE_EUR\tHWE_AFR\tHWE_EAS\tHWE_AMR\tHWE_SAS\tFILTER\tculprit\tInbreedingCoeff\tExcessHet\tAN\tAC\tMAF\tF_MISSING\tSYNTENIC\n'
-        bcftools query -f '%ID\t%CHROM\t%POS\t%ALT\t%QUAL\t%INFO/NEGATIVE_TRAIN_SITE\t%INFO/VQSLOD\t%INFO/MERR\t%INFO/HWE\t%INFO/HWE_EUR\t%INFO/HWE_AFR\t%INFO/HWE_EAS\t%INFO/HWE_AMR\t%INFO/HWE_SAS\t%FILTER\t%INFO/culprit\t%INFO/InbreedingCoeff\t%INFO/ExcessHet\t%INFO/AN\t%INFO/AC\t%INFO/MAF\t%INFO/F_MISSING\t%INFO/SYNTENIC\n' \
+        bcftools query -f "%ID\t%CHROM\t%POS\t%ALT\t%QUAL\t%INFO/NEGATIVE_TRAIN_SITE\t%INFO/VQSLOD\t%INFO/MERR\t%INFO/HWE\t%INFO/HWE_EUR\t%INFO/HWE_AFR\t%INFO/HWE_EAS\t%INFO/HWE_AMR\t%INFO/HWE_SAS\t%FILTER\t%INFO/culprit\t%INFO/InbreedingCoeff\t%INFO/${excesshet_query_tag}\t%INFO/AN\t%INFO/AC\t%INFO/MAF\t%INFO/F_MISSING\t%INFO/SYNTENIC\n" \
             ${fully_annotated_input_variants%%.bcf}.vcf.gz
-    } > $fully_annotated_input_variant_report 2> /dev/null &
+    } > $fully_annotated_input_variant_report &
 
 fi
 
@@ -867,8 +913,11 @@ if should_run "$phased_panel_no_pangenome_biallelic.csi"; then
 fi
 
 wait_and_check || exit 1
-did_run "$vcf_to_phase_no_parents.csi" || exit 1
-did_run "$vcf_phased_no_parents_common_biallelic.csi" || exit 1
+if [[ $genome != 'GRCh38' ]]
+then
+    did_run "$vcf_to_phase_no_parents.csi" || exit 1
+    did_run "$vcf_phased_no_parents_common_biallelic.csi" || exit 1
+fi
 
 if [[ $genome != 'GRCh38' ]]
 then
@@ -896,7 +945,10 @@ fi
 
 wait_and_check || exit 1
 did_run "$phased_panel_vcf_2504.csi" || exit 1
-did_run "${vcf_phased_no_parents_rare_biallelic}.csi" || exit 1
+if [[ $genome != 'GRCh38' ]]
+then
+    did_run "${vcf_phased_no_parents_rare_biallelic}.csi" || exit 1
+fi
 did_run "$phased_panel_no_pangenome_biallelic.csi" || exit 1
 
 if should_run "$chr_specific_reference_pangenome_variation_trimmed_biallelic.csi"; then
@@ -945,7 +997,7 @@ did_run "$vcf_to_phase_pangenome_biallelic_1kgp.csi" || exit 1
 
 
 ## Copy the fully_annotated.tsv to variant_frequency_stats_dir (gzipped) for the Python ETL
-if should_run "$variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz"; then
+if should_run_fully_annotated_report_gz "$variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz" || [[ $fully_annotated_input_variant_report -nt $variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz ]]; then
     bgzip -c $fully_annotated_input_variant_report > $variant_frequency_stats_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.fully_annotated.tsv.gz &
 fi
 
