@@ -47,6 +47,11 @@ resources/hprc-v1.1-*
 **/all_variant_data.parquet
 **/bcftools_query_variant_data.parquet
 intermediate_data_whole_genome/
+intermediate_data/
+working_directories/
+SHAPEIT5_switch_output/
+imputation_statistics/
+resources/SGDP_variation/
 
 # Temporary and log files
 **true_false**
@@ -84,6 +89,10 @@ liftover_indels_r2.pdf
 per_sample_missing_candidates.tsv
 pangenie_v2.*.bcf
 pangenie_v2.*.bcf.csi
+/*.vcf.gz.tbi
+/*.out
+/phasing_*.log
+/test_run_*.log
 
 # ── Virtual environments ──
 .venv*/
