@@ -117,7 +117,7 @@ See `SGDP_variation/README.md` for expected file naming.
 Run `scripts/utility/download_resources.sh` from the repository root to fetch all
 reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and the
 required FASTA indexes (`.fai` and `.gzi`). The script skips files that already
-exist. Add `--parallel` to run the independent downloads concurrently.
+exist. Add `--parallel` to launch the independent download sections together.
 
 For the Docker smoke test, prefer:
 

@@ -7,7 +7,8 @@
 # Options:
 #   --chromosomes CHR_LIST   Comma-separated chromosomes to download (default: all)
 #                            Example: --chromosomes 15,22  (for test regions)
-#   --parallel               Download independent resources in parallel
+#   --parallel               Run independent download workloads concurrently
+#                            across sections, not just within one file group
 #   --skip-unphased          Skip downloading unphased variant calls
 #   --skip-grch38-panels     Skip downloading GRCh38 phased panels
 #   --test                   Test mode: download only chr15/chr22 test-region data
@@ -198,6 +199,29 @@ bg_wait() {
     fi
 }
 
+SECTION_PIDS=()
+launch_section() {
+    if [[ "${PARALLEL}" == true ]]; then
+        "$@" &
+        SECTION_PIDS+=("$!")
+    else
+        "$@"
+    fi
+}
+
+wait_sections() {
+    local failed=0
+    if [[ "${PARALLEL}" == true ]]; then
+        for pid in "${SECTION_PIDS[@]}"; do
+            wait "${pid}" || failed=$((failed + 1))
+        done
+        SECTION_PIDS=()
+    fi
+    if [[ ${failed} -gt 0 ]]; then
+        echo "WARNING: ${failed} section(s) failed" >&2
+    fi
+}
+
 download_grch38_reference() {
     local dest_path="${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
     if [[ -f "${dest_path}" ]]; then
@@ -238,27 +262,31 @@ build_grch38_biallelic_panel() {
     }
 }
 
-# ── Reference genomes ─────────────────────────────────────────────────────────
-echo "==> Downloading reference genomes..."
+download_reference_genomes() {
+    echo "==> Downloading reference genomes..."
 
-run_job fetch "${RESOURCES}" \
-    "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/GCA_009914755.4/chm13v2.0.fa.gz"
-run_job download_grch38_reference
-bg_wait
+    run_job fetch "${RESOURCES}" \
+        "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/GCA_009914755.4/chm13v2.0.fa.gz"
+    run_job download_grch38_reference
+    bg_wait
 
-ensure_bgzip "${RESOURCES}/chm13v2.0.fa.gz"
-ensure_bgzip "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
+    ensure_bgzip "${RESOURCES}/chm13v2.0.fa.gz"
+    ensure_bgzip "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
 
-# Index reference FASTAs (creates .fa.gz.fai and .fa.gz.gzi)
-for fasta in "${RESOURCES}/chm13v2.0.fa.gz" "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"; do
-    if [[ -f "${fasta}" && ! -f "${fasta}.fai" ]]; then
-        echo "    Indexing $(basename "${fasta}") (generates .fai and .gzi)..."
-        samtools faidx "${fasta}"
-    fi
-done
+    # Index reference FASTAs (creates .fa.gz.fai and .fa.gz.gzi)
+    for fasta in "${RESOURCES}/chm13v2.0.fa.gz" "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"; do
+        if [[ -f "${fasta}" && ! -f "${fasta}.fai" ]]; then
+            echo "    Indexing $(basename "${fasta}") (generates .fai and .gzi)..."
+            samtools faidx "${fasta}"
+        fi
+    done
+}
 
-# ── Unphased variant calls ───────────────────────────────────────────────────
-if [[ "${SKIP_UNPHASED}" == false ]]; then
+download_unphased_variant_calls() {
+    local T2T_UNPHASED_BASE
+    local GRCH38_UNPHASED_S3
+    local GRCH38_UNPHASED_HTTPS
+
     echo ""
     echo "==> Downloading unphased variant calls..."
 
@@ -290,15 +318,13 @@ if [[ "${SKIP_UNPHASED}" == false ]]; then
         fi
     done
     bg_wait
-else
-    echo ""
-    echo "==> Skipping unphased variant calls (--skip-unphased)"
-fi
+}
 
-# ── GRCh38 phased reference panels (Byrska-Bishop et al. 2022) ──────────────
-# The upstream files from 1KGP use a different naming convention than the pipeline
-# expects. This section downloads and renames them to match.
-if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
+download_grch38_phased_panels() {
+    local GRCH38_PANEL_BASE
+    local GRCH38_PANEL_DIR
+    local UNRELATED_SAMPLES
+
     echo ""
     echo "==> Downloading GRCh38 phased panels (Byrska-Bishop et al. 2022)..."
 
@@ -306,6 +332,8 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
     GRCH38_PANEL_DIR="${REPO_ROOT}/phased_panels/grch38"
 
     for chr in "${CHR_ARRAY[@]}"; do
+        local upstream_name
+        local local_name
         upstream_name="1kGP_high_coverage_Illumina.chr${chr}.filtered.SNV_INDEL_SV_phased_panel.vcf.gz"
         local_name="1KGP.GRCh38.chr${chr}.recalibrated.snp_indel.pass.phased.3202.vcf.gz"
 
@@ -326,6 +354,9 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
     UNRELATED_SAMPLES="${REPO_ROOT}/resources/sample_subsets/unrelated_samples.txt"
     echo "  Creating biallelic 2504-member BCF panels..."
     for chr in "${CHR_ARRAY[@]}"; do
+        local local_name
+        local source_vcf
+        local dest_bcf
         local_name="1KGP.GRCh38.chr${chr}.recalibrated.snp_indel.pass.phased"
         source_vcf="${GRCH38_PANEL_DIR}/${local_name}.3202.vcf.gz"
         dest_bcf="${GRCH38_PANEL_DIR}/${local_name}.biallelic.2504.bcf"
@@ -341,111 +372,137 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
         run_job build_grch38_biallelic_panel "${source_vcf}" "${dest_bcf}" "${UNRELATED_SAMPLES}"
     done
     bg_wait
-else
+}
+
+download_pangenome_vcfs() {
+    local HPRC_BASE
+    local HGSVC3_BASE
+    local HGSVC3_HPRC_BASE
+    local t2t_regions=""
+    local grch38_regions=""
+
     echo ""
-    echo "==> Skipping GRCh38 phased panels (--skip-grch38-panels)"
-fi
+    echo "==> Downloading pangenome VCFs (HPRC v1.1 + HGSVC3)..."
 
-# ── Pangenome VCFs ───────────────────────────────────────────────────────────
-echo ""
-echo "==> Downloading pangenome VCFs (HPRC v1.1 + HGSVC3)..."
+    HPRC_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus"
+    HGSVC3_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3"
+    HGSVC3_HPRC_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc"
 
-HPRC_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus"
-HGSVC3_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3"
-HGSVC3_HPRC_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_23_minigraph_cactus_hgsvc3_hprc"
+    if [[ "${TEST_MODE}" == true ]]; then
+        for chr in "${CHR_ARRAY[@]}"; do
+            [[ -n "${T2T_TEST_REGIONS[${chr}]:-}" ]] && t2t_regions="${t2t_regions:+${t2t_regions},}${T2T_TEST_REGIONS[${chr}]}"
+            [[ -n "${GRCH38_TEST_REGIONS[${chr}]:-}" ]] && grch38_regions="${grch38_regions:+${grch38_regions},}${GRCH38_TEST_REGIONS[${chr}]}"
+        done
 
-if [[ "${TEST_MODE}" == true ]]; then
-    # Build combined region strings for all test chromosomes
-    t2t_regions="" grch38_regions=""
+        run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
+            "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
+            "${t2t_regions}"
+        run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
+            "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
+            "${grch38_regions}"
+        run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${t2t_regions}"
+        run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${grch38_regions}"
+        run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${t2t_regions}"
+        run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+            "${grch38_regions}"
+    else
+        run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz.tbi"
+        run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz.tbi"
+
+        run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+        run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+
+        run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+        run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
+        run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+    fi
+    bg_wait
+}
+
+download_sgdp_t2t_ground_truth() {
+    local SGDP_T2T_BASE
+    local SGDP_T2T_DIR
+
+    echo ""
+    echo "==> Downloading SGDP ground truth VCFs (T2T-CHM13 coordinates)..."
+
+    SGDP_T2T_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0"
+    SGDP_T2T_DIR="${RESOURCES}/SGDP_variation/t2t"
+
     for chr in "${CHR_ARRAY[@]}"; do
-        [[ -n "${T2T_TEST_REGIONS[${chr}]:-}" ]] && t2t_regions="${t2t_regions:+${t2t_regions},}${T2T_TEST_REGIONS[${chr}]}"
-        [[ -n "${GRCH38_TEST_REGIONS[${chr}]:-}" ]] && grch38_regions="${grch38_regions:+${grch38_regions},}${GRCH38_TEST_REGIONS[${chr}]}"
+        if [[ "${TEST_MODE}" == true && -n "${T2T_TEST_REGIONS[${chr}]:-}" ]]; then
+            run_job fetch_region "${SGDP_T2T_DIR}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
+                "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
+                "${T2T_TEST_REGIONS[${chr}]}"
+        else
+            run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
+            run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
+        fi
     done
-
-    # All 6 pangenome VCFs in parallel
-    run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
-        "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
-        "${t2t_regions}"
-    run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
-        "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
-        "${grch38_regions}"
-    run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${t2t_regions}"
-    run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${grch38_regions}"
-    run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${t2t_regions}"
-    run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${grch38_regions}"
     bg_wait
-else
-    # HPRC v1.1
-    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz.tbi"
-    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz.tbi"
+}
 
-    # HGSVC3-only
-    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
-    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+download_sgdp_grch38_ground_truth() {
+    local SGDP_GRCH38_DIR
+    local SGDP_GRCH38_ZENODO
+    local SGDP_GRCH38_TARBALL
 
-    # HGSVC3+HPRC combined
-    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
-    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
-    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
-    bg_wait
-fi
+    echo ""
+    echo "==> Downloading SGDP ground truth VCFs (GRCh38 coordinates)..."
 
-# ── SGDP ground truth (T2T coordinates) ───────────────────────────────────────
-echo ""
-echo "==> Downloading SGDP ground truth VCFs (T2T-CHM13 coordinates)..."
+    SGDP_GRCH38_DIR="${RESOURCES}/SGDP_variation/grch38"
+    SGDP_GRCH38_ZENODO="https://zenodo.org/records/19371182/files"
 
-SGDP_T2T_BASE="https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0"
-SGDP_T2T_DIR="${RESOURCES}/SGDP_variation/t2t"
-
-for chr in "${CHR_ARRAY[@]}"; do
-    if [[ "${TEST_MODE}" == true && -n "${T2T_TEST_REGIONS[${chr}]:-}" ]]; then
-        run_job fetch_region "${SGDP_T2T_DIR}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
-            "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
-            "${T2T_TEST_REGIONS[${chr}]}"
+    if [[ "${TEST_MODE}" == true ]]; then
+        SGDP_GRCH38_TARBALL="${SGDP_GRCH38_DIR}/SGDP_GRCh38_test_regions.tar.gz"
+        if [[ -f "${SGDP_GRCH38_DIR}/chr22.recalibrated.snp_indel.pass.vcf.gz" && \
+              -f "${SGDP_GRCH38_DIR}/chr15.recalibrated.snp_indel.pass.vcf.gz" ]]; then
+            echo "    SGDP GRCh38 test VCFs already present, skipping."
+        else
+            echo "    Downloading SGDP GRCh38 test-region tarball from Zenodo..."
+            wget -q -O "${SGDP_GRCH38_TARBALL}" \
+                "${SGDP_GRCH38_ZENODO}/SGDP_GRCh38_test_regions.tar.gz?download=1" && \
+                tar -xzf "${SGDP_GRCH38_TARBALL}" -C "${SGDP_GRCH38_DIR}" && \
+                rm -f "${SGDP_GRCH38_TARBALL}" || {
+                    rm -f "${SGDP_GRCH38_TARBALL}"
+                    echo "WARNING: failed to download SGDP GRCh38 test data from Zenodo" >&2
+                }
+        fi
     else
-        run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
-        run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
+        local all_present=true
+        SGDP_GRCH38_TARBALL="${SGDP_GRCH38_DIR}/SGDP_GRCh38_all_chromosomes.tar.gz"
+        for chr in "${CHR_ARRAY[@]}"; do
+            if [[ ! -f "${SGDP_GRCH38_DIR}/chr${chr}.recalibrated.snp_indel.pass.vcf.gz" ]]; then
+                all_present=false
+                break
+            fi
+        done
+        if [[ "${all_present}" == true ]]; then
+            echo "    SGDP GRCh38 VCFs already present, skipping."
+        else
+            echo "    Downloading SGDP GRCh38 whole-genome tarball from Zenodo..."
+            wget -q -O "${SGDP_GRCH38_TARBALL}" \
+                "${SGDP_GRCH38_ZENODO}/SGDP_GRCh38_all_chromosomes.tar.gz?download=1" && \
+                tar -xzf "${SGDP_GRCH38_TARBALL}" -C "${SGDP_GRCH38_DIR}" && \
+                rm -f "${SGDP_GRCH38_TARBALL}" || {
+                    rm -f "${SGDP_GRCH38_TARBALL}"
+                    echo "WARNING: failed to download SGDP GRCh38 data from Zenodo" >&2
+                }
+        fi
     fi
-done
-bg_wait
 
-# ── SGDP ground truth (GRCh38 coordinates) ───────────────────────────────────
-echo ""
-echo "==> Downloading SGDP ground truth VCFs (GRCh38 coordinates)..."
-
-SGDP_GRCH38_DIR="${RESOURCES}/SGDP_variation/grch38"
-SGDP_GRCH38_ZENODO="https://zenodo.org/records/19371182/files"
-
-if [[ "${TEST_MODE}" == true ]]; then
-    # Test mode: download pre-subsetted test-region VCFs from Zenodo
-    SGDP_GRCH38_TARBALL="${SGDP_GRCH38_DIR}/SGDP_GRCh38_test_regions.tar.gz"
-    if [[ -f "${SGDP_GRCH38_DIR}/chr22.recalibrated.snp_indel.pass.vcf.gz" && \
-          -f "${SGDP_GRCH38_DIR}/chr15.recalibrated.snp_indel.pass.vcf.gz" ]]; then
-        echo "    SGDP GRCh38 test VCFs already present, skipping."
-    else
-        echo "    Downloading SGDP GRCh38 test-region tarball from Zenodo..."
-        wget -q -O "${SGDP_GRCH38_TARBALL}" \
-            "${SGDP_GRCH38_ZENODO}/SGDP_GRCh38_test_regions.tar.gz?download=1" && \
-            tar -xzf "${SGDP_GRCH38_TARBALL}" -C "${SGDP_GRCH38_DIR}" && \
-            rm -f "${SGDP_GRCH38_TARBALL}" || {
-                rm -f "${SGDP_GRCH38_TARBALL}"
-                echo "WARNING: failed to download SGDP GRCh38 test data from Zenodo" >&2
-            }
-    fi
-    # Index any extracted VCFs that are missing a .tbi
     for vcf in "${SGDP_GRCH38_DIR}"/*.vcf.gz; do
         [[ -f "${vcf}" ]] || continue
         if [[ ! -f "${vcf}.tbi" ]]; then
@@ -453,57 +510,54 @@ if [[ "${TEST_MODE}" == true ]]; then
             bcftools index -t "${vcf}"
         fi
     done
-else
-    # Full mode: download whole-genome SGDP GRCh38 tarball from Zenodo
-    SGDP_GRCH38_TARBALL="${SGDP_GRCH38_DIR}/SGDP_GRCh38_all_chromosomes.tar.gz"
-    # Check if all requested chromosomes are already present
-    all_present=true
-    for chr in "${CHR_ARRAY[@]}"; do
-        if [[ ! -f "${SGDP_GRCH38_DIR}/chr${chr}.recalibrated.snp_indel.pass.vcf.gz" ]]; then
-            all_present=false
-            break
-        fi
-    done
-    if [[ "${all_present}" == true ]]; then
-        echo "    SGDP GRCh38 VCFs already present, skipping."
-    else
-        echo "    Downloading SGDP GRCh38 whole-genome tarball from Zenodo..."
-        wget -q -O "${SGDP_GRCH38_TARBALL}" \
-            "${SGDP_GRCH38_ZENODO}/SGDP_GRCh38_all_chromosomes.tar.gz?download=1" && \
-            tar -xzf "${SGDP_GRCH38_TARBALL}" -C "${SGDP_GRCH38_DIR}" && \
-            rm -f "${SGDP_GRCH38_TARBALL}" || {
-                rm -f "${SGDP_GRCH38_TARBALL}"
-                echo "WARNING: failed to download SGDP GRCh38 data from Zenodo" >&2
-            }
-    fi
-    # Index any extracted VCFs that are missing a .tbi
-    for vcf in "${SGDP_GRCH38_DIR}"/*.vcf.gz; do
-        [[ -f "${vcf}" ]] || continue
-        if [[ ! -f "${vcf}.tbi" ]]; then
-            echo "    Indexing $(basename "${vcf}")..."
-            bcftools index -t "${vcf}"
-        fi
-    done
-fi
+}
 
-# ── Summary ───────────────────────────────────────────────────────────────────
-echo ""
-echo "==> Download complete."
-echo ""
-echo "Directory contents:"
-echo "  resources/               - Reference genomes, pangenome VCFs, chain files"
-echo "  resources/SGDP_variation - SGDP ground truth for imputation validation"
-echo "  unphased_variant_calls/  - Raw 1KGP variant calls (input to phasing)"
-echo "  phased_panels/grch38/    - GRCh38 phased panels (Byrska-Bishop et al. 2022)"
-echo ""
-echo "Verify with:"
-echo "  ls -lh resources/*.fa.gz resources/*.vcf.gz"
-echo "  ls -lh unphased_variant_calls/t2t/*.vcf.gz | head -3"
-echo "  ls -lh phased_panels/grch38/*.vcf.gz | head -3"
-echo "  ls -lh resources/SGDP_variation/t2t/*.vcf.gz | head -3"
-echo ""
-echo "Next steps:"
-echo "  Run the pipeline: ./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 my_suffix CHM13v2.0"
-echo ""
-echo "For a quick test with minimal downloads:"
-echo "  bash scripts/utility/download_resources.sh --test"
+print_summary() {
+    echo ""
+    echo "==> Download complete."
+    echo ""
+    echo "Directory contents:"
+    echo "  resources/               - Reference genomes, pangenome VCFs, chain files"
+    echo "  resources/SGDP_variation - SGDP ground truth for imputation validation"
+    echo "  unphased_variant_calls/  - Raw 1KGP variant calls (input to phasing)"
+    echo "  phased_panels/grch38/    - GRCh38 phased panels (Byrska-Bishop et al. 2022)"
+    echo ""
+    echo "Verify with:"
+    echo "  ls -lh resources/*.fa.gz resources/*.vcf.gz"
+    echo "  ls -lh unphased_variant_calls/t2t/*.vcf.gz | head -3"
+    echo "  ls -lh phased_panels/grch38/*.vcf.gz | head -3"
+    echo "  ls -lh resources/SGDP_variation/t2t/*.vcf.gz | head -3"
+    echo ""
+    echo "Next steps:"
+    echo "  Run the pipeline: ./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 my_suffix CHM13v2.0"
+    echo ""
+    echo "For a quick test with minimal downloads:"
+    echo "  bash scripts/utility/download_resources.sh --test"
+}
+
+main() {
+    launch_section download_reference_genomes
+
+    if [[ "${SKIP_UNPHASED}" == false ]]; then
+        launch_section download_unphased_variant_calls
+    else
+        echo ""
+        echo "==> Skipping unphased variant calls (--skip-unphased)"
+    fi
+
+    if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
+        launch_section download_grch38_phased_panels
+    else
+        echo ""
+        echo "==> Skipping GRCh38 phased panels (--skip-grch38-panels)"
+    fi
+
+    launch_section download_pangenome_vcfs
+    launch_section download_sgdp_t2t_ground_truth
+    launch_section download_sgdp_grch38_ground_truth
+
+    wait_sections
+    print_summary
+}
+
+main
