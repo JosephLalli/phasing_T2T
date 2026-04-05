@@ -7,6 +7,7 @@
 # Options:
 #   --chromosomes CHR_LIST   Comma-separated chromosomes to download (default: all)
 #                            Example: --chromosomes 15,22  (for test regions)
+#   --parallel               Download independent resources in parallel
 #   --skip-unphased          Skip downloading unphased variant calls
 #   --skip-grch38-panels     Skip downloading GRCh38 phased panels
 #   --test                   Test mode: download only chr15/chr22 test-region data
@@ -20,6 +21,7 @@ RESOURCES="${REPO_ROOT}/resources"
 
 # ── Parse arguments ───────────────────────────────────────────────────────────
 CHROMOSOMES=""
+PARALLEL=false
 SKIP_UNPHASED=false
 SKIP_GRCH38_PANELS=false
 TEST_MODE=false
@@ -29,6 +31,10 @@ while [[ $# -gt 0 ]]; do
         --chromosomes)
             CHROMOSOMES="$2"
             shift 2
+            ;;
+        --parallel)
+            PARALLEL=true
+            shift
             ;;
         --skip-unphased)
             SKIP_UNPHASED=true
@@ -69,6 +75,10 @@ else
     CHR_ARRAY+=("X")
 fi
 
+if [[ "${PARALLEL}" == true ]]; then
+    echo "==> Parallel mode enabled: independent downloads will run concurrently"
+fi
+
 # ── Test-region coordinates ──────────────────────────────────────────────────
 # These must match the regions defined in create_and_assess_haplotype_panels.sh
 declare -A T2T_TEST_REGIONS GRCH38_TEST_REGIONS
@@ -105,6 +115,7 @@ fetch() {
     fi
     wget -nc -P "${dest_dir}" "${url}" || {
         echo "WARNING: failed to download ${url}" >&2
+        return 1
     }
 }
 
@@ -119,6 +130,7 @@ fetch_as() {
     wget -q -O "${tmpfile}" "${url}" && mv "${tmpfile}" "${dest_path}" || {
         rm -f "${tmpfile}"
         echo "WARNING: failed to download ${url}" >&2
+        return 1
     }
 }
 
@@ -138,6 +150,7 @@ fetch_region() {
         mv "${tmpfile}.tbi" "${dest_path}.tbi" || {
             rm -f "${tmpfile}" "${tmpfile}.tbi"
             echo "WARNING: failed to extract region ${region} from ${url}" >&2
+            return 1
         }
 }
 
@@ -157,32 +170,81 @@ ensure_bgzip() {
 
 # Collect background PIDs and wait for all to succeed.
 BGPIDS=()
+SECTION_FAILURES=0
+run_job() {
+    if [[ "${PARALLEL}" == true ]]; then
+        "$@" &
+        BGPIDS+=("$!")
+    else
+        if ! "$@"; then
+            SECTION_FAILURES=$((SECTION_FAILURES + 1))
+        fi
+    fi
+    return 0
+}
 bg_wait() {
     local failed=0
-    for pid in "${BGPIDS[@]}"; do
-        wait "${pid}" || ((failed++))
-    done
-    BGPIDS=()
-    if [[ ${failed} -gt 0 ]]; then
-        echo "WARNING: ${failed} background job(s) failed in this section" >&2
+    if [[ "${PARALLEL}" == true ]]; then
+        for pid in "${BGPIDS[@]}"; do
+            wait "${pid}" || failed=$((failed + 1))
+        done
+        BGPIDS=()
+    else
+        failed=${SECTION_FAILURES}
+        SECTION_FAILURES=0
     fi
+    if [[ ${failed} -gt 0 ]]; then
+        echo "WARNING: ${failed} job(s) failed in this section" >&2
+    fi
+}
+
+download_grch38_reference() {
+    local dest_path="${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
+    if [[ -f "${dest_path}" ]]; then
+        echo "    GRCh38 FASTA already present, skipping."
+        return 0
+    fi
+
+    echo "    Downloading, decompressing, and bgzipping GRCh38 reference..."
+    local tmpfile="${dest_path}.downloading"
+    wget -qO- "https://www.dropbox.com/s/xyggouv3tnamh0j/GRCh38_full_analysis_set_plus_decoy_hla.fa.zst?dl=1" \
+        | zstd -dq \
+        | bgzip -@ 2 > "${tmpfile}" && \
+        mv "${tmpfile}" "${dest_path}" || {
+            rm -f "${tmpfile}"
+            echo "WARNING: failed to prepare the GRCh38 reference FASTA" >&2
+            return 1
+        }
+}
+
+build_grch38_biallelic_panel() {
+    local source_vcf="$1"
+    local dest_bcf="$2"
+    local unrelated_samples="$3"
+    local tmp_bcf="${dest_bcf}.downloading"
+
+    bcftools view -Ou --threads 4 -S "${unrelated_samples}" --force-samples "${source_vcf}" \
+    | bcftools view -Ou --threads 2 -m2 -M2 -c 1:minor - \
+    | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF - \
+    | bcftools +fill-tags -Ou --threads 4 - -- -t AN,AC,MAF,MAC:1=MAC \
+    | bcftools annotate -Ou --threads 2 -x ^INFO/MAF,^INFO/MAC,^INFO/AN,^FORMAT/GT - \
+    | bcftools view --threads 4 -Ob - > "${tmp_bcf}" && \
+    bcftools index --threads 4 "${tmp_bcf}" && \
+    mv "${tmp_bcf}" "${dest_bcf}" && \
+    mv "${tmp_bcf}.csi" "${dest_bcf}.csi" || {
+        rm -f "${tmp_bcf}" "${tmp_bcf}.csi"
+        echo "WARNING: failed to create $(basename "${dest_bcf}")" >&2
+        return 1
+    }
 }
 
 # ── Reference genomes ─────────────────────────────────────────────────────────
 echo "==> Downloading reference genomes..."
 
-fetch "${RESOURCES}" \
+run_job fetch "${RESOURCES}" \
     "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/GCA_009914755.4/chm13v2.0.fa.gz"
-
-# GRCh38 FASTA: download zstd-compressed version, stream-decompress, and bgzip.
-if [[ ! -f "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz" ]]; then
-    echo "    Downloading, decompressing, and bgzipping GRCh38 reference..."
-    wget -qO- "https://www.dropbox.com/s/xyggouv3tnamh0j/GRCh38_full_analysis_set_plus_decoy_hla.fa.zst?dl=1" \
-        | zstd -dq \
-        | bgzip -@ 2 > "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
-else
-    echo "    GRCh38 FASTA already present, skipping."
-fi
+run_job download_grch38_reference
+bg_wait
 
 ensure_bgzip "${RESOURCES}/chm13v2.0.fa.gz"
 ensure_bgzip "${RESOURCES}/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz"
@@ -208,29 +270,23 @@ if [[ "${SKIP_UNPHASED}" == false ]]; then
     for chr in "${CHR_ARRAY[@]}"; do
         echo "  chr${chr}..."
         if [[ "${TEST_MODE}" == true && -n "${T2T_TEST_REGIONS[${chr}]:-}" ]]; then
-            fetch_region "${REPO_ROOT}/unphased_variant_calls/t2t/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
+            run_job fetch_region "${REPO_ROOT}/unphased_variant_calls/t2t/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
                 "${T2T_UNPHASED_BASE}/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
-                "${T2T_TEST_REGIONS[${chr}]}" &
-            BGPIDS+=($!)
+                "${T2T_TEST_REGIONS[${chr}]}"
 
-            fetch_region "${REPO_ROOT}/unphased_variant_calls/grch38/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz" \
+            run_job fetch_region "${REPO_ROOT}/unphased_variant_calls/grch38/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz" \
                 "${GRCH38_UNPHASED_S3}/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz" \
-                "${GRCH38_TEST_REGIONS[${chr}]}" &
-            BGPIDS+=($!)
+                "${GRCH38_TEST_REGIONS[${chr}]}"
         else
-            fetch "${REPO_ROOT}/unphased_variant_calls/t2t" \
-                "${T2T_UNPHASED_BASE}/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" &
-            BGPIDS+=($!)
-            fetch "${REPO_ROOT}/unphased_variant_calls/t2t" \
-                "${T2T_UNPHASED_BASE}/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi" &
-            BGPIDS+=($!)
+            run_job fetch "${REPO_ROOT}/unphased_variant_calls/t2t" \
+                "${T2T_UNPHASED_BASE}/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
+            run_job fetch "${REPO_ROOT}/unphased_variant_calls/t2t" \
+                "${T2T_UNPHASED_BASE}/1KGP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
 
-            fetch "${REPO_ROOT}/unphased_variant_calls/grch38" \
-                "${GRCH38_UNPHASED_HTTPS}/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz" &
-            BGPIDS+=($!)
-            fetch "${REPO_ROOT}/unphased_variant_calls/grch38" \
-                "${GRCH38_UNPHASED_HTTPS}/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz.tbi" &
-            BGPIDS+=($!)
+            run_job fetch "${REPO_ROOT}/unphased_variant_calls/grch38" \
+                "${GRCH38_UNPHASED_HTTPS}/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz"
+            run_job fetch "${REPO_ROOT}/unphased_variant_calls/grch38" \
+                "${GRCH38_UNPHASED_HTTPS}/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr${chr}.recalibrated_variants.vcf.gz.tbi"
         fi
     done
     bg_wait
@@ -258,12 +314,10 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
         # window (e.g. pericentromeric T2T sequence has no GRCh38 counterpart),
         # so a region-restricted panel produces an empty lifted panel there.
         echo "  chr${chr}: ${upstream_name} -> ${local_name}"
-        fetch_as "${GRCH38_PANEL_DIR}/${local_name}" \
-            "${GRCH38_PANEL_BASE}/${upstream_name}" &
-        BGPIDS+=($!)
-        fetch_as "${GRCH38_PANEL_DIR}/${local_name}.tbi" \
-            "${GRCH38_PANEL_BASE}/${upstream_name}.tbi" &
-        BGPIDS+=($!)
+        run_job fetch_as "${GRCH38_PANEL_DIR}/${local_name}" \
+            "${GRCH38_PANEL_BASE}/${upstream_name}"
+        run_job fetch_as "${GRCH38_PANEL_DIR}/${local_name}.tbi" \
+            "${GRCH38_PANEL_BASE}/${upstream_name}.tbi"
     done
     bg_wait
 
@@ -284,14 +338,7 @@ if [[ "${SKIP_GRCH38_PANELS}" == false ]]; then
             continue
         fi
         echo "    chr${chr}: subsetting to 2504 unrelated, biallelic -> $(basename "${dest_bcf}")"
-        bcftools view -Ou --threads 4 -S "${UNRELATED_SAMPLES}" --force-samples "${source_vcf}" \
-        | bcftools view -Ou --threads 2 -m2 -M2 -c 1:minor - \
-        | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF - \
-        | bcftools +fill-tags -Ou --threads 4 - -- -t AN,AC,MAF,MAC:1=MAC \
-        | bcftools annotate -Ou --threads 2 -x ^INFO/MAF,^INFO/MAC,^INFO/AN,^FORMAT/GT - \
-        | bcftools view --threads 4 -Ob - > "${dest_bcf}" \
-        && bcftools index --threads 4 "${dest_bcf}" &
-        BGPIDS+=($!)
+        run_job build_grch38_biallelic_panel "${source_vcf}" "${dest_bcf}" "${UNRELATED_SAMPLES}"
     done
     bg_wait
 else
@@ -316,61 +363,43 @@ if [[ "${TEST_MODE}" == true ]]; then
     done
 
     # All 6 pangenome VCFs in parallel
-    fetch_region "${RESOURCES}/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
+    run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
         "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" \
-        "${t2t_regions}" &
-    BGPIDS+=($!)
-    fetch_region "${RESOURCES}/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
+        "${t2t_regions}"
+    run_job fetch_region "${RESOURCES}/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
         "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" \
-        "${grch38_regions}" &
-    BGPIDS+=($!)
-    fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+        "${grch38_regions}"
+    run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
         "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${t2t_regions}" &
-    BGPIDS+=($!)
-    fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+        "${t2t_regions}"
+    run_job fetch_region "${RESOURCES}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
         "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${grch38_regions}" &
-    BGPIDS+=($!)
-    fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
+        "${grch38_regions}"
+    run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
         "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${t2t_regions}" &
-    BGPIDS+=($!)
-    fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
+        "${t2t_regions}"
+    run_job fetch_region "${RESOURCES}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
         "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" \
-        "${grch38_regions}" &
-    BGPIDS+=($!)
+        "${grch38_regions}"
     bg_wait
 else
     # HPRC v1.1
-    fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz.tbi" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz.tbi" &
-    BGPIDS+=($!)
+    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz.tbi"
+    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HPRC_BASE}/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz.tbi"
 
     # HGSVC3-only
-    fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi" &
-    BGPIDS+=($!)
+    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HGSVC3_BASE}/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
 
     # HGSVC3+HPRC combined
-    fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz" &
-    BGPIDS+=($!)
-    fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi" &
-    BGPIDS+=($!)
+    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13-vcfbub.a100k.wave.norm.vcf.gz.tbi"
+    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz"
+    run_job fetch "${RESOURCES}" "${HGSVC3_HPRC_BASE}/hgsvc3-hprc-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi"
     bg_wait
 fi
 
@@ -383,15 +412,12 @@ SGDP_T2T_DIR="${RESOURCES}/SGDP_variation/t2t"
 
 for chr in "${CHR_ARRAY[@]}"; do
     if [[ "${TEST_MODE}" == true && -n "${T2T_TEST_REGIONS[${chr}]:-}" ]]; then
-        fetch_region "${SGDP_T2T_DIR}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
+        run_job fetch_region "${SGDP_T2T_DIR}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
             "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" \
-            "${T2T_TEST_REGIONS[${chr}]}" &
-        BGPIDS+=($!)
+            "${T2T_TEST_REGIONS[${chr}]}"
     else
-        fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz" &
-        BGPIDS+=($!)
-        fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi" &
-        BGPIDS+=($!)
+        run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
+        run_job fetch "${SGDP_T2T_DIR}" "${SGDP_T2T_BASE}/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
     fi
 done
 bg_wait

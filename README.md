@@ -121,6 +121,12 @@ That helper downloads the canonical test inputs into the repo, converts and
 indexes the FASTA files (including the required `.gzi` files), and populates
 the SGDP truth data needed by the smoke test.
 
+Add `--parallel` if you want the independent downloads to run concurrently:
+
+```bash
+bash scripts/utility/download_resources.sh --test --parallel
+```
+
 If you are interested in replicating our work completely, the necessary data that is too large to store on github can be obtained by following the instructions below.
 
 
@@ -192,7 +198,7 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 ```
 
-Alternatively, run `scripts/utility/download_resources.sh` from the repository root to fetch the canonical runtime inputs, including reference genomes, pangenome VCFs, SGDP truth data, and the required FASTA indexes. Use `--test` to fetch only the chr15/chr22 smoke-test inputs.
+Alternatively, run `scripts/utility/download_resources.sh` from the repository root to fetch the canonical runtime inputs, including reference genomes, pangenome VCFs, SGDP truth data, and the required FASTA indexes. Use `--test` to fetch only the chr15/chr22 smoke-test inputs, and add `--parallel` to queue the independent downloads concurrently.
 
 #### Make binaries executable 
 
