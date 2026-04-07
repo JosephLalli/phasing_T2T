@@ -128,23 +128,30 @@ get_excesshet_query_tag() {
 # Confirm an expected output exists and is valid
 did_run() {
     local target="$1"
+    local variant_target="$target"
     if [[ ! -s "$target" ]]; then
         echo "ERROR: Expected output $target was not created or is empty." >&2
         return 1
     fi
+
     if [[ "$target" == *.csi || "$target" == *.tbi ]]; then
-        local vcf_target="${target%.csi}"
-        vcf_target="${vcf_target%.tbi}"
-        if [[ "$vcf_target" == *.vcf || "$vcf_target" == *.vcf.gz || "$vcf_target" == *.bcf ]]; then
-            local variant_count
-            if ! variant_count=$(bcftools index -n "$vcf_target" 2>/dev/null); then
-                echo "ERROR: $target exists but underlying $vcf_target is unreadable/invalid." >&2
-                return 1
-            fi
-            if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
-                echo "ERROR: $target exists but underlying $vcf_target has zero variants." >&2
-                return 1
-            fi
+        variant_target="${target%.csi}"
+        variant_target="${variant_target%.tbi}"
+        if [[ ! -s "$variant_target" ]]; then
+            echo "ERROR: Expected output $variant_target was not created or is empty." >&2
+            return 1
+        fi
+    fi
+
+    if [[ "$variant_target" == *.vcf.gz || "$variant_target" == *.bcf ]]; then
+        local variant_count
+        if ! variant_count=$(bcftools index -n "$variant_target" 2>/dev/null); then
+            echo "ERROR: $variant_target is unreadable, unindexed, or invalid." >&2
+            return 1
+        fi
+        if [[ -z "$variant_count" || "$variant_count" -eq 0 ]]; then
+            echo "ERROR: $variant_target has zero variants." >&2
+            return 1
         fi
     fi
     return 0
@@ -390,8 +397,6 @@ export BASH_XTRACEFD=19
 set -x # writes commands to logfile
 rm $basedir/phasing_${genome}_$1_$3.log
 
-tmp_prefix=$chrom_working_dir/tmp_
-
 # Assign chrom-specific regions filename
 chrom_regions=$chrom_working_dir/${chrom}_regions.txt
 
@@ -428,6 +433,13 @@ chr_specific_reference_pangenome_variation_biallelic=$chrom_working_dir/${chrom}
 chr_specific_reference_HGSVC_variation_biallelic=$chrom_working_dir/${chrom}_reference_HGSVC.biallelic.bcf
 chr_specific_reference_HGSVC_HPRC_variation_biallelic=$chrom_working_dir/${chrom}_reference_HGSVC_HPRC.biallelic.bcf
 chr_specific_reference_pangenome_variation_trimmed_biallelic=$chrom_working_dir/${chrom}_reference_pangenome.filtered_variants.biallelic.bcf
+chr_specific_reference_HGSVC_HPRC_probands_bcf=${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_HPRC_probands.bcf
+chr_specific_reference_HGSVC_probands_bcf=${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_probands.bcf
+chr_specific_reference_HGSVC_parents_bcf=${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_parents.bcf
+chr_specific_reference_HGSVC_not_part_of_trio_bcf=${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_not_part_of_trio.bcf
+pangenome_sort_tmp_prefix=${chr_specific_reference_pangenome_variation_biallelic%.bcf}.sorttmp
+hgsvc_sort_tmp_prefix=${chr_specific_reference_HGSVC_variation_biallelic%.bcf}.sorttmp
+hgsvc_hprc_sort_tmp_prefix=${chr_specific_reference_HGSVC_HPRC_variation_biallelic%.bcf}.sorttmp
 
 # Define the names of input variant files that are sample subsets
 vcf_to_phase_pangenome_biallelic_HPRC_common=$chrom_working_dir/1KGP.${genome}.${chrom}.snp_indel.phasing_qual_pass.HPRC_pangenome_calls.common.biallelic.bcf
@@ -507,7 +519,7 @@ then
         | bcftools +fixploidy -Ou - -- -f 2 \
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
-        | bcftools sort -m 40G -T $tmp_prefix -Ob > $chr_specific_reference_pangenome_variation_biallelic \
+        | bcftools sort -m 40G -T $pangenome_sort_tmp_prefix -Ob > $chr_specific_reference_pangenome_variation_biallelic \
         && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
     
     else
@@ -521,7 +533,7 @@ then
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
         | bcftools view --threads 2 -Ou -c 1:minor - \
-        | bcftools sort -m 40G -T $tmp_prefix -Ob > $chr_specific_reference_pangenome_variation_biallelic \
+        | bcftools sort -m 40G -T $pangenome_sort_tmp_prefix -Ob > $chr_specific_reference_pangenome_variation_biallelic \
         && bcftools index $chr_specific_reference_pangenome_variation_biallelic &
     fi
 fi
@@ -544,7 +556,7 @@ then
         | bcftools +fixploidy -Ou - -- -f 2 \
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
-        | bcftools sort -m 40G -T $tmp_prefix -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
+        | bcftools sort -m 40G -T $hgsvc_sort_tmp_prefix -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
         && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
 
     else
@@ -558,7 +570,7 @@ then
                         -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF,INFO/MISSING --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
         | bcftools view --threads 1 -Ou -c 1:minor - \
-        | bcftools sort -m 40G -T $tmp_prefix -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
+        | bcftools sort -m 40G -T $hgsvc_sort_tmp_prefix -Ob > $chr_specific_reference_HGSVC_variation_biallelic \
         && bcftools index $chr_specific_reference_HGSVC_variation_biallelic &
     fi
 fi
@@ -581,7 +593,7 @@ if should_run "$chr_specific_reference_HGSVC_HPRC_variation_biallelic.csi"; then
         | bcftools +fixploidy -Ou - -- -f 2 \
         | bcftools +setGT -Ou - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor - \
-        | bcftools sort -m 40G -T $tmp_prefix -Ob > $chr_specific_reference_HGSVC_HPRC_variation_biallelic \
+        | bcftools sort -m 40G -T $hgsvc_hprc_sort_tmp_prefix -Ob > $chr_specific_reference_HGSVC_HPRC_variation_biallelic \
         && bcftools index --threads 4 $chr_specific_reference_HGSVC_HPRC_variation_biallelic &
 
     else
@@ -596,7 +608,7 @@ if should_run "$chr_specific_reference_HGSVC_HPRC_variation_biallelic.csi"; then
         | bcftools +fill-tags --threads 8 -Ou - -- -t AN,AC,MAF,MAC:1=MAC,MISSING:1=F_MISSING \
         | bcftools +setGT -Ou --threads 8 - -- -t a -n p \
         | bcftools view --threads 2 -Ou -c 1:minor -  \
-        | bcftools sort -m 40G -Ob - > $chr_specific_reference_HGSVC_HPRC_variation_biallelic \
+        | bcftools sort -m 40G -T $hgsvc_hprc_sort_tmp_prefix -Ob - > $chr_specific_reference_HGSVC_HPRC_variation_biallelic \
         && bcftools index --threads 4 $chr_specific_reference_HGSVC_HPRC_variation_biallelic &
     fi
 fi
@@ -1316,40 +1328,52 @@ if [[ "$recalc_phasing_stats" == 'true' ]]; then
                                     --output $stats_dir/3202_panel_vs_HPRC_and_HGSVC_all_samples_${chrom} 2> /dev/null &
 
     #     4.2) Examine HGSVC/HPRC samples that were fully trio phased
-    bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_HPRC_probands.in_1KGP.txt 2> /dev/null \
-                     -Ob -W -o ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_HPRC_probands.bcf \
-                    $chr_specific_reference_HGSVC_HPRC_variation_biallelic && \
-    $basedir/bin/SHAPEIT5_switch_static_JLL --validation ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_HPRC_probands.bcf \
+    if should_run "$chr_specific_reference_HGSVC_HPRC_probands_bcf.csi"; then
+        bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_HPRC_probands.in_1KGP.txt 2> /dev/null \
+                         -Ob -W -o $chr_specific_reference_HGSVC_HPRC_probands_bcf \
+                        $chr_specific_reference_HGSVC_HPRC_variation_biallelic
+    fi
+    did_run "$chr_specific_reference_HGSVC_HPRC_probands_bcf" || exit 1
+    $basedir/bin/SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_HPRC_probands_bcf \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
                                     --log $chrom_working_dir/3202_panel_vs_HPRC_and_HGSVC_trio_probands_only_${chrom}.log \
                                     --output $stats_dir/3202_panel_vs_HPRC_and_HGSVC_trio_probands_only_${chrom} 2> /dev/null &
     
     #     4.3) Examine subset of HGSVC samples that were fully trio phased
-    bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_probands.in_1KGP.txt 2> /dev/null \
-                     -Ob -W -o ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_probands.bcf \
-                    $chr_specific_reference_HGSVC_HPRC_variation_biallelic && \
-    $basedir/bin/SHAPEIT5_switch_static_JLL --validation ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_probands.bcf \
+    if should_run "$chr_specific_reference_HGSVC_probands_bcf.csi"; then
+        bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_probands.in_1KGP.txt 2> /dev/null \
+                         -Ob -W -o $chr_specific_reference_HGSVC_probands_bcf \
+                        $chr_specific_reference_HGSVC_HPRC_variation_biallelic
+    fi
+    did_run "$chr_specific_reference_HGSVC_probands_bcf" || exit 1
+    $basedir/bin/SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_probands_bcf \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
                                     --log $chrom_working_dir/3202_panel_vs_HGSVC_probands_${chrom}.log \
                                     --output $stats_dir/3202_panel_vs_HGSVC_probands_${chrom} 2> /dev/null &
 
     #     4.3) only examine HGSVC samples that were partially trio phased (parents)
-    bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_parents.in_1KGP.txt 2> /dev/null \
-                     -Ob -W -o ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_parents.bcf \
-                    $chr_specific_reference_HGSVC_HPRC_variation_biallelic && \
-    $basedir/bin/SHAPEIT5_switch_static_JLL --validation ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_parents.bcf \
+    if should_run "$chr_specific_reference_HGSVC_parents_bcf.csi"; then
+        bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_parents.in_1KGP.txt 2> /dev/null \
+                         -Ob -W -o $chr_specific_reference_HGSVC_parents_bcf \
+                        $chr_specific_reference_HGSVC_HPRC_variation_biallelic
+    fi
+    did_run "$chr_specific_reference_HGSVC_parents_bcf" || exit 1
+    $basedir/bin/SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_parents_bcf \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
                                     --log $chrom_working_dir/3202_panel_vs_HGSVC_parents_${chrom}.log \
                                     --output $stats_dir/3202_panel_vs_HGSVC_parents_${chrom} 2> /dev/null &
 
     #     4.4) only examine HGSVC samples that were not trio phased
-    bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_not_part_of_trio.in_1KGP.txt 2> /dev/null \
-                     -Ob -W -o ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_not_part_of_trio.bcf \
-                    $chr_specific_reference_HGSVC_HPRC_variation_biallelic && \
-    $basedir/bin/SHAPEIT5_switch_static_JLL --validation ${chr_specific_reference_HGSVC_HPRC_variation_biallelic%%.bcf}.HGSVC_not_part_of_trio.bcf \
+    if should_run "$chr_specific_reference_HGSVC_not_part_of_trio_bcf.csi"; then
+        bcftools view --threads 4 -c 1:minor -r $whole_chrom --force-samples -S $basedir/resources/sample_subsets/HGSVC_not_part_of_trio.in_1KGP.txt 2> /dev/null \
+                         -Ob -W -o $chr_specific_reference_HGSVC_not_part_of_trio_bcf \
+                        $chr_specific_reference_HGSVC_HPRC_variation_biallelic
+    fi
+    did_run "$chr_specific_reference_HGSVC_not_part_of_trio_bcf" || exit 1
+    $basedir/bin/SHAPEIT5_switch_static_JLL --validation $chr_specific_reference_HGSVC_not_part_of_trio_bcf \
                                     --estimation $phased_panel_vcf_3202_biallelic \
                                     -R $whole_chrom --singleton \
                                     --log $chrom_working_dir/3202_panel_vs_HGSVC_not_part_of_trio_${chrom}.log \

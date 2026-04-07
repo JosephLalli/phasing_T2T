@@ -163,35 +163,51 @@ docker run --rm \
     bash -lc '
         set -euo pipefail
 
+        make_run_suffix() {
+            local base_suffix="$1"
+            local genome="$2"
+            if [[ -n "${base_suffix}" ]]; then
+                printf "%s_%s\n" "${base_suffix}" "${genome}"
+            else
+                printf "%s\n" "${genome}"
+            fi
+        }
+
+        CHM13_RUN_SUFFIX="$(make_run_suffix "${RUN_SUFFIX}" "CHM13v2.0")"
+        GRCH38_RUN_SUFFIX="$(make_run_suffix "${RUN_SUFFIX}" "GRCh38")"
+
         run_panel_test() {
             local chrom="$1"
             local genome="$2"
+            local run_suffix="$3"
             echo "=== Stage 1: ${genome} ${chrom} ==="
-            ./scripts/create_and_assess_haplotype_panels.sh "${chrom}" "${NUM_THREADS}" "${RUN_SUFFIX}" "${genome}"
+            ./scripts/create_and_assess_haplotype_panels.sh "${chrom}" "${NUM_THREADS}" "${run_suffix}" "${genome}"
         }
 
-        run_panel_test chr22_test CHM13v2.0
-        run_panel_test chr15_test CHM13v2.0
-        run_panel_test chr22_test GRCh38
-        run_panel_test chr15_test GRCh38
+        run_panel_test chr22_test CHM13v2.0 "${CHM13_RUN_SUFFIX}" &
+        run_panel_test chr15_test CHM13v2.0 "${CHM13_RUN_SUFFIX}" &
+        run_panel_test chr22_test GRCh38 "${GRCH38_RUN_SUFFIX}" &
+        run_panel_test chr15_test GRCh38 "${GRCH38_RUN_SUFFIX}" &
 
-        IMPUTATION_RESULTS_DIR="./imputation_statistics/imputation_results_${RUN_SUFFIX}"
+        wait
+
+        IMPUTATION_RESULTS_DIR="./imputation_statistics/imputation_results_${CHM13_RUN_SUFFIX}"
 
         echo "=== Stage 2: syntenic/nonsyntenic bin generation ==="
-        ./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 "${RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
-        ./scripts/create_syn_nonsyn_bins.sh GRCh38 "${RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
+        ./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 "${CHM13_RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
+        ./scripts/create_syn_nonsyn_bins.sh GRCh38 "${GRCH38_RUN_SUFFIX}" "${IMPUTATION_RESULTS_DIR}" true
 
         echo "=== Stage 3: genome-wide imputation aggregation ==="
         ./scripts/calc_genomewide_imputation_statistics_full.sh \
-            "${RUN_SUFFIX}" \
-            "${RUN_SUFFIX}" \
+            "${GRCH38_RUN_SUFFIX}" \
+            "${CHM13_RUN_SUFFIX}" \
             "${NUM_THREADS}" \
             true
 
         echo "=== Stage 4: summary parquet generation ==="
         python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py \
-            --CHM13_run_suffix "${RUN_SUFFIX}" \
-            --GRCh38_run_suffix "${RUN_SUFFIX}" \
+            --CHM13_run_suffix "${CHM13_RUN_SUFFIX}" \
+            --GRCh38_run_suffix "${GRCH38_RUN_SUFFIX}" \
             --test
 
         if [[ "${RUN_NOTEBOOKS}" == "1" ]]; then
