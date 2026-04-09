@@ -248,7 +248,7 @@ build_grch38_biallelic_panel() {
     local tmp_bcf="${dest_bcf}.downloading"
 
     bcftools view -Ou --threads 4 -S "${unrelated_samples}" --force-samples "${source_vcf}" \
-    | bcftools view -Ou --threads 2 -m2 -M2 -c 1:minor - \
+    | bcftools view -Ou --threads 2 -m2 -M2 -c 1:minor -V other - \
     | bcftools annotate -Ou -x INFO/MAC,INFO/AN,INFO/AC,INFO/MAF - \
     | bcftools +fill-tags -Ou --threads 4 - -- -t AN,AC,MAF,MAC:1=MAC \
     | bcftools annotate -Ou --threads 2 -x ^INFO/MAF,^INFO/MAC,^INFO/AN,^FORMAT/GT - \
