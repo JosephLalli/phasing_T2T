@@ -1,41 +1,24 @@
-Stat_Code	Section	Statistic_Description	Value_CHM13	Value_GRCh38	Percent_Change	Paper_Location	Source_Notebook	Notes
-F1	Variant filtering	CHM13 variants lost to GATK-based filters (F1)	14491949.0			Results: variant QC paragraph	calc_figures_for_paper_refactored	
-F2	Variant filtering	CHM13 singleton variants gained (F2)	40226623.0			Results: variant QC paragraph	calc_figures_for_paper_refactored	
-F3	Variant filtering	GRCh38 % variants filtered (F3)		47.871003341255914		Results: variant QC paragraph	calc_figures_for_paper_refactored	Denominator needs verification — may need FILTER=PASS variant count
-F4	Variant filtering	GRCh38 % filtered solely as singletons (F4)		32.996117169580366		Results: variant QC paragraph	calc_figures_for_paper_refactored	Denominator needs verification — may need FILTER=PASS variant count
-F5	Variant filtering	CHM13 % variants filtered (F5)	24.77815839961553			Results: variant QC paragraph	calc_figures_for_paper_refactored	Denominator needs verification — may need FILTER=PASS variant count
-F6	Variant filtering	CHM13 % filtered solely by VQSLOD (F6)	17.02779056827747			Results: variant QC paragraph	calc_figures_for_paper_refactored	Denominator needs verification — may need FILTER=PASS variant count
-P3	Panel composition	Number of haplotypes (P3)	6404.0			Results: panel composition paragraph	calc_figures_for_paper_refactored	3202 * 2 = 6404; same for both genomes
-P1	Panel composition	Unique CHM13 variants in panel (P1)	101152794.0			Results: panel composition paragraph	calc_figures_for_paper_refactored	Known mismatch — notebook counts evaluation subset; paper from bcftools query
-P2	Panel composition	Unique CHM13 novel-region variants in panel (P2)	305914.0			Results: panel composition paragraph	calc_figures_for_paper_refactored	Known mismatch — same as P1
-PD1	Pedigree composition	Number of trio/duo probands (PD1)	604.0			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Same value for both genomes
-PD2	Pedigree composition	Number of trio/duo parents (PD2)	1195.0			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Same value for both genomes; excludes children-who-are-parents
-PD3	Pedigree composition	Number of statistically phased samples (PD3)	1403.0			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Same value for both genomes
-PD4	Pedigree composition	Unique trio/duo members to withhold (PD4)	1799.0			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	"Paper says ""1,803 trio parents"" but means unique trio members (parents+children)"
-A1	Family-structure accuracy	SER HPRC proband (A1)		0.40794760928023754		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	
-A3	Family-structure accuracy	SER HGSVC nontrio (A3)		1.280731516927418		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	
-A2	Family-structure accuracy	SER HPRC proband (A2)	0.3548554216854477			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	
-A4	Family-structure accuracy	SER HGSVC nontrio (A4)	1.1084000065356985			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	
-W1	Panel-wide SER	Panel-wide weighted SER (W1)		0.9006904947965977		Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Weighted average of proband/parent/statistical SERs
-W2	Panel-wide SER	Panel-wide weighted SER (W2)	0.7400649236204369			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Weighted average of proband/parent/statistical SERs
-W3	Panel-wide SER	ChrX weighted SER (W3)		1.2554141829252083		Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Females only, weighted average
-W4	Panel-wide SER	ChrX weighted SER (W4)	1.0291467862362016			Results: phasing accuracy paragraph	calc_figures_for_paper_refactored	Females only, weighted average
-D1	Switch error decomposition	SER r^2 with gt error rate (D1)	0.3105202576022889			Results: switch error decomposition	calc_figures_for_paper_refactored	From make_plots.ipynb correlation CSV, Mendelian-corrected
-D2	Switch error decomposition	FER r^2 with gt error rate (D2)	0.3451703582225474			Results: switch error decomposition	calc_figures_for_paper_refactored	From make_plots.ipynb correlation CSV, Mendelian-corrected
-D3	Switch error decomposition	tSER r^2 with gt error rate (D3)	0.0060270477440324			Results: switch error decomposition	calc_figures_for_paper_refactored	From make_plots.ipynb correlation CSV, Mendelian-corrected
-D4	Switch error decomposition	HPRC proband FER GRCh38 (D4)		0.18633254601884644		Results: switch error decomposition	calc_figures_for_paper_refactored	
-D5	Switch error decomposition	HPRC proband tSER GRCh38 (D5)		0.02911131952456832		Results: switch error decomposition	calc_figures_for_paper_refactored	
-D6	Switch error decomposition	HPRC proband FER CHM13 (D6)	0.16640508477279847			Results: switch error decomposition	calc_figures_for_paper_refactored	
-D7	Switch error decomposition	HPRC proband tSER CHM13 (D7)	0.018721699495801377			Results: switch error decomposition	calc_figures_for_paper_refactored	
-D8	Switch error decomposition	Statistical tSER GRCh38 (D8)		0.25962153099912466		Results: switch error decomposition	calc_figures_for_paper_refactored	
-D9	Switch error decomposition	Statistical tSER CHM13 (D9)	0.13118671946058702			Results: switch error decomposition	calc_figures_for_paper_refactored	
-D10	Switch error decomposition	Mendelian tSER GRCh38 (D10)		0.02911131952456832		Results: switch error decomposition	calc_figures_for_paper_refactored	
-D11	Switch error decomposition	Mendelian tSER CHM13 (D11)	0.018721699495801377			Results: switch error decomposition	calc_figures_for_paper_refactored	
-D12	ChrX accuracy	ChrX tSER HPRC GRCh38 (D12)		0.26704463997883604		Results: switch error decomposition	calc_figures_for_paper_refactored	
-D13	ChrX accuracy	ChrX tSER HPRC CHM13 (D13)	0.019057838559421066			Results: switch error decomposition	calc_figures_for_paper_refactored	
-B1	Family-structure accuracy	SER HGSVC proband (B1)		0.45412841604579063		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	HGSVC probands only (HGSVC_probands group)
-B2	Family-structure accuracy	SER HGSVC proband (B2)	0.4204832073072969			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	HGSVC probands only (HGSVC_probands group)
-B3	Family-structure accuracy	SER HPRC+HGSVC proband combined (B3)		0.42742008658842084		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	Combined HPRC_samples + HGSVC_probands (used for panel-wide weighting)
-B4	Family-structure accuracy	SER HPRC+HGSVC proband combined (B4)	0.38317302847756896			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	Combined HPRC_samples + HGSVC_probands (used for panel-wide weighting)
-B5	Family-structure accuracy	SER trio parent (B5)		0.6937095512888132		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	HGSVC_parents (trio/duo parents, pedigree-phased)
-B6	Family-structure accuracy	SER trio parent (B6)	0.4880051607218429			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper_refactored	HGSVC_parents (trio/duo parents, pedigree-phased)
+Section	Statistic_Description	Value_CHM13	Value_GRCh38	Percent_Change	Paper_Location	Source_Notebook	Notes
+Variant filtering	CHM13 variants lost to GATK-based filters	14491949.0			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 singleton variants gained	40226623.0			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	GRCh38 % variants filtered		47.871003341255914		Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	GRCh38 % filtered solely as singletons		32.996117169580366		Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 % variants filtered	24.77815839961553			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 % filtered solely by VQSLOD	17.02779056827747			Results: variant QC paragraph	calc_figures_for_paper	
+Panel composition	Unique CHM13 variants in panel	101152794.0			Results: panel composition paragraph	calc_figures_for_paper	
+Panel composition	Unique CHM13 novel-region variants in panel	305914.0			Results: panel composition paragraph	calc_figures_for_paper	
+Pedigree composition	Number of trio/duo parents	1206.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Pedigree composition	Number of trio/duo probands	604.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Pedigree composition	Number of statistically phased samples	1392.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Family-structure accuracy	SER (HPRC_samples)		0.40794760928023754		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HGSVC_samples_nontrios_only)		1.280731516927418		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HPRC_samples)	0.3548554216854477			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HGSVC_samples_nontrios_only)	1.1084000065356985			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Panel-wide SER	Panel-wide SER (GRCh38)		0.7271501092272955		Results: phasing accuracy paragraph	calc_figures_for_paper	
+Panel-wide SER	Panel-wide SER (CHM13v2.0)	0.6155912366037762			Results: phasing accuracy paragraph	calc_figures_for_paper	
+Switch error decomposition	HPRC proband FER (GRCh38)		0.18633254601884644		Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband tSER (GRCh38)		0.02911131952456832		Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband FER (CHM13v2.0)	0.16640508477279847			Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband tSER (CHM13v2.0)	0.018721699495801377			Results: switch error decomposition	calc_figures_for_paper	
+ChrX accuracy	ChrX tSER HPRC (GRCh38)		0.26704463997883604		Results: switch error decomposition	calc_figures_for_paper	
+ChrX accuracy	ChrX tSER HPRC (CHM13v2.0)	0.019057838559421066			Results: switch error decomposition	calc_figures_for_paper	

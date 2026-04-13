@@ -21,7 +21,7 @@ This directory contains Jupyter notebooks for data analysis, figure generation, 
   - Regional and population-specific variant patterns
   - Requires high-memory server environment
 
-- **make_plots_clean.ipynb** - Primary figure generation notebook
+- **make_plots.ipynb** - Primary figure generation notebook
   - Creates all main, extended, and supplementary figures
   - Outputs figures to `figures/` directory
   - Generates tables for `tables/` directory
@@ -30,12 +30,13 @@ This directory contains Jupyter notebooks for data analysis, figure generation, 
 ## Data Dependencies
 
 ### Input Data Sources
-- `intermediate_data/` - Test region and summary analysis files
+- `intermediate_data/` - Test-region summary analysis files
+- `imputation_statistics/` - Test-region imputation results
 - `intermediate_data_whole_genome/` - Complete genome-wide analysis results
-- `SHAPEIT5_switch_output/` - Switch error calculations  
-- `imputation_statistics/` - Cross-reference imputation results
+- `imputation_statistics_whole_genome/` - Complete genome-wide imputation results
+- `SHAPEIT5_switch_output/` - Switch error calculations
 
 ### Output Locations
-- `figures/` - Generated publication figures
-- `tables/` - Formatted manuscript tables  
+- `figures/` and `tables/` - Test run figures and tables
+- `figures_whole_genome/` and `tables_whole_genome/` - Publication-scale figures and tables
 - Inline notebook outputs - Interactive analysis results

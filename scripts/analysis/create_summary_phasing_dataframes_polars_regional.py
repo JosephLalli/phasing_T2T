@@ -26,8 +26,13 @@ parser = argparse.ArgumentParser(description='Create summary phasing dataframes'
 parser.add_argument('--CHM13_run_suffix', help='suffix used for CHM13 run')
 parser.add_argument('--GRCh38_run_suffix', help='suffix used for GRCh38 run')
 parser.add_argument('--test', action='store_true', help='process a test with fewer contigs (chr15 and chr22 only)')
+parser.add_argument('--run-profile', choices=['test', 'whole_genome'], help='folder profile for inputs and outputs')
 args = parser.parse_args()
 test_run = args.test
+run_profile = args.run_profile or os.environ.get('PHASING_T2T_RUN_PROFILE')
+if not run_profile:
+    run_profile = 'test' if test_run else 'whole_genome'
+
 if args.CHM13_run_suffix:
     t2t_suffix = '_' + args.CHM13_run_suffix
 else:
@@ -45,10 +50,25 @@ os.chdir(os.path.join(_script_dir, '..', '..'))
 
 # -------- Define folder and file locations --------
 # File locations
-summary_statistics_folder = 'intermediate_data'
+profile_paths = {
+    'test': {
+        'intermediate_data': 'intermediate_data',
+        'imputation_statistics': 'imputation_statistics',
+    },
+    'whole_genome': {
+        'intermediate_data': 'intermediate_data_whole_genome',
+        'imputation_statistics': 'imputation_statistics_whole_genome',
+    },
+}
+
+if run_profile not in profile_paths:
+    raise ValueError(f"Unknown run profile: {run_profile!r}")
+
+summary_statistics_folder = profile_paths[run_profile]['intermediate_data']
 t2t_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats_CHM13v2.0{t2t_suffix}'
 grch_phasing_stats_folder = f'SHAPEIT5_switch_output/phasing_stats_GRCh38{grch38_suffix}'
-imputation_statistics_folder = f'imputation_statistics/imputation_results{t2t_suffix}'
+imputation_statistics_folder = f"{profile_paths[run_profile]['imputation_statistics']}/imputation_results{t2t_suffix}"
+os.makedirs(summary_statistics_folder, exist_ok=True)
 
 regional_bedfiles = {'CHM13v2.0': {'in_STRs':   'resources/GIABv3.6_bedfiles/CHM13_AllTandemRepeats.bed.gz',
                                    'in_segdups':'resources/GIABv3.6_bedfiles/CHM13_segdups.bed.gz',

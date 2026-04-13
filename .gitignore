@@ -11,8 +11,10 @@ DIRECTORY_LOGIC.md
 # Publication prep / local release scratch
 CHANGES.md
 patches/
+papers/
 docker_test_output/
 docker_smoke_output/
+notebook_runs/
 scripts/docker_run_chr22_test.sh
 docker.env
 
@@ -26,6 +28,13 @@ _quarto.yml
 
 # Symlinks
 *.lnk
+intermediate_data
+intermediate_data_whole_genome
+imputation_statistics
+imputation_statistics_fullgenome
+imputation_statistics_whole_genome
+figures_whole_genome
+tables_whole_genome
 
 ## Input files -- too large
 *unphased_variant_calls/**
@@ -48,9 +57,12 @@ resources/hprc-v1.1-*
 **/bcftools_query_variant_data.parquet
 intermediate_data_whole_genome/
 intermediate_data/
+figures_whole_genome/
+tables_whole_genome/
 working_directories/
 SHAPEIT5_switch_output/
 imputation_statistics/
+imputation_statistics_whole_genome/
 resources/SGDP_variation/
 
 # Temporary and log files
@@ -69,8 +81,7 @@ imputation_statistics_test/
 *imputation*test*/*
 
 # Keep notebooks in notebooks_fullgenome (unignore directory and .ipynb files)
-!notebooks_fullgenome/
-!notebooks_fullgenome/*.ipynb
+!notebooks/notebooks_whole_genome/*ipynb
 
 !README.md
 
@@ -119,7 +130,6 @@ notebooks/calc_per_variant_figures_for_paper copy.BACKUP.ipynb
 notebooks/make_plots copy.ipynb
 notebooks/_build_refactored_*.py
 notebooks/REFACTORING_*.md
-notebooks/notebooks_whole_genome/calc_figures_for_paper.ipynb
 notebooks/notebooks_whole_genome/calc_per_variant_figures_for_paper_to_be_reorganized.ipynb
 notebooks/**/*refactored*.ipynb
 notebooks/**/*to_be_refactored*.ipynb

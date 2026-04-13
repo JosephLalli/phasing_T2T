@@ -451,7 +451,7 @@ Notes:
 - The smoke test is not self-contained; it still requires external biological inputs.
 - `download_resources.sh --test` is the supported way to fetch those inputs into the canonical repo-local paths used by `docker.env.example`.
 - Notebook execution and Figure 6 generation are on by default. Set `RUN_NOTEBOOKS=0` in `docker.env` if you want to skip them.
-- Outputs are written to `OUTPUT_DIR`, which defaults to `./docker_smoke_output`.
+- Outputs are written to `OUTPUT_DIR`, which defaults to the project root and therefore uses the plain test folders.
 - Generated figures, tables, and executed notebooks are written to `OUTPUT_DIR/figures`, `OUTPUT_DIR/tables`, and `OUTPUT_DIR/notebook_runs`.
 
 ### 2. Full reproduction

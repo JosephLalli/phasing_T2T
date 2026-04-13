@@ -45,7 +45,7 @@ CONTAINER_NAME="${CONTAINER_NAME:-phasing-t2t-smoke}"
 NUM_THREADS="${NUM_THREADS:-12}"
 RUN_SUFFIX="${RUN_SUFFIX:-smoke}"
 RUN_NOTEBOOKS="${RUN_NOTEBOOKS:-1}"
-OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_DIR}/docker_smoke_output}"
+OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_DIR}}"
 
 require_var() {
     local name="$1"
@@ -128,6 +128,7 @@ docker run --rm \
     -e NUM_THREADS="${NUM_THREADS}" \
     -e RUN_SUFFIX="${RUN_SUFFIX}" \
     -e RUN_NOTEBOOKS="${RUN_NOTEBOOKS}" \
+    -e PHASING_T2T_RUN_PROFILE=test \
     -v "${CHM13_FA}:/phasing_T2T_project/resources/chm13v2.0.fa.gz:ro" \
     -v "${CHM13_FA}.fai:/phasing_T2T_project/resources/chm13v2.0.fa.gz.fai:ro" \
     -v "${CHM13_FA}.gzi:/phasing_T2T_project/resources/chm13v2.0.fa.gz.gzi:ro" \
@@ -213,9 +214,10 @@ docker run --rm \
         if [[ "${RUN_NOTEBOOKS}" == "1" ]]; then
             echo "=== Stage 5: notebook execution ==="
             (
-                cd notebooks
-                for nb in calc_figures_for_paper.ipynb calc_per_variant_figures_for_paper.ipynb make_plots.ipynb; do
+                cd notebooks/notebooks_whole_genome
+                for nb in calc_per_variant_figures_for_paper.ipynb make_plots.ipynb calc_figures_for_paper.ipynb; do
                     echo "Executing ${nb}"
+                    PHASING_T2T_RUN_PROFILE=test \
                     jupyter nbconvert \
                         --to notebook \
                         --execute \

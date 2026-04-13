@@ -205,6 +205,29 @@ num_threads=$2
 suffix=$3
 genome=$4
 
+run_profile="${PHASING_T2T_RUN_PROFILE:-}"
+if [[ -z "$run_profile" ]]; then
+    if [[ "$chrom" == *test ]]; then
+        run_profile="test"
+    else
+        run_profile="whole_genome"
+    fi
+fi
+
+case "$run_profile" in
+    test)
+        intermediate_data_dir=$basedir/intermediate_data
+        imputation_statistics_dir=$basedir/imputation_statistics
+        ;;
+    whole_genome)
+        intermediate_data_dir=$basedir/intermediate_data_whole_genome
+        imputation_statistics_dir=$basedir/imputation_statistics_whole_genome
+        ;;
+    *)
+        echo "ERROR: PHASING_T2T_RUN_PROFILE must be 'test' or 'whole_genome', got '$run_profile'." >&2
+        exit 2
+        ;;
+esac
 
 #settings
 hmm_ne=135000
@@ -376,8 +399,8 @@ chrom_working_dir=$basedir/working_directories/${chrom}_working${suffix}
 final_panel_dir=$basedir/phased_panels/phased_${genome}_panel${suffix}
 stats_dir=$basedir/SHAPEIT5_switch_output/phasing_stats_${genome}${suffix}
 lifted_panel_folder=$chrom_working_dir/liftover/lifted_panels
-imputation_results_dir=$basedir/imputation_statistics/imputation_results$suffix
-variant_frequency_stats_dir=$basedir/intermediate_data/variant_frequency_stats/${genome}
+imputation_results_dir=$imputation_statistics_dir/imputation_results$suffix
+variant_frequency_stats_dir=$intermediate_data_dir/variant_frequency_stats/${genome}
 
 mkdir -p $chrom_working_dir
 mkdir -p $final_panel_dir
@@ -963,7 +986,7 @@ if should_run "$variant_frequency_stats_dir/${chrom}_private_singletons.txt.gz";
         -p $duos_and_trios \
         -i $phased_panel_vcf_3202_biallelic \
         -c $chrom \
-        -o $basedir/intermediate_data/variant_frequency_stats \
+        -o $intermediate_data_dir/variant_frequency_stats \
         -j $num_threads &
 fi
 

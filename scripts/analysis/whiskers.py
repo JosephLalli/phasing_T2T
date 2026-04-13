@@ -78,7 +78,7 @@ def central_whiskerplot(
     center="median",          # "median" or "mean"
     line_width_frac=0.6,      # horizontal line length relative to per-hue width
     whisker="percentile",     # "percentile" | "ci" | "std"
-    percentiles=(95, 5),     # used if whisker="percentile"
+    percentiles=(5, 95),     # used if whisker="percentile"
     ci_level=95,              # used if whisker="ci"
     n_boot=2000,              # used if whisker="ci"
     std_n=1.0,                # used if whisker="std"
@@ -138,6 +138,15 @@ def central_whiskerplot(
     else:
         raise ValueError("center must be 'median' or 'mean'")
 
+    if whisker == "percentile":
+        if len(percentiles) != 2:
+            raise ValueError("percentiles must contain exactly two values")
+        p_lo, p_hi = np.sort(np.asarray(percentiles, dtype=float))
+        if p_lo < 0 or p_hi > 100:
+            raise ValueError("percentiles values must be between 0 and 100")
+    else:
+        p_lo = p_hi = np.nan
+
     def whisker_bounds(vals):
         v = np.asarray(vals)
         v = v[np.isfinite(v)]
@@ -147,7 +156,7 @@ def central_whiskerplot(
         c = center_fn(v)
 
         if whisker == "percentile":
-            lo, hi = np.percentile(v, percentiles)
+            lo, hi = np.percentile(v, [p_lo, p_hi])
         elif whisker == "ci":
             lo, hi = _bootstrap_ci(v, center_fn, level=ci_level, n_boot=n_boot, seed=seed)
         elif whisker == "std":
@@ -157,6 +166,9 @@ def central_whiskerplot(
             # center line is still median/mean per `center`
         else:
             raise ValueError("whisker must be 'percentile', 'ci', or 'std'")
+
+        if np.isfinite(lo) and np.isfinite(hi) and lo > hi:
+            lo, hi = hi, lo
 
         return c, lo, hi
 

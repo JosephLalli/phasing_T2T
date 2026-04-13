@@ -35,15 +35,31 @@ script_dir <- dirname(script_path)
 project_dir <- normalizePath(file.path(script_dir, "..", ".."))
 setwd(project_dir)
 
-rolling_data_candidates <- c(
-  "intermediate_data_whole_genome/rolling_stats_500k_window.parquet",
-  "intermediate_data/rolling_stats_500k_window.parquet"
+run_profile <- Sys.getenv("PHASING_T2T_RUN_PROFILE", unset = "whole_genome")
+profile_paths <- list(
+  test = list(
+    intermediate_data = "intermediate_data",
+    figures = "figures"
+  ),
+  whole_genome = list(
+    intermediate_data = "intermediate_data_whole_genome",
+    figures = "figures_whole_genome"
+  )
 )
-rolling_data_matches <- rolling_data_candidates[file.exists(rolling_data_candidates)]
 
-if (length(rolling_data_matches) == 0) {
+if (!run_profile %in% names(profile_paths)) {
+  stop("PHASING_T2T_RUN_PROFILE must be 'test' or 'whole_genome'.")
+}
+
+selected_profile <- profile_paths[[run_profile]]
+rolling_data_file <- file.path(
+  selected_profile$intermediate_data,
+  "rolling_stats_500k_window.parquet"
+)
+
+if (!file.exists(rolling_data_file)) {
   stop(
-    "Could not find rolling_stats_500k_window.parquet in intermediate_data_whole_genome/ or intermediate_data/."
+    paste0("Could not find rolling_stats_500k_window.parquet for run profile '", run_profile, "' at ", rolling_data_file, ".")
   )
 }
 
@@ -54,7 +70,7 @@ if (length(rolling_data_matches) == 0) {
 # File paths
 CONFIG <- list(
   # Input data files
-  rolling_data_file = rolling_data_matches[[1]],
+  rolling_data_file = rolling_data_file,
   t2t_cytobands_file = 'resources/chm13v2.0_cytobands_allchrs.bed',
   grch38_cytobands_file = 'resources/grch38_cytobands_allchrs.bed',
   t2t_cytobands_header_file = "resources/chm13v2.0_cytobands_allchrs.w_header.bed",
@@ -64,7 +80,7 @@ CONFIG <- list(
   grch38_segdup_file = "resources/GRCh38_segdups_gt10kb.bed",
 
   # Output directory
-  output_dir = 'figures/figure6',
+  output_dir = file.path(selected_profile$figures, 'figure6'),
 
   # Plot parameters
   plot = list(

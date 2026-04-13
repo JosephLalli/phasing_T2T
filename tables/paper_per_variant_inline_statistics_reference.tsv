@@ -1,20 +1,21 @@
-Section	Statistic_Description	Value_CHM13	Value_GRCh38	Paper_Location	Source_Notebook	Notes
-Variant filtering	GATK VQSLOD filter additional loss (CHM13)	30671243.0		Results: variant QC paragraph	calc_per_variant_figures_for_paper	
-Variant filtering	Singleton variants gained (CHM13)	0.0		Results: variant QC paragraph	calc_per_variant_figures_for_paper	
-Variant filtering	CHM13-unique region % removed by VQSLOD (F7)	91.8235290762776		Results: variant QC paragraph	calc_per_variant_figures_for_paper	From bcftools_query nonsyntenic subset; may differ from make_plots figure source
-Variant filtering	CHM13-unique region % retained in panel (F8)	4.652318478820865		Results: variant QC paragraph	calc_per_variant_figures_for_paper	From bcftools_query nonsyntenic subset; may differ from make_plots figure source
-Concordance	Overall concordance % (CHM13v2.0) (C1)	99.0817036495937		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Overall concordance % (GRCh38) (C2)		98.8910067554618	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Doubleton SNP discordance % GRCh38 (C3)		0.4825276248022302	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	Doubleton bin = 0.00021-0.00042
-Concordance	Doubleton SNP discordance % CHM13 (C4)	0.40640043233762474		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	Doubleton bin = 0.00021-0.00042
-Concordance	Singleton SNP discordance % CHM13 (C5)	0.8796982921701996		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Shared-region SNP discordance % CHM13 (C6)	0.25436231387792224		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Shared-region SNP discordance % GRCh38 (C7)		0.42248975698928276	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Shared-region indel discordance % CHM13 (C8)	4.003127367633579		Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Concordance	Shared-region indel discordance % GRCh38 (C9)		4.437390397153575	Results: per-variant concordance paragraph	calc_per_variant_figures_for_paper	
-Rephase SER	Singleton SER (CHM13v2.0) (R1)	8.27393547908082		Results: singleton SER paragraph	calc_per_variant_figures_for_paper	
-Rephase SER	Singleton SER (GRCh38) (R2)		11.645089351135173	Results: singleton SER paragraph	calc_per_variant_figures_for_paper	
-Singleton SER by type	Singleton SER SNP stat. phased (CHM13v2.0) (A5)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
-Singleton SER by type	Singleton SER Indel stat. phased (CHM13v2.0) (A6)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
-Singleton SER by type	Singleton SER SNP stat. phased (GRCh38) (A5)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
-Singleton SER by type	Singleton SER Indel stat. phased (GRCh38) (A6)			Results: phasing accuracy paragraph	calc_per_variant_figures_for_paper	
+Stat_Code	Section	Statistic_Description	Value_CHM13	Value_GRCh38	Percent_Change	Paper_Location	Source_Notebook	Notes
+C_SNP_All	Per-variant concordance	All_regions | SNP | gt_error_rate		0.4253796829703094		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_Syn	Per-variant concordance	Syntenic | Indel | gt_error_rate		4.437390397153575		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_Syn	Per-variant concordance	Syntenic | Indel | gt_error_rate	4.003127367633579			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_All	Per-variant concordance	All_regions | Indel | gt_error_rate	4.0104570069105465			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_SNP_Syn	Per-variant concordance	Syntenic | SNP | gt_error_rate		0.42248975698928276		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_All	Per-variant concordance	All_regions | Indel | gt_error_rate		4.43998056401629		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_SNP_Nsyn	Per-variant concordance	Nonsyntenic | SNP | gt_error_rate	4.596959926301244			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_SNP_Nsyn	Per-variant concordance	Nonsyntenic | SNP | gt_error_rate		2.371092294874213		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_Nsyn	Per-variant concordance	Nonsyntenic | Indel | gt_error_rate		6.92488340119855		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_Ind_Nsyn	Per-variant concordance	Nonsyntenic | Indel | gt_error_rate	9.586008796518382			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_SNP_Syn	Per-variant concordance	Syntenic | SNP | gt_error_rate	0.25436231387792224			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_SNP_All	Per-variant concordance	All_regions | SNP | gt_error_rate	0.2567346149121526			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_All	Per-variant concordance	All_regions | SNPs + Indels | gt_error_rate		1.108993244538191		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_All	Per-variant concordance	All_regions | SNPs + Indels | gt_error_rate	0.9182963504062949			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_Syn	Per-variant concordance	Syntenic | SNPs + Indels | gt_error_rate		1.1064053260628255		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_Syn	Per-variant concordance	Syntenic | SNPs + Indels | gt_error_rate	0.9146328607612747			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_Nsyn	Per-variant concordance	Nonsyntenic | SNPs + Indels | gt_error_rate		2.944617138463782		Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+C_All_Nsyn	Per-variant concordance	Nonsyntenic | SNPs + Indels | gt_error_rate	6.291116484275644			Results: Table 1 / concordance paragraphs	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples (phased_with_parents_and_pedigree)
+RS_sing	Rephasing	Singleton SER (rephased with reference panel)	8.27393547908082			Results: singleton/statistical phasing text	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples
+RS_sing	Rephasing	Singleton SER (rephased with reference panel)		11.690793831015235		Results: singleton/statistical phasing text	calc_per_variant_figures_for_paper.ipynb	ground_truth_source=HPRC_samples

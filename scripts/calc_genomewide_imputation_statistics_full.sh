@@ -99,8 +99,29 @@ test_run="${4:-false}"
 subset_folder=$basedir/resources/sample_subsets
 
 
-# Use new imputation_statistics layout
-outfolder=$basedir/imputation_statistics/imputation_results_${CHM13v2_run_suffix}
+run_profile="${PHASING_T2T_RUN_PROFILE:-}"
+if [[ -z "$run_profile" ]]; then
+    if [[ "$test_run" == true ]]; then
+        run_profile="test"
+    else
+        run_profile="whole_genome"
+    fi
+fi
+
+case "$run_profile" in
+    test)
+        imputation_statistics_dir=$basedir/imputation_statistics
+        ;;
+    whole_genome)
+        imputation_statistics_dir=$basedir/imputation_statistics_whole_genome
+        ;;
+    *)
+        echo "ERROR: PHASING_T2T_RUN_PROFILE must be 'test' or 'whole_genome', got '$run_profile'." >&2
+        exit 2
+        ;;
+esac
+
+outfolder=$imputation_statistics_dir/imputation_results_${CHM13v2_run_suffix}
 logfolder=$outfolder/logs
 mkdir -p $outfolder
 mkdir -p $logfolder
