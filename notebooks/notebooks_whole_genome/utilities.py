@@ -8,7 +8,7 @@ from string import ascii_lowercase as lowercase
 
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
+from matplotlib.axes import Axes
 from matplotlib.ticker import FuncFormatter, MultipleLocator, PercentFormatter
 from matplotlib.transforms import ScaledTranslation
 
@@ -81,11 +81,44 @@ update_legend_values={'genome':'Genome',
                       'HGSVC_samples':'HGSVC samples',
                       'ground_truth_data_source':'Assembly Source'
                     }
+### Stats functions
+
+def calculate_es(gene_list, ranked_genes, gene_set, weights):
+    """
+    Calculates the enrichment score (ES) for a gene set within a ranked list of genes.
+
+    Args:
+        gene_list (list): A list of all genes considered in the analysis.
+        ranked_genes (list): A ranked list of genes, e.g., by differential expression.
+        gene_set (list): A list of genes belonging to the gene set of interest.
+
+    Returns:
+        float: The enrichment score (ES).
+    """
+    N = len(gene_list)
+    Nh = len(gene_set)
+    ES = 0
+    running_sum = 0
+    tag_indicator = np.isin(ranked_genes, gene_set)
+    rank_list_indicator = ~tag_indicator
+    
+    for i, tag in enumerate(tag_indicator):
+      if tag:
+        running_sum += np.sqrt((N - Nh)/Nh) * weights[i]
+      else:
+        running_sum -= np.sqrt(Nh/(N - Nh)) * weights[i]
+      
+      if running_sum > ES:
+        ES = running_sum
+    
+    return ES
+
+
 
 ### plotting functions
 
-def add_letter_to_ax(ax: mpl.axes, label: str | int, points_offset=(-25, 7),
-                         va='bottom', fontsize=10, weight='bold', fontfamily='sans', alphabet=lowercase, **kwargs) -> mpl.axes:
+def add_letter_to_ax(ax: Axes, label: str | int, points_offset=(-25, 7),
+                         va='bottom', fontsize=10, weight='bold', fontfamily='sans', alphabet=lowercase, **kwargs) -> Axes:
     # Use ScaledTranslation to put the label
     # - at the top left corner (axes fraction (0, 1)),
     # - offset 20 pixels left and 7 pixels up (offset points (-20, +7)),

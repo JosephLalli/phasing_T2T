@@ -156,3 +156,4 @@ intermediate_data_whole_genome_backup/
 intermediate_data_test/
 
 # ── Stray intermediate data files ──
+CLAUDE.md

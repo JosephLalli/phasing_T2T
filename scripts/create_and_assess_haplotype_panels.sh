@@ -1105,6 +1105,9 @@ echo "phasing pangenome samples against 2504 panel"
 #### Repeat phasing as above, specifying a reference panel during the common variant phasing.
 
 if should_run "$common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi"; then
+    ## Use --filter-maf 0 to retain all input variants present in the reference panel.
+    ## With only 39-44 pangenome samples, the default --filter-maf threshold (0.001)
+    ## would exclude variants with MAC 1-4 in the reference panel that should be phased.
     $basedir/bin/SHAPEIT5_phase_common_static_v1.1.1 \
         --input $vcf_to_phase_pangenome_biallelic_HPRC_common \
         --reference $phased_panel_no_pangenome_biallelic \
@@ -1112,7 +1115,7 @@ if should_run "$common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi"
         --output $chrom_working_dir/tmp_HPRC_pangenome.bcf \
         --thread $num_threads \
         --log $chrom_working_dir/$chrom.common.pangenome_with_ref_panel.log \
-        --filter-maf $rare_variant_threshold \
+        --filter-maf 0 \
         $haploid_arg \
         --region $region \
     && bcftools view --threads 8 -Ob $chrom_working_dir/tmp_HPRC_pangenome.bcf > $common_variants_phased_HPRC_pangenome_against_ref_biallelic \
@@ -1120,30 +1123,12 @@ if should_run "$common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi"
 fi
 
 
-## Phase rare variants in chunks. We cannot specify a reference panel in this step.
-## We do this in one go, as the 1KGP pangenome sample set is smaller and requires less memory.
-i=1
+## Skip phase_rare for pangenome rephasing: with --filter-maf 0, phase_common
+## already outputs all input variants present in the reference panel. phase_rare
+## would reintroduce variants absent from the reference panel with random phase.
 if should_run "$rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi"; then
-    $basedir/bin/SHAPEIT5_phase_rare_static_v1.1.1 \
-        --input $vcf_to_phase_pangenome_biallelic_HPRC \
-        --map $chrom_map \
-        --scaffold $common_variants_phased_HPRC_pangenome_against_ref_biallelic \
-        --scaffold-region $whole_chrom \
-        --input-region $whole_chrom \
-        --thread $num_threads \
-        $haploid_arg \
-        --log $chrom_working_dir/${chrom}.${i}.rare.pangenome_with_ref_panel.log \
-        --output $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf && \
-        bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf && \
-    bcftools view --threads 8 -Ob $chrom_working_dir/${i}_tmp_pangenome_HPRC.rare.bcf > $rare_variants_phased_HPRC_pangenome_against_ref_biallelic && \
-    bcftools index --threads 8 -f $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
-
-    if [[ ! -s $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi ]]; then
-        ## This can occur if there are no variants under the rare variant threshold - then shapeit5 errors with a 'no variants to phase' error
-        cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
-        cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi
-    fi
-
+    cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic $rare_variants_phased_HPRC_pangenome_against_ref_biallelic
+    cp $common_variants_phased_HPRC_pangenome_against_ref_biallelic.csi $rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi
 fi
 
 wait_and_check || exit 1
@@ -1153,6 +1138,7 @@ did_run "$rare_variants_phased_HPRC_pangenome_against_ref_biallelic.csi" || exit
 echo "phasing pangenome samples against 2504 panel"
 ### Repeat phasing as above, specifying a reference panel during the common variant phasing.
 if should_run "$common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi"; then
+    ## Use --filter-maf 0 (see HPRC block comment above for rationale).
     $basedir/bin/SHAPEIT5_phase_common_static_v1.1.1 \
         --input $vcf_to_phase_pangenome_biallelic_1kgp \
         --reference $phased_panel_no_pangenome_biallelic \
@@ -1160,7 +1146,7 @@ if should_run "$common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi"
         --output $chrom_working_dir/tmp_pangenome_1kgp.bcf \
         --thread $num_threads \
         --log $chrom_working_dir/$chrom.common.pangenome_with_ref_panel.log \
-        --filter-maf $rare_variant_threshold \
+        --filter-maf 0 \
         $haploid_arg \
         --region $region \
     && bcftools view --threads 8 -Ob $chrom_working_dir/tmp_pangenome_1kgp.bcf > $common_variants_phased_1kgp_pangenome_against_ref_biallelic \
@@ -1168,29 +1154,10 @@ if should_run "$common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi"
 fi
 
 
-## Phase rare variants in chunks. We cannot specify a reference panel in this step.
-## We do this in one go, as the 1KGP pangenome sample set is smaller and requires less memory.
-i=1
+## Skip phase_rare for pangenome rephasing (see HPRC block comment above).
 if should_run "$rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi"; then
-    $basedir/bin/SHAPEIT5_phase_rare_static_v1.1.1 \
-        --input $vcf_to_phase_pangenome_biallelic_1kgp \
-        --map $chrom_map \
-        --scaffold $common_variants_phased_1kgp_pangenome_against_ref_biallelic \
-        --thread $num_threads \
-        --log $chrom_working_dir/${chrom}.${i}.rare.pangenome_with_ref_panel.log \
-        --scaffold-region $whole_chrom \
-        --input-region $whole_chrom \
-        $haploid_arg \
-        --output $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf && \
-        bcftools index --threads 8 -f $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf && \
-    bcftools view --threads 8 -Ob $chrom_working_dir/${i}_tmp_pangenome_1kgp.rare.bcf > $rare_variants_phased_1kgp_pangenome_against_ref_biallelic && \
-    bcftools index --threads 8 -f $rare_variants_phased_1kgp_pangenome_against_ref_biallelic 
-
-    if [[ ! -s $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi ]]; then
-        ## This can occur if there are no variants under the rare variant threshold - then shapeit5 errors with a 'no variants to phase' error
-        cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic $rare_variants_phased_1kgp_pangenome_against_ref_biallelic
-        cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi
-    fi
+    cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic $rare_variants_phased_1kgp_pangenome_against_ref_biallelic
+    cp $common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi $rare_variants_phased_1kgp_pangenome_against_ref_biallelic.csi
 fi
 wait_and_check || exit 1
 did_run "$common_variants_phased_1kgp_pangenome_against_ref_biallelic.csi" || exit 1
