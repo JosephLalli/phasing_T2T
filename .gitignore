@@ -5,7 +5,20 @@
 # Claude-related files
 *claude*
 *CLAUDE*
+AGENTS.md
 DIRECTORY_LOGIC.md
+
+# Publication prep / local release scratch
+CHANGES.md
+patches/
+papers/
+docker_test_output/
+docker_smoke_output/
+notebook_runs/
+.zenodo_staging/
+zenodo_dist/
+scripts/docker_run_chr22_test.sh
+docker.env
 
 # Python cache
 __pycache__/
@@ -14,11 +27,16 @@ __pycache__/
 .Quarto
 _quarto.yml
 
-# Test scripts
-test_docker_setup.sh
 
 # Symlinks
 *.lnk
+intermediate_data
+intermediate_data_whole_genome
+imputation_statistics
+imputation_statistics_fullgenome
+imputation_statistics_whole_genome
+figures_whole_genome
+tables_whole_genome
 
 ## Input files -- too large
 *unphased_variant_calls/**
@@ -32,22 +50,112 @@ resources/chm13v2.0.fa.gz*
 t2t_native_scaled_maps.tar.gz
 **/*.fully_annotated.tsv
 
-## Intermediate data - too large (>50MB parquets)
-all_variant_data.parquet
-bcftools_query_variant_data.parquet
-**/rolling_stats_500k_window.parquet
-**/variants.parquet
-**/MAF_performance_variants.parquet
-**/block_length.parquet
-**/rolling_stats_1m_window.parquet
-**/variants.nozeros.parquet
+# Large genomic data files (symlinks >50MB)
+resources/hgsvc3-*
+resources/hprc-v1.1-*
+
+## Intermediate data - all regenerable from pipeline + notebooks
+**/all_variant_data.parquet
+**/bcftools_query_variant_data.parquet
+intermediate_data_whole_genome/
+intermediate_data/
+figures_whole_genome/
+tables_whole_genome/
+working_directories/
+SHAPEIT5_switch_output/
+imputation_statistics/
+imputation_statistics_whole_genome/
+resources/SGDP_variation/
+
+# Temporary and log files
+**true_false**
+**log
+intermediate_data_test/
+imputation_statistics_test/
+*tmp*
+
+# Small, unnecessary files that can be regenerated
+*ancestry_specific*
+*txt.gz
+*txt.gz.tbi
+*syntenic-nonsyntenic*
+*/imputation*/*bcf*
+*imputation*test*/*
 
 # Keep notebooks in notebooks_fullgenome (unignore directory and .ipynb files)
-!notebooks_fullgenome/
-!notebooks_fullgenome/*.ipynb
-
-# I want to hang on to the claude refactored fig 6 scripts, but I want to upload just the original script for now.
-scripts/*R
-!scripts/Figure_6_script.R
+!notebooks/notebooks_whole_genome/*ipynb
 
 !README.md
+
+# ── Root-level scratch/debug files ──
+all_files.txt
+all_imputation_stats_files_to_check.txt
+all_input_description_files.txt
+error_reports.txt
+found_inputs.txt
+found_reports.txt
+missing_inputs.txt
+missing_reports.txt
+out.txt
+output.png
+liftover_indels_r2.pdf
+per_sample_missing_candidates.tsv
+pangenie_v2.*.bcf
+pangenie_v2.*.bcf.csi
+/*.vcf.gz.tbi
+/*.out
+/phasing_*.log
+/test_run_*.log
+
+# ── Virtual environments ──
+.venv*/
+
+# ── Non-core script subdirectories ──
+scripts/deprecated/
+scripts/investigation/
+scripts/utility/calc_per_contig_per_variant_r2.sh
+scripts/utility/compare_callsets.py
+scripts/utility/plot_per_variant_r2.py
+scripts/utility/regen_2430.sh
+scripts/utility/rerun_no_singletons_imputation.sh
+scripts/utility/run_parent_uninformative_chr22.py
+
+# ── Entire liftover_indels_review/ directory ──
+scripts/liftover_indels_review/
+
+# ── Superseded liftover scripts ──
+scripts/liftover_panel_JLL.sh
+
+# ── Duplicate/backup/WIP notebooks ──
+notebooks/calc_per_variant_figures_for_paper copy.ipynb
+notebooks/calc_per_variant_figures_for_paper copy.BACKUP.ipynb
+notebooks/make_plots copy.ipynb
+notebooks/_build_refactored_*.py
+notebooks/REFACTORING_*.md
+notebooks/notebooks_whole_genome/calc_per_variant_figures_for_paper_to_be_reorganized.ipynb
+notebooks/**/*refactored*.ipynb
+notebooks/**/*to_be_refactored*.ipynb
+
+# ── Notebook-generated figure outputs (regenerable) ──
+notebooks/notebooks_whole_genome/figures/
+notebooks/notebooks_whole_genome/Supp3.png
+
+# ── Experimental figure6 artifacts ──
+scripts/figure6/Figure_6_script_refactored.R
+scripts/figure6/Figure_6_script_graceful_exit.R
+scripts/figure6/*CLAUDE*
+scripts/figure6/*claude*
+scripts/figure6/AGENTS.md
+scripts/figure6/__pycache__/
+scripts/figure6/.claude/
+
+# ── R session artifacts ──
+scripts/.RData
+scripts/.Rhistory
+
+# ── Data directories (backups) ──
+intermediate_data_whole_genome_backup/
+intermediate_data_test/
+
+# ── Stray intermediate data files ──
+CLAUDE.md

@@ -1,0 +1,24 @@
+Section	Statistic_Description	Value_CHM13	Value_GRCh38	Percent_Change	Paper_Location	Source_Notebook	Notes
+Variant filtering	CHM13 variants lost to GATK-based filters	14491949.0			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 singleton variants gained	40226623.0			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	GRCh38 % variants filtered		47.871003341255914		Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	GRCh38 % filtered solely as singletons		32.996117169580366		Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 % variants filtered	24.77815839961553			Results: variant QC paragraph	calc_figures_for_paper	
+Variant filtering	CHM13 % filtered solely by VQSLOD	17.02779056827747			Results: variant QC paragraph	calc_figures_for_paper	
+Panel composition	Unique CHM13 variants in panel	101152794.0			Results: panel composition paragraph	calc_figures_for_paper	
+Panel composition	Unique CHM13 novel-region variants in panel	305914.0			Results: panel composition paragraph	calc_figures_for_paper	
+Pedigree composition	Number of trio/duo parents	1206.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Pedigree composition	Number of trio/duo probands	604.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Pedigree composition	Number of statistically phased samples	1392.0			Results: phasing accuracy paragraph	calc_figures_for_paper	Same value for both genomes
+Family-structure accuracy	SER (HPRC_samples)		0.40794760928023754		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HGSVC_samples_nontrios_only)		1.280731516927418		Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HPRC_samples)	0.3548554216854477			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Family-structure accuracy	SER (HGSVC_samples_nontrios_only)	1.1084000065356985			Results: Mendelian vs statistical phasing paragraph	calc_figures_for_paper	
+Panel-wide SER	Panel-wide SER (GRCh38)		0.7271501092272955		Results: phasing accuracy paragraph	calc_figures_for_paper	
+Panel-wide SER	Panel-wide SER (CHM13v2.0)	0.6155912366037762			Results: phasing accuracy paragraph	calc_figures_for_paper	
+Switch error decomposition	HPRC proband FER (GRCh38)		0.18633254601884644		Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband tSER (GRCh38)		0.02911131952456832		Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband FER (CHM13v2.0)	0.16640508477279847			Results: switch error decomposition	calc_figures_for_paper	
+Switch error decomposition	HPRC proband tSER (CHM13v2.0)	0.018721699495801377			Results: switch error decomposition	calc_figures_for_paper	
+ChrX accuracy	ChrX tSER HPRC (GRCh38)		0.26704463997883604		Results: switch error decomposition	calc_figures_for_paper	
+ChrX accuracy	ChrX tSER HPRC (CHM13v2.0)	0.019057838559421066			Results: switch error decomposition	calc_figures_for_paper	

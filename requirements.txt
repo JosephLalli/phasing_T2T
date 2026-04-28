@@ -1,0 +1,24 @@
+# Python dependencies for the phasing_T2T analysis pipeline.
+# These versions were used to produce the results in Lalli et al. 2025.
+# Install with: pip install -r requirements.txt
+polars>=1.0,<2
+pandas>=2.0,<3
+pyarrow>=17,<19
+xlsxwriter>=3.2,<4
+numpy>=2.0,<3
+pysam>=0.22,<1
+cyvcf2>=0.31,<1
+intervaltree>=3.1,<4
+tqdm>=4.60,<5
+pyliftover>=0.4,<1
+biopython>=1.83,<2
+scipy>=1.12,<2
+scikit-learn>=1.5,<2
+matplotlib>=3.9,<4
+seaborn>=0.13,<1
+statannotations>=0.6,<1
+upsetplot>=0.9,<1
+jupyter>=1.0
+nbconvert>=7.0,<8
+nbformat>=5.0,<6
+ipython>=8.0

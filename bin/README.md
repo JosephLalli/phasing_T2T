@@ -12,8 +12,8 @@ This directory contains static executable binaries required for the T2T phasing 
 - **SHAPEIT5_switch_static_JLL** - Custom switch error calculator with enhanced metrics
 
 ### Imputation and Genotype Concordance Tools
-- **GLIMPSE2_concordance_static** - Measures imputation accuracy and concordance
-- **impute5_1.1.5_static** - Alternative imputation method for validation
+- **GLIMPSE2_concordance** - Measures imputation accuracy and concordance
+- **impute5_v1.2.0_static** - Alternative imputation method for validation
 
 ## Installation and Setup
 

@@ -13,13 +13,14 @@ Options:
     -t TARGET      target fasta (required)
     -c CHAIN       chain file for liftover (required)
     -s SRC_FASTA   source fasta used by liftover (required)
-    -r REGION      optional region to limit processing (e.g. chr1:100000-200000)
+    -r REGION      optional source-assembly region to limit processing
+    -d DIFF        vcf that has differences between fastas (variation from src)
     -h             show this help and exit
 USAGE
 }
 
 region=""
-while getopts ":hi:o:t:c:s:r:" opt; do
+while getopts ":hi:o:t:c:s:r:d:" opt; do
     case ${opt} in
         h )
             usage
@@ -31,6 +32,7 @@ while getopts ":hi:o:t:c:s:r:" opt; do
         c ) chain=${OPTARG} ;;
         s ) in_fasta=${OPTARG} ;;
         r ) region=${OPTARG} ;;
+        d ) diff_vcf=${OPTARG} ;;
         \: ) echo "Missing argument for -${OPTARG}" >&2; usage; exit 2 ;;
         \? ) echo "Unknown option: -${OPTARG}" >&2; usage; exit 2 ;;
     esac
@@ -65,23 +67,40 @@ fi
 
 ## this code strips out all forms of vcf/bcf/vcf.gz/bcf.gz suffix
 ## strip a gz suffix if present, then strip everything after the last period.
-root_name=$(dirname $out)/$(basename ${out%.gz})
+root_name=$(dirname "$out")/$(basename "${out%.gz}")
 root_name=${root_name%.*}
-# tmpfile=$(dirname $out)/temp.$(basename $root_name).bcf
-# tmpfolder=$(dirname $out)/tmp
-# mkdir -p $tmpfolder
 
-# python3 liftover_indels.py $in $vcf_of_differences $tmpfile $chain $target_fasta \
-bcftools +liftover -Ou $in --regions $region -- --chain $chain --src-fasta-ref $in_fasta --fasta-ref $target_fasta \
-                    --write-src --write-fail --fix-tags \
-                    --reject $root_name.unlifted.bcf -Ob \
-| bcftools norm -Ou --threads 4 -f $target_fasta -m -any - \
+# Temporary workspace for bcftools sort
+tmpfolder=$(mktemp -d "$(dirname "$out")"/liftover_tmp.XXXXXX)
+cleanup_tmpfolder() {
+    rm -rf "$tmpfolder"
+}
+trap cleanup_tmpfolder EXIT
+tmpfile=$(dirname $out)/temp.$(basename $root_name).bcf
+tmpfolder=$(dirname $out)/tmp
+mkdir -p $tmpfolder
+region_args=()
+if [ -n "$region" ]; then
+    region_args=(--region "$region")
+fi
+
+python3 "$(dirname "${BASH_SOURCE[0]}")/liftover_indels.py" --input-vcf "$in" --ref-diffs-vcf $diff_vcf --output-vcf $tmpfile --chain $chain --target-fasta $target_fasta "${region_args[@]}" && \
+bcftools norm -Ou --threads 4 -f $target_fasta -m -any $tmpfile \
 | bcftools annotate -Ou --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
 | bcftools +fill-tags -Ou --threads 2 - -- -t "AN,AC,MAF,MAC:1=MAC" \
-| bcftools sort -Ou -m 8G -T $tmpfolder - \
+| bcftools sort -Ou -m 4G -T "$tmpfolder" - \
 | bcftools view -Ob --threads 8 -l1 - > $out \
-&& bcftools index --threads 2 -f $out # \
-# && rm $tmpfile
+&& bcftools index --threads 2 -f $out  \
+&& rm $tmpfile
+# bcftools +liftover -Ou $in --regions $region -- --chain $chain --src-fasta-ref $in_fasta --fasta-ref $target_fasta \
+#                     --write-src --write-fail --fix-tags \
+#                     --reject $root_name.unlifted.bcf -Ob \
+# | bcftools norm -Ou --threads 4 -f $target_fasta -m -any - \
+# | bcftools annotate -Ou --threads 4 --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' - \
+# | bcftools +fill-tags -Ou --threads 2 - -- -t "AN,AC,MAF,MAC:1=MAC" \
+# | bcftools sort -Ou -m 4G -T "$tmpfolder" - \
+# | bcftools view -Ob --threads 8 -l1 - > $out \
+# && bcftools index --threads 2 -f $out # \
 
 wait
 

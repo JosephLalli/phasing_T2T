@@ -8,7 +8,7 @@ This directory contains unphased variant call files from the 1000 Genomes Projec
 
 ## Required Downloads
 
-To obtain the raw vcf files used as inputs to this pipeline, please download the following files.
+To obtain the raw vcf files used as inputs to this pipeline, cd to the phasing_T2T directory and download the following files.
 
 ### T2T-CHM13v2.0 Variant Calls (~30-130GB per chromosome)
 ```bash
