@@ -1228,12 +1228,10 @@ if os.path.exists(maf_parquet) and os.path.exists(variant_parquet):
                       pass_filter = (pl.col('FILTER') != 'PASS').cast(pl.Boolean)
        ).select(['ID','genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter',
                    'MAC_filter','AC_filter','f_missing_filter','var_len_filter','alt_star_filter','pass_filter']
-       ).with_columns(GRCh38_filtered= ~(pl.col('ID').is_in(grch38_ids) & (pl.col('genome')=='GRCh38')),
-                       CHM13_filtered = ~(pl.col('ID').is_in(chm13_ids) & (pl.col('genome')=='CHM13v2.0')),
-                       GRCh38_criteria_fail=(pl.col('AC_filter')|
-                                                pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean),
-                       CHM13_criteria_fail =(pl.col('MAC_filter')|pl.col('VQSLOD_filter')|
-                                                pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean)
+       ).with_columns(GRCh38_filtered = pl.when(pl.col('genome')=='GRCh38').then(~(pl.col('ID').is_in(grch38_ids))),
+                       CHM13_filtered = pl.when(pl.col('genome')=='CHM13v2.0').then(~(pl.col('ID').is_in(chm13_ids))),
+                       GRCh38_criteria_fail=(pl.col('AC_filter')|pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean),
+                       CHM13_criteria_fail =(pl.col('MAC_filter')|pl.col('VQSLOD_filter')|pl.col('f_missing_filter')|pl.col('pass_filter')|pl.col('HWE_pop_filter')|pl.col('MERR_filter')|pl.col('var_len_filter')|pl.col('alt_star_filter')).cast(pl.Boolean)
        ).group_by(['genome','Syntenic','singleton', 'VQSLOD_filter','MERR_filter','HWE_pop_filter','MAC_filter','AC_filter',
                          'f_missing_filter','var_len_filter','alt_star_filter','pass_filter','CHM13_filtered','GRCh38_filtered','GRCh38_criteria_fail','CHM13_criteria_fail']
        ).len().collect()
