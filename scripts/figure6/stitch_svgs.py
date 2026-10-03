@@ -38,13 +38,16 @@ BASE_GRID_TOP_Y = 20.0
 GRID_LEFT_PAD = 0.0
 LABEL_X = 48.0
 DEFAULT_FONT_FAMILY = "Arial"
-LABEL_FONT_SIZE_PX = 8.0 * (96.0 / 72.0)
+# Final journal sizes belong in the generating source, rather than in the
+# packaging step. svglite serializes these values as SVG px despite receiving
+# point-sized plotting parameters; these values reproduce the accepted upload.
+LABEL_FONT_SIZE_PX = 7.0
 TITLE_FONT_SIZE_PX = 6.4
 TITLE_TOP_MARGIN_PX = 5.333333333333333
 TITLE_GAP_ABOVE_PANEL_PX = 2.2
 TITLE_LINE_STEP_PX = 7.2
 TITLE_Y_SHIFT_PX = TITLE_LINE_STEP_PX
-PANEL_TAG_FONT_SIZE_PX = 10.0
+PANEL_TAG_FONT_SIZE_PX = 8.0
 PANEL_TAG_FONT_WEIGHT = "bold"
 PANEL_TAG_METRICS_FAMILY = "Arial:style=Bold"
 PANEL_TAG_LOCAL_X = -0.68 - (10.0 * (72.0 / 96.0))
@@ -934,10 +937,12 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
     make_chr15_chr22_grid(chr15_block, chr22_block, out_svg)
 
     colorbar_svg = directory / "colorbar.svg"
+    pdf_source = out_svg
     if colorbar_svg.exists():
         figure6_svg = directory / "figure6.svg"
         print(f"Assembling {out_svg.name} + {colorbar_svg.name} -> {figure6_svg.name}")
         assemble_figure6(out_svg, colorbar_svg, figure6_svg)
+        pdf_source = figure6_svg
 
         figure6_png = directory / "figure6.png"
         print(f"Rasterizing {figure6_svg.name} -> {figure6_png.name} ({FIGURE6_PNG_DPI} dpi)")
@@ -953,7 +958,7 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
             to_png(figure6_svg, dpi_png, dpi=dpi)
 
     if pdf:
-        to_pdf(out_svg)
+        to_pdf(pdf_source)
 
 
 def main():

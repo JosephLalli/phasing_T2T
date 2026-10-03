@@ -104,7 +104,7 @@ CONFIG <- list(
     default_pts = 6,
     linewidth_pts = 0.5,
     percent_size_pts = 5,
-    chrom_size_pts = 8,
+    chrom_size_pts = 7,
     label_size_pts = 6,
     base_number_size_pts = 5,
     regional_var_label_margin = 0.05,
@@ -122,7 +122,11 @@ CONFIG <- list(
     figure6_panel_height_inches = 1.62,
     figure6_colorbar_width_inches = 3.4,
     figure6_colorbar_height_inches = 0.6,
-    figure6_colorbar_axis_width_pt = 219.0
+    figure6_colorbar_axis_width_pt = 219.0,
+    # PDF viewers can expose antialiasing seams between exactly abutting SVG
+    # tiles. Each following tile covers this overlap, and the final tile is
+    # clipped at the original edge, so transitions and outer geometry stay put.
+    figure6_colorbar_tile_overlap_pt = 0.50
   ),
   
   # Genomic regions of interest (CHM13 coordinates)
@@ -829,7 +833,10 @@ export_svg_colorbar <- function(out_file, max_var_density, config) {
   rect(
     xleft = x_breaks[-length(x_breaks)],
     ybottom = bar_y,
-    xright = x_breaks[-1],
+    xright = pmin(
+      x_breaks[-1] + config$plot$figure6_colorbar_tile_overlap_pt,
+      bar_x + bar_width
+    ),
     ytop = bar_y + bar_height,
     col = palette_colors,
     border = NA,

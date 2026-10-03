@@ -12,6 +12,22 @@ from matplotlib.axes import Axes
 from matplotlib.ticker import FuncFormatter, MultipleLocator, PercentFormatter
 from matplotlib.transforms import ScaledTranslation
 
+# Compatibility exports keep existing notebooks working after composition helpers moved modules.
+from figure_composition import (
+    FIG4_COMPOSITE_GROUP_ID,
+    ORIGINAL_FIG4_AXIS_A_TOP_LEFT,
+    ORIGINAL_FIG4_ILLUSTRATION_BOX,
+    _prefixed,
+    axis_left_points,
+    axis_top_left_points,
+    axis_vertical_centre_points,
+    ink_bbox,
+    lay_out_as_in_pdf,
+    panel_a_as_standalone_svg,
+    place_panel_a,
+    register_svg_namespaces,
+    stack_figure_panels,
+)
 
 ## Import functions
 def find_repo_root(start=None):
@@ -60,8 +76,8 @@ update_legend_values={'genome':'Genome',
                       'no_singletons':'No',
                       'No Filter':'Yes', 
                       'panel_filter':'Imputed with singletons?',
-                      'imputed_ds_rsquared': "Variant Imputation $\mathregular{r^2}$",
-                      'rsquared_diff': "Difference in Variant Imputation $\mathregular{r^2}$",
+                      'imputed_ds_rsquared': "Variant Imputation r²", # mathtext superscript came out at 4.2 pt, under the journal's 5 pt
+                      'rsquared_diff': "Difference in Variant Imputation r²",
                       'mean_AF': "Minor Allele Frequency",
                       "in_STRs_or_platinum": "In GIAB or Platinum STRs",
                       "not_in_STRs_or_platinum": "Not in GIAB/Platinum STRs",
@@ -413,6 +429,7 @@ def clean_figure(
     add_letters=True,
     alphabet=lowercase,
     letter_points_offset=(-25, 7),
+    letter_fontsize=10,
     **clean_axis_kwargs
 ):
     """Clean all axes in a figure and optionally add panel letters.
@@ -432,6 +449,8 @@ def clean_figure(
         Sequence of letters (e.g. `string.ascii_lowercase`).
     letter_points_offset : (float, float)
         Offset for letter placement.
+    letter_fontsize : float
+        Panel letter size in points (the journal's size is 8).
     clean_axis_kwargs : dict or None
         Extra kwargs passed to `clean_axis`.
 
@@ -456,7 +475,7 @@ def clean_figure(
         for i, (ax, _bbox) in enumerate(positioned):
             if i >= len(alphabet):
                 raise ValueError(f"Not enough letters in alphabet for {len(positioned)} axes")
-            add_letter_to_ax(ax, alphabet[i], points_offset=letter_points_offset)
+            add_letter_to_ax(ax, alphabet[i], points_offset=letter_points_offset, fontsize=letter_fontsize)
 
     return fig, axes
 
@@ -496,3 +515,104 @@ def add_x_pos(df, ax):
     data_points=pd.DataFrame(np.array(sorted(all_points, key=lambda x: x[1])), columns=['x_data','gt_error_rate'])
     df=df.merge(data_points,on='gt_error_rate')
     return df
+
+
+### Bar and sample plotting helpers
+
+
+def summarize_bar_groups(data, value, order, x='chrom', hue='genome', hue_order=('GRCh38', 'CHM13v2.0'),
+                         estimator='mean', errorbar=('ci', 95), n_boot=1000, seed=None, unit='sample_id'):
+    """Return the plotted observations and one summary row per bar, computed exactly as seaborn.barplot does.
+
+    seaborn.barplot drops rows with a missing value, then for each hue level and x category applies
+    EstimateAggregator(estimator, errorbar, n_boot, seed) to the remaining rows in their original order.
+    The same aggregator is used here so that bar heights and interval endpoints are unchanged; only the
+    bootstrap seed becomes explicit. Counts distinguish observation rows from unique sampling units.
+    """
+    from seaborn._statistics import EstimateAggregator
+
+    aggregator = EstimateAggregator(estimator, errorbar, n_boot=n_boot, seed=seed)
+    in_scope = data.loc[data[x].isin(order) & data[hue].isin(hue_order)]
+    observations = in_scope.loc[in_scope[value].notna()]
+    summary_rows = []
+    for hue_level in hue_order:
+        for x_level in order:
+            group = observations.loc[(observations[hue] == hue_level) & (observations[x] == x_level)]
+            all_rows = in_scope.loc[(in_scope[hue] == hue_level) & (in_scope[x] == x_level)]
+            row = {x: x_level, hue: hue_level, 'n_observations': len(group), 'n_unique_units': group[unit].nunique(),
+                   'n_rows_missing_value': len(all_rows) - len(group)}
+            if len(group):
+                estimate = aggregator(group, value)
+                row.update({'estimate': estimate[value], 'interval_low': estimate[f'{value}min'],
+                            'interval_high': estimate[f'{value}max']})
+            summary_rows.append(row)
+    summary = pd.DataFrame(summary_rows)
+    summary.attrs.update({'value': value, 'estimator': estimator, 'errorbar': str(errorbar), 'n_boot': n_boot, 'seed': seed,
+                          'resampling_unit': 'observation rows within each bar (seaborn units=None)'})
+    return observations.reset_index(drop=True), summary
+
+
+def desaturate_for_bars(color, saturation=0.75):
+    """Return a colour as seaborn.barplot draws it (barplot's default saturation is 0.75)."""
+    from seaborn.utils import desaturate
+    return desaturate(color, saturation)
+
+
+def overlay_sample_points(ax, data, y, order, hue_order, palette, seed=None, style='bars_with_points', size=1.3, jitter=0.25):
+    """Draw each sample's rate as a point, dodged like the bars of sns.barplot and jittered horizontally only.
+
+    numpy is seeded before each stripplot so the jitter is reproducible. Points sit at zorder 2: above the bars
+    (zorder 1) and below their whiskers (zorder 3). Bar style: white circles outlined in the bar colour; points
+    style: circles filled with it.
+    """
+    import seaborn as sns
+
+    for genome, color in zip(hue_order, palette):
+        np.random.seed(seed)
+        if style == 'bars_with_points':
+            point_kws = dict(palette={g: 'white' for g in hue_order}, edgecolor=desaturate_for_bars(color), linewidth=0.4)
+        else:
+            point_kws = dict(palette={g: desaturate_for_bars(color) for g in hue_order}, edgecolor='white', linewidth=0.15)
+        sns.stripplot(x='chrom', y=y, hue='genome', ax=ax, order=order, hue_order=hue_order, dodge=True, jitter=jitter,
+                      size=size, legend=False, zorder=2, data=data.loc[data.genome == genome], **point_kws)
+    return ax
+
+
+def style_bars(ax, alpha=0.75, edgewidth=0.5, edgecolor=None):
+    """Fill each bar (and its legend proxy) at `alpha` with a solid `edgewidth` pt outline.
+
+    edgecolor None draws the outline in the bar's own colour at full opacity.
+    """
+    import matplotlib.colors as mcolors
+
+    for bar in ax.patches:
+        rgb = mcolors.to_rgb(bar.get_facecolor())
+        bar.set_facecolor((*rgb, alpha))
+        bar.set_edgecolor((*rgb, 1.0) if edgecolor is None else edgecolor)
+        bar.set_linewidth(edgewidth)
+    return ax
+
+
+def plot_mean_and_ci(ax, data, y, order, hue_order, seed=None):
+    """Points style: sns.barplot's estimate and interval (mean, 95% bootstrap CI) as black lines, without bars."""
+    import seaborn as sns
+
+    sns.pointplot(x='chrom', y=y, hue='genome', ax=ax, order=order, hue_order=hue_order,
+                  palette={g: 'black' for g in hue_order}, dodge=0.4, linestyle='none', markers='_',
+                  markersize=6, markeredgewidth=0.8, err_kws={'linewidth':0.5, 'zorder':3}, capsize=0.15,
+                  seed=seed, legend=False, zorder=4, data=data)
+    return ax
+
+
+def add_points_with_ci_legend(ax, genome_palette, genome_order=('GRCh38', 'CHM13v2.0'), point_size=1.3):
+    """Key for the points style: genome-coloured points plus one mean-and-interval glyph. Returns the legend."""
+    from matplotlib.legend_handler import HandlerTuple
+    from matplotlib.lines import Line2D
+
+    handles = [Line2D([], [], marker='o', ls='', markerfacecolor=desaturate_for_bars(c), markeredgecolor='white',
+                      markeredgewidth=0.15, markersize=point_size * 2) for c in genome_palette]
+    labels = [update_legend_values.get(g, g) for g in genome_order]
+    handles.append((Line2D([], [], color='black', marker='|', markersize=5, markeredgewidth=0.5, ls=''),
+                    Line2D([], [], color='black', marker='_', markersize=6, markeredgewidth=0.8, ls='')))
+    labels.append('Mean and 95% CI')
+    return ax.legend(handles=handles, labels=labels, loc='upper left', handler_map={tuple: HandlerTuple(ndivide=None, pad=0)})
