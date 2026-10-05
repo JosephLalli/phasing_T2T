@@ -1227,10 +1227,11 @@ fig.suptitle('Biallelic Variant Switch Rates', fontsize=10, weight='bold', y=1.0
 axA.set_title('Genotype Error Rate', fontsize=9, weight='bold', pad=10)
 axB.set_title('Switch Error Rate', fontsize=9, weight='bold', pad=10)
 clean_figure(fig)
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.png', facecolor='white')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.svg', facecolor='white')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.eps', facecolor='white')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.pdf', facecolor='white')
+# Include the title above the normal canvas in each exported format.
+plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.png', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.svg', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.eps', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.pdf', facecolor='white', bbox_inches='tight')
 
 # %% [markdown]
 # ### Supplemental Figure 15
