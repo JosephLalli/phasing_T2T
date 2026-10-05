@@ -47,6 +47,13 @@ for output in figures_whole_genome tables_whole_genome scratch; do
     mkdir -p "$OUTPUT_DIR/$output"
 done
 
+# Git archives omit empty directories. Create bind-mount destinations before
+# making the extracted repository read-only inside the container.
+for mountpoint in intermediate_data_whole_genome imputation_statistics_whole_genome figures_whole_genome tables_whole_genome; do
+    [[ ! -L "$PROJECT_DIR/$mountpoint" ]] || { echo "ERROR: mount destination is a symlink: $mountpoint" >&2; exit 2; }
+    mkdir -p "$PROJECT_DIR/$mountpoint"
+done
+
 BUILD_DIR=
 cleanup() { [[ -z "$BUILD_DIR" ]] || rm -rf -- "$BUILD_DIR"; }
 trap cleanup EXIT
