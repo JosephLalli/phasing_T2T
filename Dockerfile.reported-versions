@@ -27,8 +27,8 @@ RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firm
     && test "$(fc-match -f '%{family}' Arial)" = 'Arial' \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /tmp/requirements.txt
-RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt && \
+COPY requirements.figures.lock.txt /tmp/requirements.figures.lock.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.figures.lock.txt && \
     python -c "import importlib; expected={'numpy':'2.3.4','polars':'1.29.0','pandas':'2.2.3','scipy':'1.16.2','matplotlib':'3.9.2','seaborn':'0.13.2','pyarrow':'17.0.0'}; found={name:importlib.import_module(name).__version__ for name in expected}; assert found == expected, (found, expected)"
 
 WORKDIR /work
