@@ -1,10 +1,7 @@
 # Resources
 
-This directory mixes two kinds of inputs:
-
-1. Small, publication-tracked resources that ship with the repository.
-2. Large external resources that are required at runtime but intentionally do
-   not live in git.
+This directory contains the reference files used by the analysis. Smaller files
+are included in the repository; larger files need to be downloaded separately.
 
 ## Tracked in git
 
@@ -16,7 +13,7 @@ This directory mixes two kinds of inputs:
 
 ## Provided externally
 
-These inputs are required for the full pipeline and for the Docker smoke test:
+Download these files to run the pipeline, including the chr15 and chr22 tests:
 
 - CHM13 and GRCh38 reference FASTA files and indexes
 - unphased 1KGP variant calls in T2T and GRCh38 coordinates
@@ -24,8 +21,8 @@ These inputs are required for the full pipeline and for the Docker smoke test:
 - SGDP truth data in T2T and GRCh38 coordinates
 - HPRC and HGSVC3 pangenome VCFs and indexes
 
-The publication branch no longer tracks machine-specific symlinks to those
-files. Supply them in one of two ways:
+These files are not included in the repository. You can provide them in either
+of the following ways:
 
 1. Mount them into the container with `scripts/run_docker_smoke_test.sh`
    using a `docker.env` created from `docker.env.example`.
@@ -51,8 +48,8 @@ All VCF files require their corresponding `.tbi` tabix index at the same path.
 
 ## Source URLs
 
-Representative download sources are below. Keep a frozen archive outside git
-for the exact publication run if long-term bitwise replication matters.
+Download links are listed below. Keep copies of the input files used for your
+analysis so that you can repeat it later.
 
 ### Reference genomes
 
@@ -93,16 +90,16 @@ done
 ```
 
 **GRCh38 coordinates**:
-The smoke test and full reproduction use Zenodo tarballs that are unpacked into
+Download the test-region or whole-genome data from Zenodo and extract it into
 `resources/SGDP_variation/grch38/`.
 
-Smoke-test tarball:
+Test-region data:
 ```bash
 wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_test_regions.tar.gz \
   "https://zenodo.org/records/19371182/files/SGDP_GRCh38_test_regions.tar.gz?download=1"
 ```
 
-Whole-genome tarball:
+Whole-genome data:
 ```bash
 wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_all_chromosomes.tar.gz \
   "https://zenodo.org/records/19371182/files/SGDP_GRCh38_all_chromosomes.tar.gz?download=1"
@@ -117,9 +114,9 @@ See `SGDP_variation/README.md` for expected file naming.
 Run `scripts/utility/download_resources.sh` from the repository root to fetch all
 reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and the
 required FASTA indexes (`.fai` and `.gzi`). The script skips files that already
-exist. Add `--parallel` to launch the independent download sections together.
+exist. Add `--parallel` to download the different datasets at the same time.
 
-For the Docker smoke test, prefer:
+To download the chr15 and chr22 test-region inputs, run:
 
 ```bash
 bash scripts/utility/download_resources.sh --test

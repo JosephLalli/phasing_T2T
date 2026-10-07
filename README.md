@@ -9,7 +9,7 @@
 
 This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2023](https://www.nature.com/articles/s41586-023-06457-y)) that have been computationally phased using SHAPEIT5 ([Hofmeister et al 2023](https://www.nature.com/articles/s41588-023-01415-w)). Phased panels (both unrelated 2504 member panels and full 3202 member panels) are available at the [T2T/HPRC aws bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/).
 
-The prior Zenodo archive at [record 19836492](https://zenodo.org/record/19836492) remains a reference release. Its analysis data are not the matched reviewer inputs for the current figures. Please cite our preprint describing this work, which is available at [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
+The previous code and analysis data are available at [Zenodo record 19836492](https://zenodo.org/record/19836492). To generate the current figures, use the code and input files described below. Please cite our preprint describing this work, which is available at [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
 ## Repository structure
 
@@ -79,7 +79,7 @@ pip install polars pandas numpy jupyter
 
 ### Docker Environment (Recommended)
 
-The published Docker image supports the pipeline test workflow. The separate reported-version figure environment below is used for the revised publication figures.
+Use the Docker image below to test the phasing pipeline. To generate the figures, use `Dockerfile.reported-versions` as described below.
 
 **Run in Docker container:**
 ```bash
@@ -98,8 +98,8 @@ cd scripts
 
 Replace `/path/to/your/phasing_T2T_project` with the absolute path to your local copy of this repository.
 
-For the pipeline smoke test, download the external test inputs and use the
-repository's configured runner:
+To test the pipeline on the chr15 and chr22 regions, download the input files
+and run:
 
 ```bash
 bash scripts/utility/download_resources.sh --test
@@ -109,17 +109,15 @@ cp docker.env.example docker.env
 bash scripts/run_docker_smoke_test.sh docker.env
 ```
 
-The test uses the chr15 and chr22 regions for both references. It still needs
-external biological inputs; [resources/README.md](resources/README.md) lists
-their canonical paths. The published image and the revised figure image are
-separate environments.
+This tests both references. See [resources/README.md](resources/README.md) for
+the required input files and where to put them. The figures use a separate
+Docker image, described below.
 
 ### Publication figure code
 
-The matched reviewer release provides `JosephLalli__phasing_T2T__NG-TR68126R_20261004.zip`
-and `NG-TR68126R_notebook_inputs.zip` together. Extract both archives as siblings;
-the input archive contains the 188 manifest-listed inputs needed by the canonical
-notebook. From the directory containing the downloaded files:
+To generate the figures, download `JosephLalli__phasing_T2T__NG-TR68126R_20261004.zip`
+and `NG-TR68126R_notebook_inputs.zip`. The second zip contains the 188 input files
+needed by the notebook. Extract both zips in the same directory, then run:
 
 ```bash
 unzip JosephLalli__phasing_T2T__NG-TR68126R_20261004.zip
@@ -130,25 +128,24 @@ bash scripts/run_publication_notebook.sh \
   --output ../phasing_T2T-notebook-reproduction-output
 ```
 
-The runner verifies the release manifest and canonical notebook hash before it
-executes `notebooks/notebooks_whole_genome/make_plots.ipynb`, writes outputs to
-the requested directory, and records the execution receipt in `scratch/`. Building
-the Docker image downloads pinned packages; after it exists, notebook execution
-runs with Docker networking disabled.
+This script checks the input files and notebook against the supplied checksums,
+then runs `notebooks/notebooks_whole_genome/make_plots.ipynb`. Figures and tables
+are written to the output directory, with a record of the run in `scratch/`.
+Building the Docker image requires internet access to download the specified
+package versions. The notebook then runs without network access.
 
-The canonical publication figure workflow is the Jupytext pair
-`notebooks/notebooks_whole_genome/make_plots.py` and `make_plots.ipynb`; edit
-the `py:percent` file and sync it before use:
+To edit the figure code, change `notebooks/notebooks_whole_genome/make_plots.py`
+and update its paired `make_plots.ipynb` notebook with Jupytext:
 
 ```bash
 jupytext --sync notebooks/notebooks_whole_genome/make_plots.ipynb
 ```
 
-`Dockerfile.reported-versions` provides Python 3.11 with the exact reported
-numpy, polars, pandas, scipy, matplotlib, seaborn, and pyarrow versions. It also
-includes PyMuPDF, `rsvg-convert`, and a verified Arial installation. Build it
-and run the notebook with the repository and publication-scale inputs mounted
-read-only, while mounting only the figure and table destinations writable:
+`Dockerfile.reported-versions` contains Python 3.11 and the reported versions of
+numpy, polars, pandas, scipy, matplotlib, seaborn, and pyarrow. It also includes
+PyMuPDF, `rsvg-convert`, and Arial. To build the image and run the notebook directly,
+replace the example input and output paths below with your own. The code and
+input files are mounted read-only; results are written to the output directories:
 
 ```bash
 # This image only needs its Dockerfile and exact figure lockfile as build inputs.
@@ -183,21 +180,20 @@ docker run --rm --network none --read-only --tmpfs /tmp:rw,size=8g \
     --ExecutePreprocessor.timeout=-1
 ```
 
-Vector figure composition is implemented in
-`notebooks/notebooks_whole_genome/figure_composition.py`, with compatible
-exports from `utilities.py`. Figure 5 is generated by
-`scripts/figure5/Figure_5_script.R` and assembled by
-`scripts/figure5/stitch_svgs.py`; its text sizes and colorbar tile overlap are
-defined in those sources.
+`notebooks/notebooks_whole_genome/figure_composition.py` combines the figure
+panels, and its functions are also available through `utilities.py`. Figure 5
+is generated by `scripts/figure5/Figure_5_script.R` and assembled by
+`scripts/figure5/stitch_svgs.py`. These scripts also set the text sizes and
+overlap between colorbar tiles.
 
-Use this map for the main and Extended Data figure outputs:
+The main and Extended Data figures are saved with the following filenames:
 
-| Current figure | Source output under `figures_whole_genome/` |
+| Figure | Output file under `figures_whole_genome/` |
 | --- | --- |
 | Figure 2 | `Figure 2.pdf` |
 | Figure 3 | `Figure 4 (a,b only) with graphic.pdf` |
 | Figure 4 | `Figure 5.pdf` |
-| Figure 5 | `figure6/figure6.svg` from the R workflow |
+| Figure 5 | `figure6/figure6.svg` from the R script |
 | Figure 6 | `Figure 7.pdf` |
 | Extended Data 1 | `supplemental/Supplemental_13.pdf` |
 | Extended Data 2 | `Extended Data - chromosome detail.pdf` |
@@ -208,11 +204,11 @@ Use this map for the main and Extended Data figure outputs:
 | Extended Data 7 | `Extended Data - ancestry imputation.pdf` |
 | Extended Data 8 | `supplemental/Supplemental 23.pdf` |
 
-Figure 1 is supplied separately. The whole-genome revision notebook has
-been executed with the reported Python package versions from existing
-summary and per-site inputs. This check does not rerun the upstream variant
-processing or phasing pipeline. The Figure 5 R workflow was checked with
-the available R environment; original R/package versions were not reported.
+Figure 1 is supplied separately. The figure notebook has been run with the
+reported Python package versions using the summary and per-site input files.
+This does not repeat the variant processing or phasing. The Figure 5 R script
+has also been run, but the R and package versions used for the original figures
+were not reported.
 
 Panel-wide headline SER is calculated in
 `notebooks/notebooks_whole_genome/calc_figures_for_paper.ipynb`: counts are pooled
@@ -232,21 +228,17 @@ cd phasing_T2T
 
 ### 2) Obtain primary data sources
 
-If your goal is to run the Docker smoke test or the chr15/chr22 test regions,
-do not skip this section. The repository includes the scripts and region
-definitions for those test cases, but the biological inputs are still external.
-The fastest supported setup path is:
+To run the chr15 and chr22 test regions, first download the required input files:
 
 ```bash
 bash scripts/utility/download_resources.sh --test
 ```
 
-That helper downloads the canonical test inputs into the repo, converts and
-indexes the FASTA files (including the required `.gzi` files), and populates
-the SGDP truth data needed by the smoke test.
+This script downloads the test-region input files, converts and indexes the
+FASTA files (including the required `.gzi` files), and downloads the SGDP
+ground truth data.
 
-Add `--parallel` if you want the independent download workloads to run together
-across sections:
+Add `--parallel` to download the different datasets at the same time:
 
 ```bash
 bash scripts/utility/download_resources.sh --test --parallel
@@ -323,7 +315,7 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 ```
 
-Alternatively, run `scripts/utility/download_resources.sh` from the repository root to fetch the canonical runtime inputs, including reference genomes, pangenome VCFs, SGDP truth data, and the required FASTA indexes. Use `--test` to fetch only the chr15/chr22 smoke-test inputs, and add `--parallel` to launch the independent download sections together.
+Alternatively, run `scripts/utility/download_resources.sh` from the repository root to download the reference genomes, pangenome VCFs, SGDP ground truth data, and FASTA indexes. Use `--test` to download only the chr15 and chr22 test-region inputs, and add `--parallel` to download the different datasets at the same time.
 
 #### Make binaries executable 
 
@@ -365,10 +357,10 @@ Information on how to generate recombination maps can be found at https://github
 
 #### Option A:  Download summary statistics 
 
- For the current reviewer workflow, use the matched `NG-TR68126R_notebook_inputs.zip`
- together with its code archive and `scripts/run_publication_notebook.sh`. The
- older Zenodo record is a prior reference release and is not the exact input set
- for the current figure notebook.
+Use `NG-TR68126R_notebook_inputs.zip` with its code zip and
+`scripts/run_publication_notebook.sh`, as described above. These are the input
+files for the current figure notebook. The older Zenodo record contains the
+inputs for the previous version.
 
 #### Option B: Generate summary statistics from output of create_and_assess_haplotype_panels.sh
 
@@ -403,11 +395,11 @@ The current publication notebooks are in `notebooks/notebooks_whole_genome/`:
 - `calc_per_variant_figures_for_paper.ipynb` performs the heavier per-variant analyses.
 - `make_plots.py` and its paired `.ipynb` generate the publication figures.
 
-Use the reported-version figure workflow above to execute `make_plots.ipynb`.
+Run `make_plots.ipynb` using the Docker instructions above.
 The `test` profile writes to `figures/` and `tables/`; `whole_genome` writes
 to `figures_whole_genome/` and `tables_whole_genome/`.
 
-### Run the Figure 5 R workflow
+### Generate Figure 5
 
 Run from the repository root in an environment with the required R packages:
 
