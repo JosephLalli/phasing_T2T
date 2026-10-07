@@ -1,5 +1,5 @@
 # ============================================================================
-# Figure 6 Script: Genomic Ideogram Plots with SVG Export
+# Figure 5 Script: Genomic Ideogram Plots with SVG Export
 # ============================================================================
 # This script creates ideogram plots showing variant density, switch error
 # rates, and genotype error rates across chromosomes for both CHM13 and GRCh38
@@ -27,7 +27,7 @@ get_script_path <- function() {
     return(normalizePath(sys.frames()[[1]]$ofile))
   }
 
-  stop("Could not determine the Figure 6 script path.")
+  stop("Could not determine the Figure 5 script path.")
 }
 
 script_path <- get_script_path()
@@ -805,7 +805,7 @@ export_svg_colorbar <- function(out_file, max_var_density, config) {
   width_pt <- config$plot$figure6_colorbar_width_inches * 72
   height_pt <- config$plot$figure6_colorbar_height_inches * 72
 
-  # Span the axis between the centers of the two Figure 6 panel columns after
+  # Span the axis between the centers of the two Figure 5 panel columns after
   # stitching, while keeping the legend centered in its own SVG canvas.
   bar_width <- config$plot$figure6_colorbar_axis_width_pt
   bar_height <- 7.56
@@ -1099,6 +1099,6 @@ export_svg_whole(
 )
 cat(paste("Saved:", t2t_whole_svg, "\n"))
 
-cat("Figure 6 SVG export completed successfully!\n")
+cat("Figure 5 SVG export completed successfully!\n")
 cat("Output files saved to:", CONFIG$output_dir, "\n")
 cat("Run 'python stitch_svgs.py --batch", CONFIG$output_dir, "' to combine pairs.\n")

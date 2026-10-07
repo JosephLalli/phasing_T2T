@@ -8,7 +8,7 @@ Single-pair mode:
 Batch mode (pairs grch38_*.svg with t2t_*.svg by matching suffix):
     python stitch_svgs.py --batch figures/figure6/ [--spacing -8] [--pdf]
 
-Figure 6 block mode (build the pre-colorbar chr15 + chr22 regional block):
+Figure 5 block mode (build the pre-colorbar chr15 + chr22 regional block):
     python stitch_svgs.py --grid figures/figure6/ [--pdf]
 """
 
@@ -607,7 +607,7 @@ def stitch(top_svg: Path, bottom_svg: Path, out_svg: Path, spacing=None):
 
 
 def make_figure6_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
-    """Stack short Figure 6 source panels into one canonical region block."""
+    """Stack short Figure 5 source panels into one canonical region block."""
 
     grch38_root = etree.parse(str(grch38_svg)).getroot()
     t2t_root = etree.parse(str(t2t_svg)).getroot()
@@ -623,7 +623,7 @@ def make_figure6_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
     t2t_height = _float_attr(t2t_root, "height")
     if width != t2t_width or height != t2t_height:
         raise ValueError(
-            f"Figure 6 source size mismatch: {grch38_svg.name} is {width}x{height}, "
+            f"Figure 5 source size mismatch: {grch38_svg.name} is {width}x{height}, "
             f"{t2t_svg.name} is {t2t_width}x{t2t_height}"
         )
 
@@ -667,7 +667,7 @@ def make_figure6_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
 
 
 def make_chr15_chr22_grid(chr15_block_svg: Path, chr22_block_svg: Path, out_svg: Path):
-    """Create the pre-colorbar Figure 6 chr15 + chr22 block from two assembled region blocks."""
+    """Create the pre-colorbar Figure 5 chr15 + chr22 block from two assembled region blocks."""
 
     chr15_root = etree.parse(str(chr15_block_svg)).getroot()
     chr22_root = etree.parse(str(chr22_block_svg)).getroot()
@@ -682,11 +682,11 @@ def make_chr15_chr22_grid(chr15_block_svg: Path, chr22_block_svg: Path, out_svg:
 
     if chr15_w != GRID_LAYOUT["block_width"] or chr22_w != GRID_LAYOUT["block_width"]:
         raise ValueError(
-            f"Figure 6 block width mismatch. Expected {GRID_LAYOUT['block_width']}pt, "
+            f"Figure 5 block width mismatch. Expected {GRID_LAYOUT['block_width']}pt, "
             f"found {chr15_w}pt and {chr22_w}pt"
         )
     if chr15_h != chr22_h:
-        raise ValueError(f"Figure 6 block height mismatch. Found {chr15_h}pt and {chr22_h}pt")
+        raise ValueError(f"Figure 5 block height mismatch. Found {chr15_h}pt and {chr22_h}pt")
 
     root = _new_svg_root(
         GRID_LAYOUT["width"],
@@ -735,7 +735,7 @@ def make_chr15_chr22_grid(chr15_block_svg: Path, chr22_block_svg: Path, out_svg:
 
 
 def assemble_figure6(grid_svg: Path, colorbar_svg: Path, out_svg: Path):
-    """Assemble the final Figure 6 SVG from the chr15/chr22 grid and colorbar."""
+    """Assemble the final Figure 5 SVG from the chr15/chr22 grid and colorbar."""
 
     grid_root = etree.parse(str(grid_svg)).getroot()
     colorbar_root = etree.parse(str(colorbar_svg)).getroot()
@@ -903,7 +903,7 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
     missing = [path.name for path in source_paths.values() if not path.exists()]
     if missing:
         print(
-            "Missing Figure 6 source SVGs: " + ", ".join(sorted(missing)),
+            "Missing Figure 5 source SVGs: " + ", ".join(sorted(missing)),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -963,12 +963,12 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Stitch regional SVGs and rebuild the pre-colorbar Figure 6 block."
+        description="Stitch regional SVGs and rebuild the pre-colorbar Figure 5 block."
     )
     parser.add_argument("--batch", metavar="DIR", type=Path,
                         help="Batch mode: process all grch38_*/t2t_* pairs in DIR")
     parser.add_argument("--grid", metavar="DIR", type=Path,
-                        help="Create the pre-colorbar Figure 6 chr15 + chr22 regional block in DIR")
+                        help="Create the pre-colorbar Figure 5 chr15 + chr22 regional block in DIR")
     parser.add_argument("top",    nargs="?", type=Path, help="Top SVG (single-pair mode)")
     parser.add_argument("bottom", nargs="?", type=Path, help="Bottom SVG (single-pair mode)")
     parser.add_argument("output", nargs="?", type=Path, help="Output SVG (single-pair mode)")

@@ -520,38 +520,6 @@ def add_x_pos(df, ax):
 ### Bar and sample plotting helpers
 
 
-def summarize_bar_groups(data, value, order, x='chrom', hue='genome', hue_order=('GRCh38', 'CHM13v2.0'),
-                         estimator='mean', errorbar=('ci', 95), n_boot=1000, seed=None, unit='sample_id'):
-    """Return the plotted observations and one summary row per bar, computed exactly as seaborn.barplot does.
-
-    seaborn.barplot drops rows with a missing value, then for each hue level and x category applies
-    EstimateAggregator(estimator, errorbar, n_boot, seed) to the remaining rows in their original order.
-    The same aggregator is used here so that bar heights and interval endpoints are unchanged; only the
-    bootstrap seed becomes explicit. Counts distinguish observation rows from unique sampling units.
-    """
-    from seaborn._statistics import EstimateAggregator
-
-    aggregator = EstimateAggregator(estimator, errorbar, n_boot=n_boot, seed=seed)
-    in_scope = data.loc[data[x].isin(order) & data[hue].isin(hue_order)]
-    observations = in_scope.loc[in_scope[value].notna()]
-    summary_rows = []
-    for hue_level in hue_order:
-        for x_level in order:
-            group = observations.loc[(observations[hue] == hue_level) & (observations[x] == x_level)]
-            all_rows = in_scope.loc[(in_scope[hue] == hue_level) & (in_scope[x] == x_level)]
-            row = {x: x_level, hue: hue_level, 'n_observations': len(group), 'n_unique_units': group[unit].nunique(),
-                   'n_rows_missing_value': len(all_rows) - len(group)}
-            if len(group):
-                estimate = aggregator(group, value)
-                row.update({'estimate': estimate[value], 'interval_low': estimate[f'{value}min'],
-                            'interval_high': estimate[f'{value}max']})
-            summary_rows.append(row)
-    summary = pd.DataFrame(summary_rows)
-    summary.attrs.update({'value': value, 'estimator': estimator, 'errorbar': str(errorbar), 'n_boot': n_boot, 'seed': seed,
-                          'resampling_unit': 'observation rows within each bar (seaborn units=None)'})
-    return observations.reset_index(drop=True), summary
-
-
 def desaturate_for_bars(color, saturation=0.75):
     """Return a colour as seaborn.barplot draws it (barplot's default saturation is 0.75)."""
     from seaborn.utils import desaturate
