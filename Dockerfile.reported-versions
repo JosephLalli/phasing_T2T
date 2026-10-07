@@ -1,0 +1,36 @@
+# Focused publication-figure validation environment. The repository and full
+# input directories are mounted read-only; only scratch output mounts are writable.
+FROM python:3.11-bookworm@sha256:a8f8fbe1a0edc9e4dddafa64ba73f7e04be7be5ebc23f332362e779e0a2e4e52
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    MPLBACKEND=Agg
+
+RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources && \
+    echo 'msttcorefonts msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections && \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      fontconfig \
+      fonts-liberation2 \
+      ttf-mscorefonts-installer \
+      librsvg2-bin \
+      poppler-utils \
+      libcairo2 \
+      libffi-dev \
+      libglib2.0-0 \
+      libxml2-dev \
+      libcurl4-openssl-dev \
+      zlib1g-dev \
+      libbz2-dev \
+      liblzma-dev \
+    && fc-cache -f \
+    && test "$(fc-match -f '%{family}' Arial)" = 'Arial' \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.figures.lock.txt /tmp/requirements.figures.lock.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.figures.lock.txt && \
+    python -c "import importlib; expected={'numpy':'2.3.4','polars':'1.29.0','pandas':'2.2.3','scipy':'1.16.2','matplotlib':'3.9.2','seaborn':'0.13.2','pyarrow':'17.0.0'}; found={name:importlib.import_module(name).__version__ for name in expected}; assert found == expected, (found, expected)"
+
+WORKDIR /work
+
+LABEL org.opencontainers.image.description="Reported-version Python 3.11 environment for Lalli et al. publication figures"

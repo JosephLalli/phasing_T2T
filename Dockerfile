@@ -34,7 +34,7 @@
 #
 # See scripts/run_docker_smoke_test.sh plus docker.env.example for a complete example.
 
-FROM ubuntu:22.04
+FROM python:3.11-bookworm@sha256:a8f8fbe1a0edc9e4dddafa64ba73f7e04be7be5ebc23f332362e779e0a2e4e52
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
@@ -42,7 +42,11 @@ ENV TZ=UTC
 WORKDIR /build
 
 # ── System dependencies ──
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Microsoft core fonts are installed from Debian's contrib package so SVG/PDF
+# generation resolves Arial consistently. The EULA is accepted noninteractively.
+RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources && \
+    echo 'msttcorefonts msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections && \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     autoconf \
     automake \
@@ -66,16 +70,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfribidi-dev \
     libjpeg-dev \
     libpng-dev \
-    libtiff5-dev \
+    libtiff-dev \
     libxml2-dev \
-    python3 \
-    python3-pip \
     python3-dev \
     r-base \
     r-base-dev \
     cmake \
+    fontconfig \
     fonts-liberation2 \
+    ttf-mscorefonts-installer \
+    librsvg2-bin \
+    poppler-utils \
     parallel \
+    && fc-cache -f \
+    && test "$(fc-match -f '%{family}' Arial)" = 'Arial' \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Build htslib 1.22 ──
@@ -111,7 +119,7 @@ RUN bcftools +liftover --help 2>&1 | head -1
 
 # ── Python packages ──
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 # ── R packages for Figure 6 generation ──
 RUN R -q -e "install.packages(c('BiocManager', 'arrow', 'PlotTools', 'tidyverse', 'svglite'), repos='https://cloud.r-project.org')" && \

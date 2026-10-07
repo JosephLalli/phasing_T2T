@@ -227,10 +227,10 @@ docker run --rm \
                 done
             )
 
-            echo "=== Stage 6: Figure 6 generation ==="
-            Rscript ./scripts/figure6/Figure_6_script.R
-            python3 ./scripts/figure6/stitch_svgs.py --batch ./figures/figure6
-            python3 ./scripts/figure6/stitch_svgs.py --grid ./figures/figure6
+            echo "=== Stage 6: Figure 5 generation ==="
+            Rscript ./scripts/figure5/Figure_5_script.R
+            python3 ./scripts/figure5/stitch_svgs.py --batch ./figures/figure6
+            python3 ./scripts/figure5/stitch_svgs.py --grid ./figures/figure6
         fi
 
         echo "=== Smoke test complete ==="
