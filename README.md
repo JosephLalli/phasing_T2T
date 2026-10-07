@@ -1,15 +1,17 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19836492.svg)](https://doi.org/10.5281/zenodo.19836492)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17178669.svg)](https://doi.org/10.5281/zenodo.17178669)
 
 **[Download phased haplotype panel at this location](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/)**
 
-**[Download CHM13v2.0 recombination maps at this location](https://doi.org/10.5281/zenodo.19601957)**
+**[Download CHM13v2.0 recombination maps at this location]([https://doi.org/10.5281/zenodo.17178669](https://zenodo.org/records/19601957/files/scaled_to_deCODE_no_mask.zip?download=1))**
+
+(Maps can also be found in this repository at https://github.com/JosephLalli/phasing_T2T/tree/main/resources/recombination_maps/t2t_native_scaled_maps)
 
 
 # Computationally phased T2T 1KGP panel
 
 This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2023](https://www.nature.com/articles/s41586-023-06457-y)) that have been computationally phased using SHAPEIT5 ([Hofmeister et al 2023](https://www.nature.com/articles/s41588-023-01415-w)). Phased panels (both unrelated 2504 member panels and full 3202 member panels) are available at the [T2T/HPRC aws bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/).
 
-The previous code and analysis data are available at [Zenodo record 19836492](https://zenodo.org/record/19836492). To generate the current figures, use the code and input files described below. Please cite our preprint describing this work, which is available at [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
+The previous code and analysis data are available at [Zenodo record 17178669](https://zenodo.org/record/17178669). To generate the current figures, use the code and input files described below. Please cite our preprint describing this work, which is available at [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
 ## Repository structure
 
