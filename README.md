@@ -2,23 +2,23 @@
 
 **[Download phased haplotype panel at this location](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/)**
 
-**[Download CHM13v2.0 recombination maps at this location]([https://doi.org/10.5281/zenodo.17178669](https://zenodo.org/records/19601957/files/scaled_to_deCODE_no_mask.zip?download=1))**
+**[CHM13v2.0 recombination maps used by the pipeline](resources/recombination_maps/t2t_native_scaled_maps)**
 
-(Maps can also be found in this repository at https://github.com/JosephLalli/phasing_T2T/tree/main/resources/recombination_maps/t2t_native_scaled_maps)
+The GRCh38 maps are in [resources/recombination_maps/grch38](resources/recombination_maps/grch38).
 
 
 # Computationally phased T2T 1KGP panel
 
 This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2023](https://www.nature.com/articles/s41586-023-06457-y)) that have been computationally phased using SHAPEIT5 ([Hofmeister et al 2023](https://www.nature.com/articles/s41588-023-01415-w)). Phased panels (both unrelated 2504 member panels and full 3202 member panels) are available at the [T2T/HPRC aws bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/).
 
-The previous code and analysis data are available at [Zenodo record 17178669](https://zenodo.org/record/17178669). To generate the current figures, use the code and input files described below. Please cite our preprint describing this work, which is available at [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
+The previous code and analysis data are available at [Zenodo record 17178669](https://zenodo.org/record/17178669). Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
 ## Repository structure
 
 ```
 ├── bin/
 │   └── [ GLIMPSE2 / impute5 / SHAPEIT5 static binaries ]
-├── figures/ (Generated publication figures)
+├── figures/ (Test-region figures)
 │   ├── figure6/ (Figure 5 karyotype plots and assembled SVGs)
 │   └── supplemental/
 ├── notebooks/
@@ -28,7 +28,7 @@ The previous code and analysis data are available at [Zenodo record 17178669](ht
 │       ├── [ Summary and per-variant notebooks for whole-genome data ]
 │       ├── make_plots.{py,ipynb} (Publication figures)
 │       ├── utilities.py (Plotting and data helpers)
-│       └── figure_composition.py (Vector panel composition)
+│       └── figure_composition.py (Combines figure panels)
 ├── resources/
 │   ├── GIABv3.6_bedfiles/
 │   │   └── [ GIAB v3.6 T2T/GRCh38 stratifications ]
@@ -38,157 +38,105 @@ The previous code and analysis data are available at [Zenodo record 17178669](ht
 │   │   ├── grch38/ (HAPMAP GRCh38 recombination maps)
 │   │   └── t2t_native_scaled_maps/ (T2T native recombination maps)
 │   ├── sample_subsets/
-│   │   └── [ Sample IDs used to, for example, remove pangenome relatives ]
+│   │   └── [ Sample IDs, including pangenome relatives ]
 │   ├── SGDP_variation/
 │   │   └── [ Reference GRCh38/CHM13 Simons Genome Diversity Project variation ]
 │   └── [ Additional reference files ]
 ├── scripts/
 │   └── [Utility and analysis scripts]
 ├── tables/
-│   └── [Generated summary tables]
-├── Dockerfile (Containerized environment)
+│   └── [Test-region summary tables]
+├── Dockerfile (Pipeline and figure dependencies)
 └── README.md (This file)
 ```
 
-### Key Directory Functions
-
-- **bin/**: Static executables for SHAPEIT5 phasing and validation tools
-- **resources/**: Reference data including genomes, genetic maps, and validation datasets
-  - **pedigrees/**: Family relationship files for trio-informed phasing
-  - **sample_subsets/**: Population and family groupings for analysis
-  - **recombination_maps/**: Genetic distance maps for both T2T and GRCh38 references
-- **scripts/**: Analysis pipeline and utility scripts for phasing and evaluation
-- **notebooks/**: Jupyter notebooks for figure generation and statistical analysis
-- **figures/** & **tables/**: Generated publication outputs
-
-
 ## How to create this phased haplotype panel
 
-This section provides step-by-step instructions for how to recreate the phased CHM13v2.0 haplotype panel in your working environment.
+### Clone and pull the image
 
-### Prerequisites
-
-Before downloading data files, ensure you have the following tools installed:
+Clone the repository and go into the phasing_T2T directory:
 
 ```bash
-# Required system tools
-sudo apt-get update && sudo apt-get install -y \
-    wget curl bcftools tabix parallel docker.io
-
-# Python packages (if running analysis scripts)
-pip install polars pandas numpy jupyter
+git clone https://github.com/JosephLalli/phasing_T2T
+cd phasing_T2T
+docker pull jlalli/phasing_t2t:v2.1
 ```
 
-### Docker Environment (Recommended)
+### Run the pipeline in Docker
 
-Use the Docker image below to test the phasing pipeline. To generate the figures, use `Dockerfile.reported-versions` as described below.
+Run on a server with Git and Docker.
 
-**Run in Docker container:**
-```bash
-# Pull the container
-docker pull jlalli/phasing_t2t_dep_container:v2.0
-
-# Start an interactive session with the project mounted
-docker run -it -v /path/to/your/phasing_T2T_project:/workspace/phasing_T2T_project \
-    -w /workspace/phasing_T2T_project \
-    jlalli/phasing_t2t_dep_container:v2.0
-
-# Once inside the container, you can run any pipeline commands
-cd scripts
-./create_and_assess_haplotype_panels.sh chr22_test 12 docker_test CHM13v2.0
-```
-
-Replace `/path/to/your/phasing_T2T_project` with the absolute path to your local copy of this repository.
-
-To test the pipeline on the chr15 and chr22 regions, download the input files
-and run:
+Download the inputs listed in [resources/README.md](resources/README.md). Then
+run the pipeline from the repository root, providing the chromosome, number of
+threads, output suffix, and reference genome:
 
 ```bash
-bash scripts/utility/download_resources.sh --test
-docker pull jlalli/phasing_t2t_dep_container:v2.0
-cp docker.env.example docker.env
-# Review the input paths and output directory in docker.env.
-bash scripts/run_docker_smoke_test.sh docker.env
+bash run_pipeline.sh chr22 12 run1 CHM13v2.0
+bash run_pipeline.sh chr22 12 run1 GRCh38
 ```
 
-This tests both references. See [resources/README.md](resources/README.md) for
-the required input files and where to put them. The figures use a separate
-Docker image, described below.
+For the chr15 and chr22 test regions, download the test inputs in Docker and
+run with `chr15_test` or `chr22_test`:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  --mount "type=bind,src=$PWD,dst=/phasing_T2T_project" \
+  --workdir /phasing_T2T_project jlalli/phasing_t2t:v2.1 \
+  bash scripts/utility/download_resources.sh --test
+bash run_pipeline.sh chr15_test 12 test_run CHM13v2.0
+bash run_pipeline.sh chr15_test 12 test_run GRCh38
+bash run_pipeline.sh chr22_test 12 test_run CHM13v2.0
+bash run_pipeline.sh chr22_test 12 test_run GRCh38
+```
+
+`run_pipeline.sh` runs `scripts/create_and_assess_haplotype_panels.sh` in Docker.
+Put inputs at the paths listed in the resources README; results are saved in
+the repository. The image and downloads require internet access.
 
 ### Publication figure code
 
-To generate the figures, download `JosephLalli__phasing_T2T__NG-TR68126R_20261004.zip`
-and `NG-TR68126R_notebook_inputs.zip`. The second zip contains the 188 input files
-needed by the notebook. Extract both zips in the same directory, then run:
+Download `phasing_T2T_code.zip`, `NG-TR68126R_concordance_files.zip`, and the 12
+Parquet files from the code and inputs record. These contain the 188 inputs
+used by the figure notebook. Extract both archives in the same directory and
+put the Parquet files in
+`phasing_T2T-notebook-inputs/intermediate_data_whole_genome/`, then run:
 
 ```bash
-unzip JosephLalli__phasing_T2T__NG-TR68126R_20261004.zip
-unzip NG-TR68126R_notebook_inputs.zip
+unzip phasing_T2T_code.zip
+unzip NG-TR68126R_concordance_files.zip
+mkdir -p phasing_T2T-notebook-inputs/intermediate_data_whole_genome
+cp /path/to/12_parquet_files/*.parquet phasing_T2T-notebook-inputs/intermediate_data_whole_genome/
 cd phasing_T2T-NG-TR68126R
-bash scripts/run_publication_notebook.sh \
+docker pull jlalli/phasing_t2t:v2.1
+bash scripts/run_make_plots.sh \
   --inputs ../phasing_T2T-notebook-inputs \
-  --output ../phasing_T2T-notebook-reproduction-output
+  --output ../notebook_outputs
 ```
 
-This script checks the input files and notebook against the supplied checksums,
-then runs `notebooks/notebooks_whole_genome/make_plots.ipynb`. Figures and tables
-are written to the output directory, with a record of the run in `scratch/`.
-Building the Docker image requires internet access to download the specified
-package versions. The notebook then runs without network access.
+`run_make_plots.sh` checks the inputs against `SHA256SUMS.txt` and runs
+`notebooks/notebooks_whole_genome/make_plots.ipynb` in Docker. Figures, tables,
+and the executed notebook are saved to the output directory. Use a new or
+empty directory. The code and inputs are read-only during the run. Internet
+access is needed to pull the image and download inputs; the notebook runs
+without it.
 
-To edit the figure code, change `notebooks/notebooks_whole_genome/make_plots.py`
-and update its paired `make_plots.ipynb` notebook with Jupytext:
+The script uses 8 CPUs and 64 GiB of memory by default. Set `PHASING_T2T_THREADS`,
+`PHASING_T2T_MEMORY`, or `PHASING_T2T_IMAGE` to change them.
 
-```bash
-jupytext --sync notebooks/notebooks_whole_genome/make_plots.ipynb
-```
+Edit `notebooks/notebooks_whole_genome/make_plots.py`, then update the paired
+`make_plots.ipynb` with Jupytext in the interactive Docker container below.
 
-`Dockerfile.reported-versions` contains Python 3.11 and the reported versions of
-numpy, polars, pandas, scipy, matplotlib, seaborn, and pyarrow. It also includes
-PyMuPDF, `rsvg-convert`, and Arial. To build the image and run the notebook directly,
-replace the example input and output paths below with your own. The code and
-input files are mounted read-only; results are written to the output directories:
-
-```bash
-# This image only needs its Dockerfile and exact figure lockfile as build inputs.
-figure_build_dir=$(mktemp -d)
-cp Dockerfile.reported-versions requirements.figures.lock.txt "$figure_build_dir/"
-docker build -f "$figure_build_dir/Dockerfile.reported-versions" \
-  -t phasing-t2t-figures:reported "$figure_build_dir"
-rm -r "$figure_build_dir"
-
-# Create the writable output directories before mounting them.
-mkdir -p /path/to/scratch/figures /path/to/scratch/tables /path/to/scratch/notebooks
-
-docker run --rm --network none --read-only --tmpfs /tmp:rw,size=8g \
-  --user "$(id -u):$(id -g)" \
-  -e MPLCONFIGDIR=/tmp/matplotlib \
-  -e XDG_CACHE_HOME=/tmp/cache \
-  -e JUPYTER_DATA_DIR=/tmp/jupyter-data \
-  -e JUPYTER_CONFIG_DIR=/tmp/jupyter-config \
-  -e JUPYTER_RUNTIME_DIR=/tmp/jupyter-runtime \
-  -e IPYTHONDIR=/tmp/ipython \
-  -e PHASING_T2T_RUN_PROFILE=whole_genome \
-  -v "$PWD:/work/repo:ro" \
-  -v /path/to/intermediate_data_whole_genome:/work/repo/intermediate_data_whole_genome:ro \
-  -v /path/to/imputation_statistics_whole_genome:/work/repo/imputation_statistics_whole_genome:ro \
-  -v /path/to/scratch/figures:/work/repo/figures_whole_genome \
-  -v /path/to/scratch/tables:/work/repo/tables_whole_genome \
-  -v /path/to/scratch/notebooks:/scratch \
-  -w /work/repo phasing-t2t-figures:reported \
-  jupyter nbconvert --to notebook --execute \
-    notebooks/notebooks_whole_genome/make_plots.ipynb \
-    --output /scratch/make_plots.executed.ipynb \
-    --ExecutePreprocessor.timeout=-1
-```
+The Docker image includes Python 3.11 and the reported package versions from
+`requirements.txt`, along with PyMuPDF, `rsvg-convert`, Arial, and the R packages
+used for Figure 5.
 
 `notebooks/notebooks_whole_genome/figure_composition.py` combines the figure
-panels, and its functions are also available through `utilities.py`. Figure 5
-is generated by `scripts/figure5/Figure_5_script.R` and assembled by
-`scripts/figure5/stitch_svgs.py`. These scripts also set the text sizes and
-overlap between colorbar tiles.
+panels; these functions are also available through `utilities.py`. Generate
+Figure 5 with `scripts/figure5/Figure_5_script.R` and combine its panels with
+`scripts/figure5/stitch_svgs.py`. These scripts set the text sizes and overlap
+between colorbar tiles.
 
-The main and Extended Data figures are saved with the following filenames:
+The main and Extended Data figure filenames are:
 
 | Figure | Output file under `figures_whole_genome/` |
 | --- | --- |
@@ -206,11 +154,10 @@ The main and Extended Data figures are saved with the following filenames:
 | Extended Data 7 | `Extended Data - ancestry imputation.pdf` |
 | Extended Data 8 | `supplemental/Supplemental 23.pdf` |
 
-Figure 1 is supplied separately. The figure notebook has been run with the
-reported Python package versions using the summary and per-site input files.
-This does not repeat the variant processing or phasing. The Figure 5 R script
-has also been run, but the R and package versions used for the original figures
-were not reported.
+Figure 1 is supplied separately. The notebook uses precomputed summary and
+per-site inputs; it does not rerun variant processing or phasing. It has been
+run with the reported Python package versions. The Figure 5 script has also
+been run, but the original R and package versions were not reported.
 
 Panel-wide headline SER is calculated in
 `notebooks/notebooks_whole_genome/calc_figures_for_paper.ipynb`: counts are pooled
@@ -218,17 +165,20 @@ within each benchmark category, and the three category SERs are averaged using
 panel-membership weights of 608 probands, 1,195 parents, and 1,399 non-trio
 individuals.
 
-### 1) Clone this repository
+### Run downloads and manual analysis in Docker
 
-Begin by cloning this github repository to your local hard drive and going into the phasing_T2T directory:
+The commands from here through Figure 5 run inside one interactive container.
+From the repository root, start it once:
 
 ```bash
-# Create main project directory
-git clone https://github.com/JosephLalli/phasing_T2T
-cd phasing_T2T
+docker run --rm -it --user "$(id -u):$(id -g)" \
+  --mount "type=bind,src=$PWD,dst=/phasing_T2T_project" \
+  --workdir /phasing_T2T_project jlalli/phasing_t2t:v2.1 bash
 ```
 
-### 2) Obtain primary data sources
+Run the following commands at `/phasing_T2T_project` inside that container.
+
+### Download inputs
 
 To run the chr15 and chr22 test regions, first download the required input files:
 
@@ -236,9 +186,8 @@ To run the chr15 and chr22 test regions, first download the required input files
 bash scripts/utility/download_resources.sh --test
 ```
 
-This script downloads the test-region input files, converts and indexes the
-FASTA files (including the required `.gzi` files), and downloads the SGDP
-ground truth data.
+This downloads the test inputs, converts and indexes the FASTA files
+(including `.gzi` files), and downloads the SGDP ground truth data.
 
 Add `--parallel` to download the different datasets at the same time:
 
@@ -246,7 +195,7 @@ Add `--parallel` to download the different datasets at the same time:
 bash scripts/utility/download_resources.sh --test --parallel
 ```
 
-If you are interested in replicating our work completely, the necessary data that is too large to store on github can be obtained by following the instructions below.
+To repeat the full analysis, download the larger files below.
 
 
 ### Primary 1kGP Variant Calls
@@ -262,7 +211,8 @@ done
 
 **Unphased 1000 Genomes Project Variant Calls (GRCh38)** (~30-130GB per chromosome):
 
-(Note that these files are only necessary for comparing how many variants are filtered by different pre-phasing filter cutoffs.)
+These are only needed to compare how many variants are filtered by different
+pre-phasing cutoffs.
 
 ```bash
 # Download unphased, annotated GRCh38 1kGP variant calls.
@@ -317,20 +267,14 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2024_02_26_minigraph_cactus_hgsvc3/hgsvc3-2024-02-23-mc-chm13.GRCh38-vcfbub.a100k.wave.norm.vcf.gz.tbi
 ```
 
-Alternatively, run `scripts/utility/download_resources.sh` from the repository root to download the reference genomes, pangenome VCFs, SGDP ground truth data, and FASTA indexes. Use `--test` to download only the chr15 and chr22 test-region inputs, and add `--parallel` to download the different datasets at the same time.
+You can also use `scripts/utility/download_resources.sh` to download the
+reference genomes, pangenome VCFs, SGDP ground truth data, and FASTA indexes.
+Run it from the repository root. Use `--test` for the chr15 and chr22 inputs,
+and add `--parallel` to download the datasets at the same time.
 
-#### Make binaries executable 
+### Run phasing scripts directly
 
-After downloading, ensure binaries are executable:
-``` bash
-# Check executable permissions
-chmod +x SHAPEIT5_* GLIMPSE2_* impute5_*
-chmod +x scripts/*.sh
-```
-
-### 3) Run phasing scripts
-
-As an example, to compare the performance of phasing the test region of chromosome 22, run the following commands
+To phase the chromosome 22 test region and compare the two panels, run:
 
 ```bash
 # Phase chr22_test (chr22_test and chr15_test are recognized, along with chr1-22, X, PAR1, PAR2)
@@ -347,30 +291,36 @@ num_threads=12
 ./create_and_assess_haplotype_panels.sh chr22_test $num_threads $GRCh38_suffix GRCh38
 ```
 
-The resulting phased haplotype panels will be found in phased_panels/phased_CHM13v2.0_panel_$CHM13_suffix folder, while the equivelent subsets of the Byrska-Bishop phased GRCh38 panel can be found in phased_panels/phased_GRCh38_panel_$GRCh38_suffix.
+The CHM13 panels are saved to
+`phased_panels/phased_CHM13v2.0_panel_$CHM13_suffix`. The corresponding subsets
+of the Byrska-Bishop GRCh38 panel are saved to
+`phased_panels/phased_GRCh38_panel_$GRCh38_suffix`.
 
-Raw output from SHAPEIT5_switch phasing accuracy assessments can be found in SHAPEIT5_switch_output.
+SHAPEIT5_switch results are saved to `SHAPEIT5_switch_output`.
 
 ## To replicate analysis in paper
 
-Information on how to generate recombination maps can be found at https://github.com/mccoy-lab/1kgp_chm13_maps. This repository contains the portion of the analysis devoted to producing and evaluating a phased T2T-CHM13 reference panel.
+See https://github.com/mccoy-lab/1kgp_chm13_maps for the recombination map code.
+This repository contains the code for producing and evaluating the phased
+T2T-CHM13 panel.
 
 ### Gather summary statistics
 
-#### Option A:  Download summary statistics 
+#### Download summary statistics
 
-Use `NG-TR68126R_notebook_inputs.zip` with its code zip and
-`scripts/run_publication_notebook.sh`, as described above. These are the input
-files for the current figure notebook. The older Zenodo record contains the
-inputs for the previous version.
+Use the concordance archive and 12 Parquet files described in
+[Publication figure code](#publication-figure-code). The older Zenodo record
+contains inputs for the previous version.
 
-#### Option B: Generate summary statistics from output of create_and_assess_haplotype_panels.sh
+#### Calculate summary statistics
 
-If you are interesting in replicating our work from scratch, please continue from step 3 above. These scripts gather the results of SHAPEIT5_switch and GLIMPSE2_concordance into experiment-wide dataframes.
+After running `create_and_assess_haplotype_panels.sh`, use the scripts below to
+combine the SHAPEIT5_switch and GLIMPSE2_concordance results into dataframes.
 
-Please note: These scripts can easily take up over 350GB of ram as written.
+These scripts can use over 350GB of RAM. Run on a server.
 
 ```bash
+cd ..
 # Build the syntenic/nonsyntenic label files used by the concordance aggregation.
 ./scripts/create_syn_nonsyn_bins.sh CHM13v2.0 $CHM13_suffix imputation_statistics/imputation_results_${CHM13_suffix} true
 ./scripts/create_syn_nonsyn_bins.sh GRCh38 $GRCh38_suffix imputation_statistics/imputation_results_${CHM13_suffix} true
@@ -385,7 +335,8 @@ python3 ./scripts/analysis/create_summary_phasing_dataframes_polars_regional.py 
     --test
 ```
 
-GLIMPSE2_concordance output (Both GRCh38 and CHM13v2.0) will be found in imputation_statistics/imputation_results_${CHM13_suffix}
+GLIMPSE2_concordance results for both references are saved to
+`imputation_statistics/imputation_results_${CHM13_suffix}`.
 
 Summary parquet files will be found in intermediate data
 
@@ -393,17 +344,19 @@ Summary parquet files will be found in intermediate data
 
 The current publication notebooks are in `notebooks/notebooks_whole_genome/`:
 
-- `calc_figures_for_paper.ipynb` calculates manuscript summary values.
-- `calc_per_variant_figures_for_paper.ipynb` performs the heavier per-variant analyses.
-- `make_plots.py` and its paired `.ipynb` generate the publication figures.
+- `calc_figures_for_paper.ipynb` calculates the values reported in the paper
+  using the smaller summary Parquet files. Run on a laptop.
+- `calc_per_variant_figures_for_paper.ipynb` calculates the values that require
+  loading the full variant dataframes into memory. Run on a server.
+- `make_plots.py` and its paired `.ipynb` generate the figures.
 
-Run `make_plots.ipynb` using the Docker instructions above.
+Run `make_plots.ipynb` in this Docker container.
 The `test` profile writes to `figures/` and `tables/`; `whole_genome` writes
 to `figures_whole_genome/` and `tables_whole_genome/`.
 
 ### Generate Figure 5
 
-Run from the repository root in an environment with the required R packages:
+Run from the repository root inside the Docker container:
 
 ```bash
 PHASING_T2T_RUN_PROFILE=whole_genome Rscript scripts/figure5/Figure_5_script.R
@@ -413,6 +366,19 @@ python3 scripts/figure5/stitch_svgs.py --grid figures_whole_genome/figure6 --pdf
 
 Figure 5 is written to `figure6/figure6.svg` and `figure6/figure6.pdf`.
 Set `PHASING_T2T_RUN_PROFILE=test` and use `figures/figure6` for test-region inputs.
+
+Sync the paired publication notebook after editing it:
+
+```bash
+jupytext --sync notebooks/notebooks_whole_genome/make_plots.ipynb
+```
+
+When these manual commands finish, leave the container. Run the host
+`run_pipeline.sh` or `scripts/run_make_plots.sh` wrappers only after exiting:
+
+```bash
+exit
+```
 
 
 

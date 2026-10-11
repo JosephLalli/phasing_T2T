@@ -1,6 +1,5 @@
 # Gitignore file itself
 .gitignore
-.dockerignore
 
 # Claude-related files
 *claude*
@@ -12,8 +11,7 @@ DIRECTORY_LOGIC.md
 CHANGES.md
 patches/
 papers/
-docker_test_output/
-docker_smoke_output/
+docker_*_output/
 notebook_runs/
 .zenodo_staging/
 zenodo_dist/

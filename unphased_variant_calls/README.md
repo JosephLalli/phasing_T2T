@@ -1,16 +1,18 @@
 # Unphased Variant Calls
 
-This directory contains unphased variant call files from the 1000 Genomes Project mapped to both T2T-CHM13 and GRCh38 reference genomes.
+Unphased 1000 Genomes Project variant calls mapped to T2T-CHM13 and GRCh38.
 
-## Directory Structure
-- `t2t/` - Variant calls aligned to T2T-CHM13v2.0 reference
-- `grch38/` - Variant calls aligned to GRCh38 reference
+## Directories
 
-## Required Downloads
+- `t2t/`: variant calls aligned to the T2T-CHM13v2.0 reference
+- `grch38/`: variant calls aligned to the GRCh38 reference
 
-To obtain the raw vcf files used as inputs to this pipeline, cd to the phasing_T2T directory and download the following files.
+## Downloads
 
-### T2T-CHM13v2.0 Variant Calls (~30-130GB per chromosome)
+Inside the Docker container described in the [main README](../README.md#run-downloads-and-manual-analysis-in-docker), download the raw VCF inputs from the phasing_T2T directory.
+
+### T2T-CHM13v2.0 variant calls (~30-130GB per chromosome)
+
 ```bash
 # Download T2T-CHM13 variant calls for all chromosomes
 for chr in {1..22} X; do
@@ -19,7 +21,8 @@ for chr in {1..22} X; do
 done
 ```
 
-### GRCh38 Variant Calls (~30-130GB per chromosome)
+### GRCh38 variant calls (~30-130GB per chromosome)
+
 ```bash
 # Download unphased, annotated GRCh38 1kGP variant calls
 for chr in {1..22} X; do

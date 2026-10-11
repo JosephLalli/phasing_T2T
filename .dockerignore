@@ -1,0 +1,26 @@
+# Keep the main-image build context to files copied by Dockerfile.
+*
+!Dockerfile
+!requirements.txt
+!bin/
+!bin/**
+!scripts/
+!scripts/**
+!resources/
+!resources/**
+!notebooks/
+!notebooks/**
+
+# Runtime reference data are supplied through the repository bind mount.
+resources/**/*.fa*
+resources/**/*.fasta*
+resources/**/*.vcf*
+resources/**/*.bcf*
+resources/**/*.tbi
+resources/**/*.csi
+resources/SGDP_variation/t2t/**
+resources/SGDP_variation/grch38/**
+
+# Do not add local interpreter caches to the build context.
+**/__pycache__/
+**/*.pyc

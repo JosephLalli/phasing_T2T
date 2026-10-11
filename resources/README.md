@@ -1,9 +1,9 @@
 # Resources
 
-This directory contains the reference files used by the analysis. Smaller files
-are included in the repository; larger files need to be downloaded separately.
+Reference files for the analysis. Small annotations are included here; download
+the larger inputs separately.
 
-## Tracked in git
+## Included files
 
 - `GIABv3.6_bedfiles/`
 - `pedigrees/`
@@ -11,7 +11,9 @@ are included in the repository; larger files need to be downloaded separately.
 - `sample_subsets/`
 - chain files, cytobands, BEDs, and other small annotations used by the paper
 
-## Provided externally
+## Downloads
+
+Run the commands below inside the Docker container described in the [main README](../README.md#run-downloads-and-manual-analysis-in-docker).
 
 Download these files to run the pipeline, including the chr15 and chr22 tests:
 
@@ -21,14 +23,11 @@ Download these files to run the pipeline, including the chr15 and chr22 tests:
 - SGDP truth data in T2T and GRCh38 coordinates
 - HPRC and HGSVC3 pangenome VCFs and indexes
 
-These files are not included in the repository. You can provide them in either
-of the following ways:
+Put them at the paths below. After downloading, leave the container and run
+`run_pipeline.sh` from the repository root. The script mounts the repository
+and these inputs into Docker.
 
-1. Mount them into the container with `scripts/run_docker_smoke_test.sh`
-   using a `docker.env` created from `docker.env.example`.
-2. Download them manually to the runtime paths expected by the scripts.
-
-## Canonical runtime paths
+## Required file paths
 
 The shell pipeline expects these paths when running inside the repository or
 inside the Docker container:
@@ -46,10 +45,10 @@ inside the Docker container:
 
 All VCF files require their corresponding `.tbi` tabix index at the same path.
 
-## Source URLs
+## Download links
 
-Download links are listed below. Keep copies of the input files used for your
-analysis so that you can repeat it later.
+Download links are below. Keep the inputs used for an analysis so it can be
+repeated.
 
 ### Reference genomes
 
@@ -111,10 +110,10 @@ See `SGDP_variation/README.md` for expected file naming.
 
 ### Automated download
 
-Run `scripts/utility/download_resources.sh` from the repository root to fetch all
-reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and the
-required FASTA indexes (`.fai` and `.gzi`). The script skips files that already
-exist. Add `--parallel` to download the different datasets at the same time.
+Run `scripts/utility/download_resources.sh` from the repository root to fetch
+reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and
+the required FASTA indexes (`.fai` and `.gzi`). The script skips existing
+files. Add `--parallel` to download datasets at the same time.
 
 To download the chr15 and chr22 test-region inputs, run:
 
