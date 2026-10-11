@@ -13,6 +13,9 @@ patches/
 papers/
 docker_*_output/
 notebook_runs/
+/NG-TR68126R_concordance_files.zip
+/INPUT_MANIFEST.json
+/SHA256SUMS.txt
 .zenodo_staging/
 zenodo_dist/
 scripts/docker_run_chr22_test.sh

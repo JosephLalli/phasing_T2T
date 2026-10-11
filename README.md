@@ -23,6 +23,11 @@ Read the whole-genome notebooks at [Phasing T2T notebooks](https://josephlalli.g
 ├── figures/ (Test-region figures)
 │   ├── figure5/ (Figure 5 karyotype plots and assembled SVGs)
 │   └── supplemental/
+├── intermediate_data_whole_genome/ (Summary Parquet files)
+├── imputation_statistics_whole_genome/ (Chromosome-level imputation results)
+├── figures_whole_genome/ (Generated publication figures)
+├── tables_whole_genome/ (Generated tables)
+├── notebook_runs/ (Executed notebooks)
 ├── notebooks/
 │   ├── calc_figures_for_paper.ipynb (Summary statistics)
 │   ├── calc_per_variant_figures_for_paper.ipynb (Per-variant analysis)
@@ -68,11 +73,16 @@ docker pull jlalli/phasing_t2t:v2.1
 
 Run on a server with Git and Docker.
 
-Download the inputs listed in [resources/README.md](resources/README.md). Then
-run the pipeline from the repository root, providing the chromosome, number of
-threads, output suffix, and reference genome:
+Download the inputs with `scripts/utility/download_resources.sh`, then run the
+pipeline from the repository root, providing the chromosome, number of
+threads, output suffix, and reference genome. The input files are listed in
+[resources/README.md](resources/README.md).
 
 ```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  --mount "type=bind,src=$PWD,dst=/phasing_T2T_project" \
+  --workdir /phasing_T2T_project jlalli/phasing_t2t:v2.1 \
+  bash scripts/utility/download_resources.sh
 bash run_pipeline.sh chr22 12 run1 CHM13v2.0
 bash run_pipeline.sh chr22 12 run1 GRCh38
 ```
@@ -97,30 +107,61 @@ the repository. The image and downloads require internet access.
 
 ### Publication figure code
 
-Download `phasing_T2T_code.zip`, `NG-TR68126R_concordance_files.zip`, and the 12
-Parquet files from the code and inputs record. These contain the 188 inputs
-used by the figure notebook. Extract both archives in the same directory and
-put the Parquet files in
-`phasing_T2T-notebook-inputs/intermediate_data_whole_genome/`, then run:
+Processing and phasing the full panel takes a lot of compute power. To
+reproduce the figures without repeating those steps, we provide the
+intermediate files on [Zenodo](https://zenodo.org/records/23289651): 12 summary
+Parquet files and 176 chromosome-level files containing variant-level
+imputation accuracy results.
+
+Run these commands from an empty directory. They extract the code, download
+the inputs into the repository's existing folders, and run the notebook in
+Docker.
 
 ```bash
+zenodo_files_url="https://zenodo.org/records/23289651/files"
+
+curl -fL --retry 3 \
+  "$zenodo_files_url/phasing_T2T_code.zip?download=1" \
+  -o phasing_T2T_code.zip
 unzip phasing_T2T_code.zip
-unzip NG-TR68126R_concordance_files.zip
-mkdir -p phasing_T2T-notebook-inputs/intermediate_data_whole_genome
-cp /path/to/12_parquet_files/*.parquet phasing_T2T-notebook-inputs/intermediate_data_whole_genome/
 cd phasing_T2T-NG-TR68126R
+
+curl -fL --retry 3 \
+  "$zenodo_files_url/NG-TR68126R_concordance_files.zip?download=1" \
+  -o NG-TR68126R_concordance_files.zip
+unzip NG-TR68126R_concordance_files.zip
+
+mkdir -p intermediate_data_whole_genome
+for filename in \
+  MAF_performance_variants.parquet \
+  ancestries.parquet \
+  binned_maf_data.parquet \
+  chroms.parquet \
+  filter_summary_stats.parquet \
+  methods.parquet \
+  per_cytoband_variant_data.parquet \
+  per_genome_cnv_regions.parquet \
+  per_genome_cnv_regions_with_slop.parquet \
+  per_sample_imputation_performance.parquet \
+  per_variant_category_imputation_performance.parquet \
+  samples.parquet
+do
+  curl -fL --retry 3 \
+    "$zenodo_files_url/$filename?download=1" \
+    -o "intermediate_data_whole_genome/$filename"
+done
+
 docker pull jlalli/phasing_t2t:v2.1
-bash scripts/run_make_plots.sh \
-  --inputs ../phasing_T2T-notebook-inputs \
-  --output ../notebook_outputs
+bash scripts/run_make_plots.sh
 ```
 
 `run_make_plots.sh` checks the inputs against `SHA256SUMS.txt` and runs
-`notebooks/notebooks_whole_genome/make_plots.ipynb` in Docker. Figures, tables,
-and the executed notebook are saved to the output directory. Use a new or
-empty directory. The code and inputs are read-only during the run. Internet
-access is needed to pull the image and download inputs; the notebook runs
-without it.
+`notebooks/notebooks_whole_genome/make_plots.ipynb` in Docker. The repository
+is mounted at `/phasing_T2T_project`, which is the container's working
+directory. Figures are saved in `figures_whole_genome/`, tables in
+`tables_whole_genome/`, and the executed notebook in `notebook_runs/`, all
+inside the repository on your disk. Internet access is needed to pull the
+image and download inputs; the notebook runs without it.
 
 The script uses 8 CPUs and 64 GiB of memory by default. Set `PHASING_T2T_THREADS`,
 `PHASING_T2T_MEMORY`, or `PHASING_T2T_IMAGE` to change them.
