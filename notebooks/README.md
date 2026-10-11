@@ -2,6 +2,14 @@
 
 This directory contains the notebooks used to calculate paper values and make figures.
 
+Read the whole-genome notebooks at [Phasing T2T notebooks](https://josephlalli.github.io/phasing_T2T/):
+
+- [Manuscript values](https://josephlalli.github.io/phasing_T2T/calc_figures_for_paper.html)
+- [Per-variant calculations](https://josephlalli.github.io/phasing_T2T/calc_per_variant_figures_for_paper.html)
+- [Publication figures](https://josephlalli.github.io/phasing_T2T/make_plots.html)
+
+The HTML files in `notebooks_whole_genome/` can also be opened locally. They show saved notebook outputs; `make_plots.html` uses the validated Docker run.
+
 `calc_figures_for_paper.ipynb` calculates all values reported in the text of the paper. It only uses smaller summary parquet files and is designed to run on a laptop in Docker.
 
 `calc_per_variant_figures_for_paper.ipynb` calculates values that require loading the full variant dataframes into memory. Run it on a server in Docker.

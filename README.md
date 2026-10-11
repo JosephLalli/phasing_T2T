@@ -13,6 +13,8 @@ This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant dat
 
 The previous code and analysis data are available at [Zenodo record 17178669](https://zenodo.org/record/17178669). Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
+Read the whole-genome notebooks at [Phasing T2T notebooks](https://josephlalli.github.io/phasing_T2T/). Standalone HTML copies are included with the code archive and can be opened locally.
+
 ## Repository structure
 
 ```
