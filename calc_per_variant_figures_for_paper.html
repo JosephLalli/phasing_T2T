@@ -2225,7 +2225,7 @@ code, pre, td, th { overflow-wrap:anywhere; }
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
   <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
-   
+
   <ul>
   <li><a href="#paper-source-of-truth" id="toc-paper-source-of-truth" class="nav-link active" data-scroll-target="#paper-source-of-truth">Paper source of truth</a></li>
   <li><a href="#execution-order" id="toc-execution-order" class="nav-link" data-scroll-target="#execution-order">Execution order</a></li>
@@ -4663,11 +4663,11 @@ Isolated indel discordance -- GRCh38: 0.45%, CHM13: 0.43%</code></pre>
 <span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;Manual inspection of pangenome-discordant indels showed that they were frequently &#39;</span></span>
 <span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed &#39;</span></span>
 <span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;with genome-wide analysis (GRCh38: </span><span class="sc">{</span>grch38_multiallelic_indel_disc<span class="sc">:.2f}</span><span class="ss">%, T2T-CHM13: &#39;</span></span>
-<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;</span><span class="sc">{</span>chm13_multiallelic_indel_disc<span class="sc">:.2f}</span><span class="ss">% indel discordance within STRs, Supplemental Figure 13).&#39;</span>)</span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;</span><span class="sc">{</span>chm13_multiallelic_indel_disc<span class="sc">:.2f}</span><span class="ss">% indel discordance within STRs, Extended Data Figure 1).&#39;</span>)</span>
 <span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&#39;In contrast, isolated indels that did not overlap with other variant classes in the &#39;</span></span>
 <span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;panel showed substantially lower discordance rates (GRCh38: </span><span class="sc">{</span>grch38_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, &#39;</span></span>
-<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;T2T-CHM13: </span><span class="sc">{</span>chm13_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, Supplemental Figure 14).&#39;</span>)</span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&#39;T2T-CHM13: </span><span class="sc">{</span>chm13_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, Supplementary Figure 13).&#39;</span>)</span>
 <span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a><span class="co"># ---- Singleton SER ----</span></span>
@@ -4699,9 +4699,9 @@ Genotyping accuracy did not vary substantially by minor allele frequency (0.02%-
 
 --- Results: STR and isolated variant stratification ---
 
-Manual inspection of pangenome-discordant indels showed that they were frequently found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed with genome-wide analysis (GRCh38: 5.56%, T2T-CHM13: 5.11% indel discordance within STRs, Supplemental Figure 13).
+Manual inspection of pangenome-discordant indels showed that they were frequently found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed with genome-wide analysis (GRCh38: 5.56%, T2T-CHM13: 5.11% indel discordance within STRs, Extended Data Figure 1).
 
-In contrast, isolated indels that did not overlap with other variant classes in the panel showed substantially lower discordance rates (GRCh38: 0.45%, T2T-CHM13: 0.43%, Supplemental Figure 14).
+In contrast, isolated indels that did not overlap with other variant classes in the panel showed substantially lower discordance rates (GRCh38: 0.45%, T2T-CHM13: 0.43%, Supplementary Figure 13).
 
 --- Results: Singleton phasing accuracy ---
 
@@ -4859,7 +4859,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
 <span id="cb17-138"><a href="#cb17-138" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;Manual inspection of pangenome-discordant indels showed that they were frequently &#39;</span></span>
 <span id="cb17-139"><a href="#cb17-139" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed &#39;</span></span>
 <span id="cb17-140"><a href="#cb17-140" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;with genome-wide analysis (GRCh38: </span><span class="sc">{</span>grch38_str_indel_disc<span class="sc">:.2f}</span><span class="ss">%, T2T-CHM13: &#39;</span></span>
-<span id="cb17-141"><a href="#cb17-141" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;</span><span class="sc">{</span>chm13_str_indel_disc<span class="sc">:.2f}</span><span class="ss">% indel discordance within STRs, Supplemental Figure 11).&#39;</span></span>
+<span id="cb17-141"><a href="#cb17-141" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;</span><span class="sc">{</span>chm13_str_indel_disc<span class="sc">:.2f}</span><span class="ss">% indel discordance within STRs, Extended Data Figure 1).&#39;</span></span>
 <span id="cb17-142"><a href="#cb17-142" aria-hidden="true" tabindex="-1"></a>    ),</span>
 <span id="cb17-143"><a href="#cb17-143" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Paper_Location&#39;</span>: <span class="st">&#39;Results: STR stratification; manuscript lines 222-229&#39;</span>,</span>
 <span id="cb17-144"><a href="#cb17-144" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Source_Notebook&#39;</span>: <span class="st">&#39;calc_per_variant_figures_for_paper.ipynb&#39;</span>,</span>
@@ -4876,7 +4876,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
 <span id="cb17-155"><a href="#cb17-155" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Paper_Text&#39;</span>: (</span>
 <span id="cb17-156"><a href="#cb17-156" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;In contrast, isolated indels that did not overlap with other variant classes in the &#39;</span></span>
 <span id="cb17-157"><a href="#cb17-157" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;panel showed substantially lower discordance rates (GRCh38: </span><span class="sc">{</span>grch38_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, &#39;</span></span>
-<span id="cb17-158"><a href="#cb17-158" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;T2T-CHM13: </span><span class="sc">{</span>chm13_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, Supplemental Figure 12).&#39;</span></span>
+<span id="cb17-158"><a href="#cb17-158" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f&#39;T2T-CHM13: </span><span class="sc">{</span>chm13_isolated_indel_disc<span class="sc">:.2f}</span><span class="ss">%, Supplementary Figure 13).&#39;</span></span>
 <span id="cb17-159"><a href="#cb17-159" aria-hidden="true" tabindex="-1"></a>    ),</span>
 <span id="cb17-160"><a href="#cb17-160" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Paper_Location&#39;</span>: <span class="st">&#39;Results: isolated variant stratification; manuscript lines 222-229&#39;</span>,</span>
 <span id="cb17-161"><a href="#cb17-161" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;Source_Notebook&#39;</span>: <span class="st">&#39;calc_per_variant_figures_for_paper.ipynb&#39;</span>,</span>
@@ -5160,7 +5160,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
     anchorJS.add('.anchored');
     const isCodeAnnotation = (el) => {
       for (const clz of el.classList) {
-        if (clz.startsWith('code-annotation-')) {                     
+        if (clz.startsWith('code-annotation-')) {
           return true;
         }
       }
@@ -5180,11 +5180,11 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
         button.setAttribute("data-bs-title", "Copied!");
-        tooltip = new bootstrap.Tooltip(button, 
-          { trigger: "manual", 
+        tooltip = new bootstrap.Tooltip(button,
+          { trigger: "manual",
             customClass: "code-copy-button-tooltip",
             offset: [0, -8]});
-        tooltip.show();    
+        tooltip.show();
       }
       setTimeout(function() {
         if (tooltip) {
@@ -5312,7 +5312,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
       if (onUntriggerFn) {
         config.onUntrigger = onUntriggerFn;
       }
-      window.tippy(el, config); 
+      window.tippy(el, config);
     }
     const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
     for (var i=0; i<noterefs.length; i++) {
@@ -5387,7 +5387,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
       tippyHover(xref, undefined, function(instance) {
         instance.disable();
         let url = xref.getAttribute('href');
-        let hash = undefined; 
+        let hash = undefined;
         if (url.startsWith('#')) {
           hash = url;
         } else {
@@ -5415,7 +5415,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
               if (note !== null) {
                 const html = processXRef(id, note);
                 instance.setContent(html);
-              } 
+              }
             }).finally(() => {
               instance.enable();
               instance.show();
@@ -5439,7 +5439,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
               }
               const html = processXRef(null, note);
               instance.setContent(html);
-            } 
+            }
           }).finally(() => {
             instance.enable();
             instance.show();
@@ -5479,7 +5479,7 @@ Among HPRC samples with published long-read-based assemblies, alignment to T2T-C
               height = bottom - top;
             }
             if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
+              // cook up a div (if necessary) and position it
               let div = window.document.getElementById("code-annotation-line-highlight");
               if (div === null) {
                 div = window.document.createElement("div");
