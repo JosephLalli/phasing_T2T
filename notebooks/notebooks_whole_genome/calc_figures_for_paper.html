@@ -2225,7 +2225,7 @@ code, pre, td, th { overflow-wrap:anywhere; }
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
   <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
-   
+
   <ul>
   <li><a href="#paper-source-of-truth" id="toc-paper-source-of-truth" class="nav-link active" data-scroll-target="#paper-source-of-truth">Paper source of truth</a></li>
   <li><a href="#execution-order" id="toc-execution-order" class="nav-link" data-scroll-target="#execution-order">Execution order</a></li>
@@ -2264,11 +2264,11 @@ code, pre, td, th { overflow-wrap:anywhere; }
 
 <div class="quarto-title-meta">
 
-    
-  
-    
+
+
+
   </div>
-  
+
 
 
 </header>
@@ -4187,12 +4187,12 @@ Categories (8, object): [&#39;trios&#39;, &#39;HPRC_samples&#39;, &#39;HGSVC_sam
 <span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;In contrast, our filtering strategy removed </span><span class="sc">{</span>pct_chm13_filtered<span class="sc">:.0f}</span><span class="ss">% of 1kGP T2T-CHM13 variants, &quot;</span></span>
 <span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;with </span><span class="sc">{</span>pct_chm13_vqslod_only<span class="sc">:.1f}</span><span class="ss">% of variants filtered solely due to the VQSLOD filter &quot;</span></span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;(Supplemental Figure 1).&quot;</span>)</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;(Supplementary Figure 1).&quot;</span>)</span>
 <span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Our stricter VQSLOD filter removes </span><span class="sc">{</span>pct_chm13_unique_vqslod_only_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing &quot;</span></span>
 <span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;variants in T2T-CHM13-unique regions. When all filters are considered, only &quot;</span></span>
 <span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;</span><span class="sc">{</span>pct_chm13_unique_retained_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing variants in these regions are retained &quot;</span></span>
-<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;(Supplemental Figure 1).&quot;</span>)</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;(Supplementary Figure 1).&quot;</span>)</span>
 <span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Panel composition (manuscript lines 237-244) ---</span></span>
@@ -4238,7 +4238,7 @@ Categories (8, object): [&#39;trios&#39;, &#39;HPRC_samples&#39;, &#39;HGSVC_sam
 <span id="cb37-62"><a href="#cb37-62" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;genotyping error rates, while tSERs were uncorrelated with genotyping error rates &quot;</span></span>
 <span id="cb37-63"><a href="#cb37-63" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;(SER r2 = </span><span class="sc">{</span>ser_r2[<span class="st">&#39;CHM13v2.0&#39;</span>]<span class="sc">:.2f}</span><span class="ss">, FER r2 = </span><span class="sc">{</span>fer_r2[<span class="st">&#39;CHM13v2.0&#39;</span>]<span class="sc">:.2f}</span><span class="ss">, &quot;</span></span>
 <span id="cb37-64"><a href="#cb37-64" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;tSER = </span><span class="sc">{</span>tser_r2[<span class="st">&#39;CHM13v2.0&#39;</span>]<span class="sc">:.3f}</span><span class="ss">, Pearson correlation, Mendelian pre-phased samples), &quot;</span></span>
-<span id="cb37-65"><a href="#cb37-65" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;supporting the interpretation that flips stem from genotyping errors (Supplemental Figure 15).&quot;</span>)</span>
+<span id="cb37-65"><a href="#cb37-65" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;supporting the interpretation that flips stem from genotyping errors (Extended Data Figure 3).&quot;</span>)</span>
 <span id="cb37-66"><a href="#cb37-66" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb37-67"><a href="#cb37-67" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb37-68"><a href="#cb37-68" aria-hidden="true" tabindex="-1"></a><span class="co"># HPRC proband FER and tSER</span></span>
@@ -4246,7 +4246,7 @@ Categories (8, object): [&#39;trios&#39;, &#39;HPRC_samples&#39;, &#39;HGSVC_sam
 <span id="cb37-70"><a href="#cb37-70" aria-hidden="true" tabindex="-1"></a>chm13_fer <span class="op">=</span> hprc_proband_grouped.loc[hprc_proband_grouped.genome <span class="op">==</span> <span class="st">&#39;CHM13v2.0&#39;</span>, <span class="st">&#39;flip_error_rate&#39;</span>].values[<span class="dv">0</span>]</span>
 <span id="cb37-71"><a href="#cb37-71" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;The measured flip error rate for HPRC probands from the 1kGP GRCh38 panel was </span><span class="sc">{</span>grch38_fer<span class="sc">:.3f}</span><span class="ss">%, &quot;</span></span>
 <span id="cb37-72"><a href="#cb37-72" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;while the tSER was </span><span class="sc">{</span>grch38_proband_tser<span class="sc">:.3f}</span><span class="ss">%. HPRC probands from the T2T-CHM13 panel had a flip &quot;</span></span>
-<span id="cb37-73"><a href="#cb37-73" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;error rate of </span><span class="sc">{</span>chm13_fer<span class="sc">:.3f}</span><span class="ss">% and a tSER of </span><span class="sc">{</span>chm13_proband_tser<span class="sc">:.3f}</span><span class="ss">% (Figure 4b).&quot;</span>)</span>
+<span id="cb37-73"><a href="#cb37-73" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f&quot;error rate of </span><span class="sc">{</span>chm13_fer<span class="sc">:.3f}</span><span class="ss">% and a tSER of </span><span class="sc">{</span>chm13_proband_tser<span class="sc">:.3f}</span><span class="ss">% (Figure 3b).&quot;</span>)</span>
 <span id="cb37-74"><a href="#cb37-74" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
 <span id="cb37-75"><a href="#cb37-75" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb37-76"><a href="#cb37-76" aria-hidden="true" tabindex="-1"></a><span class="co"># Statistical vs Mendelian tSER</span></span>
@@ -4283,9 +4283,9 @@ The inclusion of singleton alleles added 40,226,623 unique variants to our datas
 
 Overall, variant filtering had removed 47.9% of variants in the Byrska-Bishop et al. 1kGP GRCh38 panel, including 33.0% of all variants that were filtered out solely because they were singletons.
 
-In contrast, our filtering strategy removed 25% of 1kGP T2T-CHM13 variants, with 17.0% of variants filtered solely due to the VQSLOD filter (Supplemental Figure 1).
+In contrast, our filtering strategy removed 25% of 1kGP T2T-CHM13 variants, with 17.0% of variants filtered solely due to the VQSLOD filter (Supplementary Figure 1).
 
-Our stricter VQSLOD filter removes 35.3% of GATK-passing variants in T2T-CHM13-unique regions. When all filters are considered, only 5.8% of GATK-passing variants in these regions are retained (Supplemental Figure 1).
+Our stricter VQSLOD filter removes 35.3% of GATK-passing variants in T2T-CHM13-unique regions. When all filters are considered, only 5.8% of GATK-passing variants in these regions are retained (Supplementary Figure 1).
 
 === PANEL COMPOSITION ===
 The resulting panel contains 6,404 haplotypes and 101,152,794 unique variants, including 305,914 high-confidence phased variants in previously unresolved regions of the T2T-CHM13 genome.
@@ -4300,9 +4300,9 @@ Weighting the observed proband/parent/non-trio SER by panel membership (608 prob
 In statistically-phased HGSVC non-trio samples, chromosome X SER decreased from 0.94% in the GRCh38 panel to 0.44% in the T2T-CHM13 panel.
 
 === SWITCH ERROR DECOMPOSITION ===
-In our dataset, the majority of switch errors were associated with flips. FERs were correlated with genotyping error rates, while tSERs were uncorrelated with genotyping error rates (SER r2 = 0.31, FER r2 = 0.35, tSER = 0.006, Pearson correlation, Mendelian pre-phased samples), supporting the interpretation that flips stem from genotyping errors (Supplemental Figure 15).
+In our dataset, the majority of switch errors were associated with flips. FERs were correlated with genotyping error rates, while tSERs were uncorrelated with genotyping error rates (SER r2 = 0.31, FER r2 = 0.35, tSER = 0.006, Pearson correlation, Mendelian pre-phased samples), supporting the interpretation that flips stem from genotyping errors (Supplementary Figure 15).
 
-The measured flip error rate for HPRC probands from the 1kGP GRCh38 panel was 0.186%, while the tSER was 0.029%. HPRC probands from the T2T-CHM13 panel had a flip error rate of 0.166% and a tSER of 0.019% (Figure 4b).
+The measured flip error rate for HPRC probands from the 1kGP GRCh38 panel was 0.186%, while the tSER was 0.029%. HPRC probands from the T2T-CHM13 panel had a flip error rate of 0.166% and a tSER of 0.019% (Figure 3b).
 
 Specifically, tSERs were 0.13% for statistically-phased samples and 0.019% for Mendelian pre-phased samples in the T2T-CHM13 panel, compared to 0.26% and 0.029% in the GRCh38 panel.
 
@@ -4652,7 +4652,7 @@ Among HPRC samples with published long-read-based assemblies, true phasing error
 <span id="cb41-38"><a href="#cb41-38" aria-hidden="true" tabindex="-1"></a>         notes<span class="op">=</span>variant_filter_note)</span>
 <span id="cb41-39"><a href="#cb41-39" aria-hidden="true" tabindex="-1"></a>add_stat(<span class="st">&#39;Variant filtering&#39;</span>, <span class="st">&#39;CHM13 % variants filtered&#39;</span>,</span>
 <span id="cb41-40"><a href="#cb41-40" aria-hidden="true" tabindex="-1"></a>         value_chm13<span class="op">=</span>pct_chm13_filtered,</span>
-<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a>         paper_text<span class="op">=</span><span class="ss">f&#39;In contrast, our filtering strategy removed </span><span class="sc">{</span>pct_chm13_filtered<span class="sc">:.0f}</span><span class="ss">% of 1kGP T2T-CHM13 variants, with </span><span class="sc">{</span>pct_chm13_vqslod_only<span class="sc">:.1f}</span><span class="ss">% of variants filtered solely due to the VQSLOD filter (Supplemental Figure 1).&#39;</span>,</span>
+<span id="cb41-41"><a href="#cb41-41" aria-hidden="true" tabindex="-1"></a>         paper_text<span class="op">=</span><span class="ss">f&#39;In contrast, our filtering strategy removed </span><span class="sc">{</span>pct_chm13_filtered<span class="sc">:.0f}</span><span class="ss">% of 1kGP T2T-CHM13 variants, with </span><span class="sc">{</span>pct_chm13_vqslod_only<span class="sc">:.1f}</span><span class="ss">% of variants filtered solely due to the VQSLOD filter (Supplementary Figure 1).&#39;</span>,</span>
 <span id="cb41-42"><a href="#cb41-42" aria-hidden="true" tabindex="-1"></a>         paper_location<span class="op">=</span><span class="st">&#39;Results: variant QC paragraph&#39;</span>,</span>
 <span id="cb41-43"><a href="#cb41-43" aria-hidden="true" tabindex="-1"></a>         notes<span class="op">=</span>variant_filter_note)</span>
 <span id="cb41-44"><a href="#cb41-44" aria-hidden="true" tabindex="-1"></a>add_stat(<span class="st">&#39;Variant filtering&#39;</span>, <span class="st">&#39;CHM13 </span><span class="sc">% f</span><span class="st">iltered solely by VQSLOD&#39;</span>,</span>
@@ -4670,7 +4670,7 @@ Among HPRC samples with published long-read-based assemblies, true phasing error
 <span id="cb41-56"><a href="#cb41-56" aria-hidden="true" tabindex="-1"></a>         notes<span class="op">=</span>chm13_unique_filter_note)</span>
 <span id="cb41-57"><a href="#cb41-57" aria-hidden="true" tabindex="-1"></a>add_stat(<span class="st">&#39;CHM13-unique filtering&#39;</span>, <span class="st">&#39;CHM13-unique </span><span class="sc">% G</span><span class="st">ATK PASS variants removed solely by VQSLOD&#39;</span>,</span>
 <span id="cb41-58"><a href="#cb41-58" aria-hidden="true" tabindex="-1"></a>         value_chm13<span class="op">=</span>pct_chm13_unique_vqslod_only_of_gatk_passing,</span>
-<span id="cb41-59"><a href="#cb41-59" aria-hidden="true" tabindex="-1"></a>         paper_text<span class="op">=</span><span class="ss">f&#39;Our stricter VQSLOD filter removes </span><span class="sc">{</span>pct_chm13_unique_vqslod_only_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing variants in T2T-CHM13-unique regions. When all filters are considered, only </span><span class="sc">{</span>pct_chm13_unique_retained_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing variants in these regions are retained (Supplemental Figure 1).&#39;</span>,</span>
+<span id="cb41-59"><a href="#cb41-59" aria-hidden="true" tabindex="-1"></a>         paper_text<span class="op">=</span><span class="ss">f&#39;Our stricter VQSLOD filter removes </span><span class="sc">{</span>pct_chm13_unique_vqslod_only_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing variants in T2T-CHM13-unique regions. When all filters are considered, only </span><span class="sc">{</span>pct_chm13_unique_retained_of_gatk_passing<span class="sc">:.1f}</span><span class="ss">% of GATK-passing variants in these regions are retained (Supplementary Figure 1).&#39;</span>,</span>
 <span id="cb41-60"><a href="#cb41-60" aria-hidden="true" tabindex="-1"></a>         paper_location<span class="op">=</span><span class="st">&#39;Results: CHM13-unique filtering paragraph&#39;</span>,</span>
 <span id="cb41-61"><a href="#cb41-61" aria-hidden="true" tabindex="-1"></a>         notes<span class="op">=</span><span class="ss">f&#39;</span><span class="sc">{</span>chm13_unique_vqslod_only<span class="sc">:,}</span><span class="ss">/</span><span class="sc">{</span>chm13_unique_gatk_passing<span class="sc">:,}</span><span class="ss">; </span><span class="sc">{</span>chm13_unique_filter_note<span class="sc">}</span><span class="ss">&#39;</span>)</span>
 <span id="cb41-62"><a href="#cb41-62" aria-hidden="true" tabindex="-1"></a>add_stat(<span class="st">&#39;CHM13-unique filtering&#39;</span>, <span class="st">&#39;CHM13-unique </span><span class="sc">% G</span><span class="st">ATK PASS variants retained after all CHM13 filters&#39;</span>,</span>
@@ -4746,7 +4746,7 @@ Among HPRC samples with published long-read-based assemblies, true phasing error
 <span id="cb41-132"><a href="#cb41-132" aria-hidden="true" tabindex="-1"></a>    add_stat(<span class="st">&#39;Switch error decomposition&#39;</span>, <span class="ss">f&#39;HPRC proband tSER (</span><span class="sc">{</span>g<span class="sc">}</span><span class="ss">)&#39;</span>,</span>
 <span id="cb41-133"><a href="#cb41-133" aria-hidden="true" tabindex="-1"></a>             value_chm13<span class="op">=</span><span class="bu">float</span>(row.true_switch_error_rate) <span class="cf">if</span> <span class="st">&#39;CHM13&#39;</span> <span class="kw">in</span> <span class="bu">str</span>(g) <span class="cf">else</span> np.nan,</span>
 <span id="cb41-134"><a href="#cb41-134" aria-hidden="true" tabindex="-1"></a>             value_grch38<span class="op">=</span><span class="bu">float</span>(row.true_switch_error_rate) <span class="cf">if</span> <span class="st">&#39;GRCh38&#39;</span> <span class="kw">in</span> <span class="bu">str</span>(g) <span class="cf">else</span> np.nan,</span>
-<span id="cb41-135"><a href="#cb41-135" aria-hidden="true" tabindex="-1"></a>             paper_text<span class="op">=</span><span class="ss">f&#39;The measured flip error rate for HPRC probands from the 1kGP GRCh38 panel was </span><span class="sc">{</span>grch38_fer<span class="sc">:.3f}</span><span class="ss">%, while the tSER was </span><span class="sc">{</span>grch38_proband_tser<span class="sc">:.3f}</span><span class="ss">%. HPRC probands from the T2T-CHM13 panel had a flip error rate of </span><span class="sc">{</span>chm13_fer<span class="sc">:.3f}</span><span class="ss">% and a tSER of </span><span class="sc">{</span>chm13_proband_tser<span class="sc">:.3f}</span><span class="ss">% (Figure 4b).&#39;</span> <span class="cf">if</span> <span class="st">&#39;GRCh38&#39;</span> <span class="kw">in</span> <span class="bu">str</span>(g) <span class="cf">else</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb41-135"><a href="#cb41-135" aria-hidden="true" tabindex="-1"></a>             paper_text<span class="op">=</span><span class="ss">f&#39;The measured flip error rate for HPRC probands from the 1kGP GRCh38 panel was </span><span class="sc">{</span>grch38_fer<span class="sc">:.3f}</span><span class="ss">%, while the tSER was </span><span class="sc">{</span>grch38_proband_tser<span class="sc">:.3f}</span><span class="ss">%. HPRC probands from the T2T-CHM13 panel had a flip error rate of </span><span class="sc">{</span>chm13_fer<span class="sc">:.3f}</span><span class="ss">% and a tSER of </span><span class="sc">{</span>chm13_proband_tser<span class="sc">:.3f}</span><span class="ss">% (Figure 3b).&#39;</span> <span class="cf">if</span> <span class="st">&#39;GRCh38&#39;</span> <span class="kw">in</span> <span class="bu">str</span>(g) <span class="cf">else</span> <span class="st">&#39;&#39;</span>,</span>
 <span id="cb41-136"><a href="#cb41-136" aria-hidden="true" tabindex="-1"></a>             paper_location<span class="op">=</span><span class="st">&#39;Results: switch error decomposition&#39;</span>)</span>
 <span id="cb41-137"><a href="#cb41-137" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb41-138"><a href="#cb41-138" aria-hidden="true" tabindex="-1"></a><span class="co"># -- Switch-error correlation / regression values --</span></span>
@@ -5905,7 +5905,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
     anchorJS.add('.anchored');
     const isCodeAnnotation = (el) => {
       for (const clz of el.classList) {
-        if (clz.startsWith('code-annotation-')) {                     
+        if (clz.startsWith('code-annotation-')) {
           return true;
         }
       }
@@ -5925,11 +5925,11 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
         button.setAttribute("data-bs-title", "Copied!");
-        tooltip = new bootstrap.Tooltip(button, 
-          { trigger: "manual", 
+        tooltip = new bootstrap.Tooltip(button,
+          { trigger: "manual",
             customClass: "code-copy-button-tooltip",
             offset: [0, -8]});
-        tooltip.show();    
+        tooltip.show();
       }
       setTimeout(function() {
         if (tooltip) {
@@ -6057,7 +6057,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
       if (onUntriggerFn) {
         config.onUntrigger = onUntriggerFn;
       }
-      window.tippy(el, config); 
+      window.tippy(el, config);
     }
     const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
     for (var i=0; i<noterefs.length; i++) {
@@ -6132,7 +6132,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
       tippyHover(xref, undefined, function(instance) {
         instance.disable();
         let url = xref.getAttribute('href');
-        let hash = undefined; 
+        let hash = undefined;
         if (url.startsWith('#')) {
           hash = url;
         } else {
@@ -6160,7 +6160,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
               if (note !== null) {
                 const html = processXRef(id, note);
                 instance.setContent(html);
-              } 
+              }
             }).finally(() => {
               instance.enable();
               instance.show();
@@ -6184,7 +6184,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
               }
               const html = processXRef(null, note);
               instance.setContent(html);
-            } 
+            }
           }).finally(() => {
             instance.enable();
             instance.show();
@@ -6224,7 +6224,7 @@ Wrote: tables_whole_genome/collapsed_duplication_high_error_overlap_threshold_3p
               height = bottom - top;
             }
             if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
+              // cook up a div (if necessary) and position it
               let div = window.document.getElementById("code-annotation-line-highlight");
               if (div === null) {
                 div = window.document.createElement("div");

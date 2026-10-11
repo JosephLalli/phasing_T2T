@@ -80,7 +80,7 @@ CONFIG <- list(
   grch38_segdup_file = "resources/GRCh38_segdups_gt10kb.bed",
 
   # Output directory
-  output_dir = file.path(selected_profile$figures, 'figure6'),
+  output_dir = file.path(selected_profile$figures, 'figure5'),
 
   # Plot parameters
   plot = list(
@@ -109,8 +109,8 @@ CONFIG <- list(
     base_number_size_pts = 5,
     regional_var_label_margin = 0.05,
     regional_data_label_margin = 0.09,
-    figure6_var_label_margin = 0.02,
-    figure6_data_label_margin = 0.05,
+    figure5_var_label_margin = 0.02,
+    figure5_data_label_margin = 0.05,
     
     # Region padding
     slop = 1.5e6,
@@ -118,15 +118,15 @@ CONFIG <- list(
     # Image dimensions (used by svglite)
     width_inches = 3.5,
     height_inches = 3.5,
-    figure6_panel_width_inches = 3.0,
-    figure6_panel_height_inches = 1.62,
-    figure6_colorbar_width_inches = 3.4,
-    figure6_colorbar_height_inches = 0.6,
-    figure6_colorbar_axis_width_pt = 219.0,
+    figure5_panel_width_inches = 3.0,
+    figure5_panel_height_inches = 1.62,
+    figure5_colorbar_width_inches = 3.4,
+    figure5_colorbar_height_inches = 0.6,
+    figure5_colorbar_axis_width_pt = 219.0,
     # PDF viewers can expose antialiasing seams between exactly abutting SVG
     # tiles. Each following tile covers this overlap, and the final tile is
     # clipped at the original edge, so transitions and outer geometry stay put.
-    figure6_colorbar_tile_overlap_pt = 0.50
+    figure5_colorbar_tile_overlap_pt = 0.50
   ),
   
   # Genomic regions of interest (CHM13 coordinates)
@@ -148,7 +148,7 @@ CONFIG <- list(
   )
 )
 
-CONFIG$figure6_regions <- c("chr15_anglemans", "chr22_22q11")
+CONFIG$figure5_regions <- c("chr15_anglemans", "chr22_22q11")
 
 # Layout r-values for data bands within data.panel = 1
 CONFIG$plot$layout <- list(
@@ -190,7 +190,7 @@ strip_unit <- function(value) {
   as.numeric(gsub("[^0-9.-]", "", value))
 }
 
-expand_figure6_source_canvas <- function(svg_path, left_pad_pt = 12, bottom_pad_pt = 4) {
+expand_figure5_source_canvas <- function(svg_path, left_pad_pt = 12, bottom_pad_pt = 4) {
   svg_lines <- readLines(svg_path, warn = FALSE)
   root_idx <- grep("<svg ", svg_lines, fixed = TRUE)[1]
   if (is.na(root_idx)) {
@@ -361,21 +361,21 @@ max_variants_in_region <- function(data, region, label) {
   max(region_data$variants_per_1k, na.rm = TRUE)
 }
 
-calculate_figure6_max_var_density <- function(grch38_data, chm13_data, config) {
-  figure6_max_values <- c()
+calculate_figure5_max_var_density <- function(grch38_data, chm13_data, config) {
+  figure5_max_values <- c()
 
-  for (region_name in config$figure6_regions) {
+  for (region_name in config$figure5_regions) {
     grch38_region <- create_padded_region(config$grch38_regions[[region_name]], config$plot$slop)
     chm13_region <- create_padded_region(config$chm13_regions[[region_name]], config$plot$slop)
 
-    figure6_max_values <- c(
-      figure6_max_values,
+    figure5_max_values <- c(
+      figure5_max_values,
       max_variants_in_region(grch38_data, grch38_region, paste("GRCh38", region_name)),
       max_variants_in_region(chm13_data, chm13_region, paste("CHM13v2.0", region_name))
     )
   }
 
-  max(figure6_max_values, na.rm = TRUE)
+  max(figure5_max_values, na.rm = TRUE)
 }
 
 format_colorbar_breaks <- function(max_var_density, num_breaks = 6) {
@@ -776,7 +776,7 @@ export_svg_whole <- function(data, density_data, cytobands, cnv_data, genome,
   dev.off()
 }
 
-export_svg_figure6_panel <- function(region, data, density_data, cytobands, cnv_data, segdup_data, genome,
+export_svg_figure5_panel <- function(region, data, density_data, cytobands, cnv_data, segdup_data, genome,
                                      ser_color, gt_color, max_var_density,
                                      plot_params, config, out_file) {
   export_svg_regional(
@@ -793,21 +793,21 @@ export_svg_figure6_panel <- function(region, data, density_data, cytobands, cnv_
     plot_params = plot_params,
     config = config,
     out_file = out_file,
-    width_inches = config$plot$figure6_panel_width_inches,
-    height_inches = config$plot$figure6_panel_height_inches
+    width_inches = config$plot$figure5_panel_width_inches,
+    height_inches = config$plot$figure5_panel_height_inches
   )
 
-  expand_figure6_source_canvas(out_file)
+  expand_figure5_source_canvas(out_file)
 }
 
 export_svg_colorbar <- function(out_file, max_var_density, config) {
   legend_labels <- format_colorbar_breaks(max_var_density)
-  width_pt <- config$plot$figure6_colorbar_width_inches * 72
-  height_pt <- config$plot$figure6_colorbar_height_inches * 72
+  width_pt <- config$plot$figure5_colorbar_width_inches * 72
+  height_pt <- config$plot$figure5_colorbar_height_inches * 72
 
   # Span the axis between the centers of the two Figure 5 panel columns after
   # stitching, while keeping the legend centered in its own SVG canvas.
-  bar_width <- config$plot$figure6_colorbar_axis_width_pt
+  bar_width <- config$plot$figure5_colorbar_axis_width_pt
   bar_height <- 7.56
   bar_x <- (width_pt - bar_width) / 2
   bar_y <- 10.80
@@ -819,8 +819,8 @@ export_svg_colorbar <- function(out_file, max_var_density, config) {
   n_steps <- 100
 
   svglite(out_file,
-          width = config$plot$figure6_colorbar_width_inches,
-          height = config$plot$figure6_colorbar_height_inches,
+          width = config$plot$figure5_colorbar_width_inches,
+          height = config$plot$figure5_colorbar_height_inches,
           pointsize = config$plot$default_pts,
           system_fonts = list(sans = "Arial"))
 
@@ -834,7 +834,7 @@ export_svg_colorbar <- function(out_file, max_var_density, config) {
     xleft = x_breaks[-length(x_breaks)],
     ybottom = bar_y,
     xright = pmin(
-      x_breaks[-1] + config$plot$figure6_colorbar_tile_overlap_pt,
+      x_breaks[-1] + config$plot$figure5_colorbar_tile_overlap_pt,
       bar_x + bar_width
     ),
     ytop = bar_y + bar_height,
@@ -943,7 +943,7 @@ grch38_3202_vs_HPRC_density <- grch38_density_gr[['1kgp_variation_phased_with_re
 # Calculate maximum variant density
 global_max_var_density <- round(max(max(grch38_3202_vs_HPRC_data$variants_per_1k),
                                    max(chm13_3202_vs_HPRC_data$variants_per_1k)))
-figure6_max_var_density <- calculate_figure6_max_var_density(
+figure5_max_var_density <- calculate_figure5_max_var_density(
   grch38_data = grch38_3202_vs_HPRC_density,
   chm13_data = chm13_3202_vs_HPRC_density,
   config = CONFIG
@@ -962,7 +962,7 @@ dir.create(CONFIG$output_dir, showWarnings = FALSE, recursive = TRUE)
 regional_plot_params <- setup_single_plot_params()
 
 colorbar_svg <- file.path(CONFIG$output_dir, "colorbar.svg")
-export_svg_colorbar(colorbar_svg, figure6_max_var_density, CONFIG)
+export_svg_colorbar(colorbar_svg, figure5_max_var_density, CONFIG)
 cat(paste("Saved:", colorbar_svg, "\n"))
 
 cat("Generating regional SVGs...\n")
@@ -1005,9 +1005,9 @@ for (region_name in names(CONFIG$grch38_regions)) {
   )
   cat(paste("  Saved:", grch38_svg, "\n"))
 
-  if (region_name %in% CONFIG$figure6_regions) {
-    grch38_figure6_svg <- file.path(CONFIG$output_dir, paste0("figure6_grch38_", suffix, ".svg"))
-    export_svg_figure6_panel(
+  if (region_name %in% CONFIG$figure5_regions) {
+    grch38_figure5_svg <- file.path(CONFIG$output_dir, paste0("figure5_grch38_", suffix, ".svg"))
+    export_svg_figure5_panel(
       region       = grch38_region,
       data         = grch38_3202_vs_HPRC_data,
       density_data = grch38_3202_vs_HPRC_density,
@@ -1017,12 +1017,12 @@ for (region_name in names(CONFIG$grch38_regions)) {
       genome       = "hg38",
       ser_color    = CONFIG$plot$grch38_ser_color,
       gt_color     = CONFIG$plot$grch38_gt_color,
-      max_var_density = figure6_max_var_density,
+      max_var_density = figure5_max_var_density,
       plot_params  = regional_plot_params,
       config       = CONFIG,
-      out_file     = grch38_figure6_svg
+      out_file     = grch38_figure5_svg
     )
-    cat(paste("  Saved:", grch38_figure6_svg, "\n"))
+    cat(paste("  Saved:", grch38_figure5_svg, "\n"))
   }
 
   t2t_svg <- file.path(CONFIG$output_dir, paste0("t2t_", suffix, ".svg"))
@@ -1043,9 +1043,9 @@ for (region_name in names(CONFIG$grch38_regions)) {
   )
   cat(paste("  Saved:", t2t_svg, "\n"))
 
-  if (region_name %in% CONFIG$figure6_regions) {
-    t2t_figure6_svg <- file.path(CONFIG$output_dir, paste0("figure6_t2t_", suffix, ".svg"))
-    export_svg_figure6_panel(
+  if (region_name %in% CONFIG$figure5_regions) {
+    t2t_figure5_svg <- file.path(CONFIG$output_dir, paste0("figure5_t2t_", suffix, ".svg"))
+    export_svg_figure5_panel(
       region       = t2t_region,
       data         = chm13_3202_vs_HPRC_data,
       density_data = chm13_3202_vs_HPRC_density,
@@ -1055,12 +1055,12 @@ for (region_name in names(CONFIG$grch38_regions)) {
       genome       = "hs1",
       ser_color    = CONFIG$plot$chm13_ser_color,
       gt_color     = CONFIG$plot$chm13_gt_color,
-      max_var_density = figure6_max_var_density,
+      max_var_density = figure5_max_var_density,
       plot_params  = regional_plot_params,
       config       = CONFIG,
-      out_file     = t2t_figure6_svg
+      out_file     = t2t_figure5_svg
     )
-    cat(paste("  Saved:", t2t_figure6_svg, "\n"))
+    cat(paste("  Saved:", t2t_figure5_svg, "\n"))
   }
 }
 

@@ -5,11 +5,11 @@ from string import ascii_lowercase as lowercase
 import numpy as np
 
 
-# Original Figure 4 geometry maps to current Figure 3; coordinates are points from the figure top-left, measured from
+# Figure 3 geometry; coordinates are points from the figure top-left, measured from
 # the Word-embedded SVG: axis a's top-left corner and the illustration's bounding box.
-ORIGINAL_FIG4_AXIS_A_TOP_LEFT = (36.4993, 19.1315)
-ORIGINAL_FIG4_ILLUSTRATION_BOX = (45.9, 4.2, 292.4, 173.5)
-FIG4_COMPOSITE_GROUP_ID = '4a-4'
+ORIGINAL_FIG3_AXIS_A_TOP_LEFT = (36.4993, 19.1315)
+ORIGINAL_FIG3_ILLUSTRATION_BOX = (45.9, 4.2, 292.4, 173.5)
+FIG3_COMPOSITE_GROUP_ID = '4a-4'
 
 
 def lay_out_as_in_pdf(fig):
@@ -18,7 +18,7 @@ def lay_out_as_in_pdf(fig):
     Constrained layout places axes up to 0.3 pt differently for each renderer, and plt.savefig and the notebook's
     inline display both redraw the figure for the screen after the last save, so positions read from a figure are
     those of whichever renderer drew it last. A throwaway PDF save re-runs the layout with the PDF renderer; for
-    Figure 4 the positions it gives do not depend on which renderer drew the figure before it.
+    Figure 3 the positions it gives do not depend on which renderer drew the figure before it.
     """
     import io
     fig.savefig(io.BytesIO(), format='pdf')
@@ -79,7 +79,7 @@ def panel_a_as_standalone_svg(source_svg, kind, workdir):
     if kind == 'composite':
         # Keep only the illustration group of the submitted composite
         for child in list(root):
-            if child.tag.split('}')[1] != 'defs' and child.attrib.get('id') != FIG4_COMPOSITE_GROUP_ID:
+            if child.tag.split('}')[1] != 'defs' and child.attrib.get('id') != FIG3_COMPOSITE_GROUP_ID:
                 root.remove(child)
     vb = root.attrib['viewBox'].split()
     root.attrib['width'] = vb[2] + 'pt'
@@ -99,9 +99,9 @@ def place_panel_a(svg_path, pdf_path, source_svg, kind, axis_top_left, centre_y=
     import tempfile
     from xml.etree import ElementTree as ET
     import fitz
-    dx = axis_top_left[0] - ORIGINAL_FIG4_AXIS_A_TOP_LEFT[0]
-    dy = axis_top_left[1] - ORIGINAL_FIG4_AXIS_A_TOP_LEFT[1]
-    box = fitz.Rect(ORIGINAL_FIG4_ILLUSTRATION_BOX) + (dx, dy, dx, dy)
+    dx = axis_top_left[0] - ORIGINAL_FIG3_AXIS_A_TOP_LEFT[0]
+    dy = axis_top_left[1] - ORIGINAL_FIG3_AXIS_A_TOP_LEFT[1]
+    box = fitz.Rect(ORIGINAL_FIG3_ILLUSTRATION_BOX) + (dx, dy, dx, dy)
     with tempfile.TemporaryDirectory() as tmp:
         lone_svg = panel_a_as_standalone_svg(source_svg, kind, tmp)
         lone_pdf = os.path.join(tmp, 'panel_a.pdf')

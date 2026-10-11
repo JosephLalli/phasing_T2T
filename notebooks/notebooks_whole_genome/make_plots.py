@@ -571,7 +571,7 @@ binned_maf_data_regions = pd.concat([binned_maf_data_regions, regional_cat_data.
 #
 
 # %% [markdown]
-# ### Supplemental Figure 1
+# ### Supplementary Figure 1
 # Panel filtering statistics
 
 # %%
@@ -758,10 +758,10 @@ upset_plots_config = [
 # Create and save figure
 fig = create_upset_figure_layout(upset_plots_config, figsize=(13,9))
 
-fig.savefig(f'{supplemental_figures_folder}/Supplemental 1.png', bbox_inches='tight')
-fig.savefig(f'{supplemental_figures_folder}/Supplemental 1.svg', bbox_inches='tight')
-fig.savefig(f'{supplemental_figures_folder}/Supplemental 1.eps', bbox_inches='tight')
-fig.savefig(f'{supplemental_figures_folder}/Supplemental 1.pdf', bbox_inches='tight')
+fig.savefig(f'{supplemental_figures_folder}/Supplementary Figure 1.png', bbox_inches='tight')
+fig.savefig(f'{supplemental_figures_folder}/Supplementary Figure 1.svg', bbox_inches='tight')
+fig.savefig(f'{supplemental_figures_folder}/Supplementary Figure 1.eps', bbox_inches='tight')
+fig.savefig(f'{supplemental_figures_folder}/Supplementary Figure 1.pdf', bbox_inches='tight')
 
 plt.rcParams["figure.dpi"] = 300        # Display rendering
 plt.rcParams["savefig.dpi"] = 300      # Export rendering
@@ -769,7 +769,7 @@ plt.rcParams["savefig.dpi"] = 300      # Export rendering
 # %% [markdown]
 # ## Figure 1: Recombination maps
 #
-# Paper refs: manuscript recombination-map section; reviewer reply lines 500-507. Supplemental context: Supplemental Figures 2-6.
+# Paper refs: manuscript recombination-map section; reviewer reply lines 500-507.
 #
 # Status: Generated in abortvin repository. The recombination-map figures are produced by the recombination workflow/R assets.
 #
@@ -883,7 +883,7 @@ plt.savefig(f'{figdir}/Figure 2.pdf', facecolor='white')
 # Fig 2. Phased panel switch error rates binned by minor allele frequency. Of the 3202 participants in the 1KGP, 39 had their genomes assembled by the HPRC. An additional 61 had their genomes assembled by the HGSVC. a) The switch error rate of haplotype panel SNPs from 39 indiviudals, using their HPRC-assembled genomes as ground truth. Variants located in regions of CHM13v2.0 that are non-syntenic with GRCh38 are included in overall variant bin error rates, but are also plotted separately as CHM13v2.0 (Novel) variants. b) SER of haplotype panel SNPs from 19 individuals, using their HGSVC-assembled genomes as ground truth. Unlike the 39 HPRC samples, these 19 individuals are not part of a 1KGP trio, and therefore were phased without any mendelian-based error correction. c) Indel SER from the mendelian-phased HPRC samples. d) Indel SER from the 19 individuals phased without mendelian error correction. Switch error rates and average minor allele frequency per bin are displayed on a log scale.
 
 # %% [markdown]
-# #### Supplemental Figure 9
+# #### Supplementary Figure 9
 # Illustration describing different methods of evaluating phasing quality.
 # Phasing is the process of assigning heterozygous variant calls to one of two haplotypes (in the case of diploid organisms.) One of the challenges of assessing the accuracy of statistically phased haplotypes is identifying a ground truth to compare to. In the case of trio-based phasing evaluation, the ground truth is parental genomes. While not every heterozygous site can be assigned to a haplotype of paternal or maternal origin, most can confidently be assigned to one or the other. Alternately, one can use an empirically phased reference assembly as a source of ground truth.
 # When a callset’s phasing describes a variant that is from a different parent of origin than the preceeding variant, that is called a switch error. Genotyping errors, as illustrated in the fourth panel, can force statistical phasing software to assign a variant to a haplotype that is different than nearby heterozygous sites. When two switch errors occur back-to-back, that is described as a flip error. Importantly, flip errors do not affect the phasing of surrounding heterozygous sites. Discerning flip errors from true switch errors is important when evaluating phasing methods, as the majority of switch errors can frequently be found in flip errors. Counting these switches as “true” switch errors inflates switch error rates by including sites that do not affect regional phasing.
@@ -892,14 +892,14 @@ plt.savefig(f'{figdir}/Figure 2.pdf', facecolor='white')
 #
 
 # %% [markdown]
-# #### Supplemental Figure 10
+# #### Supplementary Figure 10
 # 1000 Genomes Project samples by number of relatives available to provide information for Mendelian pre-phasing.
 
 # %% [markdown]
 #
 
 # %% [markdown]
-# ### Supplemental Figure 11
+# ### Supplementary Figure 11
 #
 # SNP (L column) and Indel (R column) genotyping error rates for 1KGP phased haplotype panel variation, binned by minor allele frequency. Genotyping error rates were defined as the number of inaccurate heterozygous or homozygous alternative genotypes (both alleles must be called correctly; there was no partial credit for correctly calling one allele) divided by the number of heterozygous or homozygous alternative genotypes. Correct and incorrect variant calls were determined via comparison to ground-truth assemblies for the following subsets of samples: a) Mendelian-corrected trio probands with ground truth assemblies present in the HPRC human pangenome; b) Mendelian-corrected trio probands with ground truth assemblies produced by the HGSVC; c) Mendelian-corrected trio parents with ground truth assemblies produced by the HGSVC; d) Uncorrected samples which are not part of a 1KGP trio with ground truth assemblies produced by the HGSVC. e) The genotype error rates of trio probands, trio parents, and non-trio samples were weighted by each category's prevelance in the 1000 Genomes Project to produce estimated panel-wide average genotype error rates. Genotype error rates and average minor allele frequency per bin are displayed on a log scale.
 
@@ -1034,13 +1034,13 @@ for i, ax in enumerate([axA, axB, axC, axD, axE, axF, axG, axH, axI, axJ]): # le
         text.set_text(new_t)
 
 
-plt.savefig(f'{figdir}/supplemental/Supplemental 11.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 11.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 11.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 11.pdf', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 11.png', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 11.svg', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 11.eps', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 11.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Supplemental Figure 12
+# ### Supplementary Figure 12
 # Concordance of GATK Haplotypecaller variant calls with genomic assembly-derived reference variants\
 #
 # A) Genotype variants from the T2T-CHM13 reference haplotype panel were compared to variants derived from a joint HPRC-HGSVC pangenome released by the HGSVC. Each point is one sample-assembly pair. Two samples had assemblies generated by both the HPRC and the HGSVC: HG00733 and HG02818. The lower line connects the HG00733 datapoints, and the upper line connects the HG02818 data points. Datapoints are colored by their 1KGP assigned superpopulation group.
@@ -1107,13 +1107,13 @@ for sample_id in samples_to_connect:
 fig,[ax]=clean_figure(fig)
 ax.set_xlim(ax_x)
 ax.set_ylim(ax_y)
-plt.savefig(f'{figdir}/supplemental/Supplemental_12.png', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_12.pdf', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_12.svg', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 12.png', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 12.pdf', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 12.svg', facecolor='white', dpi=300)
 
 
 # %% [markdown]
-# ### Supplemental Figure 13
+# ### Extended Data Figure 1
 # Properties of called SNPs and Indels in increasing complex genetic regions
 
 # %%
@@ -1164,13 +1164,13 @@ fig.align_ylabels([axB, axD, axF])
 
 
 clean_figure(fig, letter_fontsize=8) # 8 pt panel letters for the journal (this is Extended Data now)
-plt.savefig(f'{figdir}/supplemental/Supplemental_13.png', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_13.pdf', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_13.svg', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 1.png', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 1.pdf', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 1.svg', facecolor='white', dpi=300)
 
 
 # %% [markdown]
-# ### Supplemental Figure 14
+# ### Supplementary Figure 13
 #
 # Genotyping and switch error rates for isolated variants in GRCh38 and T2T-CHM13 panels.
 #
@@ -1228,13 +1228,13 @@ axA.set_title('Genotype Error Rate', fontsize=9, weight='bold', pad=10)
 axB.set_title('Switch Error Rate', fontsize=9, weight='bold', pad=10)
 clean_figure(fig)
 # Include the title above the normal canvas in each exported format.
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.png', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.svg', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.eps', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{supplemental_figures_folder}/Supplemental_14_isolated_biallelic_estimated_error.pdf', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplementary Figure 13.png', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplementary Figure 13.svg', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplementary Figure 13.eps', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{supplemental_figures_folder}/Supplementary Figure 13.pdf', facecolor='white', bbox_inches='tight')
 
 # %% [markdown]
-# ### Supplemental Figure 15
+# ### Supplementary Figure 14
 # SNP (L column) and Indel (R column) switch error rates for 1KGP phased haplotype panel variation, binned by minor allele frequency.
 # Switch error rates were determined by comparing estimated phasing to ground-truth assemblies for the following subsets of samples: a) Mendelian-corrected trio probands with ground truth assemblies present in the HPRC human pangenome; b) Mendelian-corrected trio probands with ground truth assemblies produced by the HGSVC; c) Mendelian-corrected trio parents with ground truth assemblies produced by the HGSVC; d) Uncorrected samples which are not part of a 1KGP trio with ground truth assemblies produced by the HGSVC. e) The switch error rates of trio probands, trio parents, and non-trio samples were weighted by each category's prevelance in the 1000 Genomes Project to produce estimated panel-wide average switch error rates. Switch error rates and average minor allele frequency per bin are displayed on a log scale.
 
@@ -1368,17 +1368,16 @@ for i, ax in enumerate([axA, axB, axC, axD, axE, axF, axG, axH, axI, axJ]): # le
         text.set_text(new_t)
 
 
-plt.savefig(f'{figdir}/supplemental/Supplemental 15.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 15.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 15.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 15.pdf', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 14.png', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 14.svg', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 14.eps', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 14.pdf', facecolor='white')
 
 # %% [markdown]
-# ## Figure 3: per-chromosome SER and chrX/PAR performance
+# ## Extended Data Figure 2a: per-chromosome SER and chrX/PAR performance
 
 # %%
-# Paper cross-reference: Figure 3; manuscript lines 282-290.
-# Figure 3: Per-chromosome error rate performance in CHM13 vs GRCh38, including chrX
+# Extended Data Figure 2a: Per-chromosome error rate performance in CHM13 vs GRCh38, including chrX.
 
 all_chroms_plus_chrX = pd.concat((all_chroms_chrX, all_samples.assign(chrom = 'chr1-22+X'))).reset_index(drop=True)
 
@@ -1445,18 +1444,18 @@ ax.yaxis.set_major_formatter(PercentFormatter(decimals=2))
 ax.set_axisbelow(True)
 if chromosome_panel_style == 'bars_with_points':
     legend.set_title('Genome')
-plt.savefig(f'{figdir}/Figure 3.png', facecolor='white')
-plt.savefig(f'{figdir}/Figure 3.svg', facecolor='white')
-plt.savefig(f'{figdir}/Figure 3.eps', facecolor='white')
-plt.savefig(f'{figdir}/Figure 3.pdf', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2a.png', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2a.svg', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2a.eps', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2a.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Supplemental Figure 16
+# ### Supplementary Figure 15
 # Whole genome, pseudoautosomal region 1 (PAR1), PAR2, and non-PAR chromosome X switch error rates.
 # Switch error rates for trio probands with HPRC or HGSVC assemblies from either the GRCh38 or T2T-CHM13 1KGP reference haplotype panels, with each sample's assembly used as ground truth. PAR switch error rates are calculated separately from the non-PAR region of chromosome X. Non-PAR chromosome X switch error rates are only calculated from female samples.
 
 # %%
-# Paper cross-reference: Supplemental Figure 14; supplemental lines 191-195; manuscript lines 282-290.
+# Supplementary Figure 15: PAR1, PAR2, and non-PAR chromosome X performance.
 # fig, ax = plt.subplots(1,1,figsize=(one_col,one_col), layout='tight')
 fig, ax = plt.subplots(1,1,figsize=(one_col,one_col), layout='tight')
 ## Supplemental: PAR1, PAR2, chrX
@@ -1482,13 +1481,13 @@ ax.yaxis.set_major_formatter(perc_formatter)
 ax.grid(axis='y', alpha=0.5)
 ax.set_axisbelow(True)
 clean_figure(fig)
-plt.savefig(f'{figdir}/supplemental/Supplemental 16.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 16.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 16.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 16.pdf', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 15.png', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 15.eps', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 15.svg', facecolor='white')
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 15.pdf', facecolor='white')
 
 # %% [markdown]
-# ## Figure 4: switch errors, flip errors, and true switch errors
+# ## Figure 3 and Extended Data Figure 2 source: switch errors, flip errors, and true switch errors
 #
 # Flip error rates and true switch error rates.
 #
@@ -1496,18 +1495,18 @@ plt.savefig(f'{figdir}/supplemental/Supplemental 16.pdf', facecolor='white')
 #
 
 # %%
-### Figure 4a illustrator image
+### Figure 3a illustrator image
 
 from IPython.display import Image
-fig4a_image = Path(figdir) / 'Fig 4a.png'
-if not fig4a_image.exists():
-    fig4a_image = Path(source_figures_folder) / 'Fig 4a.png'
-Image(filename=str(fig4a_image), width=500)
+fig3a_image = Path(figdir) / 'Figure 3a.png'
+if not fig3a_image.exists():
+    fig3a_image = Path(source_figures_folder) / 'Figure 3a.png'
+Image(filename=str(fig3a_image), width=500)
 
 
 # %%
-# Paper cross-reference: Figure 4; manuscript lines 293-321.
-## Figure 4
+# Paper cross-reference: Figure 3 and Extended Data Figure 2 source; manuscript lines 293-321.
+## Figure 3 and Extended Data Figure 2 source
 figure_layout="""
 AAABB
 AAABB
@@ -1675,46 +1674,46 @@ for i, ax in enumerate(axes.values()):
     add_letter_to_ax(ax, i, fontsize=8) # journal wants 8 pt bold panel letters
 
 
-## Fig 4a - graphic
+## Figure 3a - graphic
 sns.despine(ax=axA, top=True, right=True, left=True, bottom=True)
 axA.set_yticks([])
 axA.set_xticks([])
 # clean_figure(fig)
-plt.savefig(f'{figdir}/Figure 4.png', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4.svg', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4.eps', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4.pdf', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 and Extended Data Figure 2 source.png', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 and Extended Data Figure 2 source.svg', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 and Extended Data Figure 2 source.eps', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 and Extended Data Figure 2 source.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Figure 4a: drop the Illustrator graphic into Figure 4
+# ### Figure 3 and Extended Data Figure 2 source with graphic
 #
-# Puts the editable Illustrator version of the 4a graphic (`figures/Fig 4a.svg`) into the empty axis A, centred left-right in the space it took up in the submitted figure and centred top-to-bottom on the 4b box. Writes 'Figure 4 with graphic' as svg + pdf (text stays editable), plus a png rendered from the pdf.
+# Puts the editable Illustrator version of the Figure 3a graphic (`figures/Figure 3a.svg`) into the empty axis A, centred left-right in the space it took up in the submitted figure and centred top-to-bottom on the companion panel. Writes 'Figure 3 and Extended Data Figure 2 source with graphic' as svg + pdf (text stays editable), plus a png rendered from the pdf.
 
 # %%
 import shutil
 import subprocess
 
 for ext in ['svg','pdf']:
-    shutil.copy(f'{figdir}/Figure 4.{ext}', f'{figdir}/Figure 4 with graphic.{ext}')
-place_panel_a(f'{figdir}/Figure 4 with graphic.svg', f'{figdir}/Figure 4 with graphic.pdf', f'{source_figures_folder}/Fig 4a.svg', 'illustrator',
+    shutil.copy(f'{figdir}/Figure 3 and Extended Data Figure 2 source.{ext}', f'{figdir}/Figure 3 and Extended Data Figure 2 source with graphic.{ext}')
+place_panel_a(f'{figdir}/Figure 3 and Extended Data Figure 2 source with graphic.svg', f'{figdir}/Figure 3 and Extended Data Figure 2 source with graphic.pdf', f'{source_figures_folder}/Figure 3a.svg', 'illustrator',
               axis_top_left_points(fig, axA), centre_y=axis_vertical_centre_points(fig, axB))
-subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Figure 4 with graphic.pdf', f'{figdir}/Figure 4 with graphic'])
+subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Figure 3 and Extended Data Figure 2 source with graphic.pdf', f'{figdir}/Figure 3 and Extended Data Figure 2 source with graphic'])
 
 # %% [markdown]
-# ### Extended Data: chromosome detail (Figure 3 + Figure 4c,d)
+# ### Extended Data Figure 2: chromosome detail
 #
-# Whole genome and per-chromosome switch and true switch error rates. Figure 3 and Figure 4c,d moved together into one Extended Data figure (main text is one display item over the limit), one row of chromosomes per panel.
+# Whole genome and per-chromosome switch and true switch error rates. The Figure 3 source and its chromosome panels form Extended Data Figure 2.
 #
-# a) Switch error rates of the 39 HPRC trio probands (Mendelian phased), was Figure 3. b) True switch error rates of the same probands, was Figure 4c. c) True switch error rates of the 19 HGSVC samples that are not part of a trio (statistically phased), was Figure 4d.
+# a) Switch error rates of the 39 HPRC trio probands. b) True switch error rates of the same probands. c) True switch error rates of the 19 HGSVC samples that are not part of a trio.
 
 # %%
-# Extended Data, chromosome detail - old Figure 3 + Figure 4c,d. Same code as those two cells, just stacked into one figure
+# Extended Data Figure 2 chromosome-detail components, stacked into one figure.
 fig, axes = plt.subplot_mosaic("A\nB\nC", figsize=(two_col, 3*1.55))
 ax = axes['A']
 axC = axes['B']
 axD = axes['C']
 
-## a (old Figure 3)
+## a (Extended Data Figure 2a component)
 for genome, color in zip(genome_order, genome_palette):
     np.random.seed(chromosome_panel_seed)
     if chromosome_panel_style == 'bars_with_points':
@@ -1770,7 +1769,7 @@ if chromosome_panel_style == 'bars_with_points':
 ax.set_xlabel(None) # only the bottom panel gets the Chromosome label
 ax.set_title('HPRC Mendelian Phased', pad=6) # name the cohort like b and c do
 
-## b, c (old Figure 4c,d)
+## b, c (Extended Data Figure 2 components)
 for genome, color in zip(genome_order, genome_palette):
     np.random.seed(chromosome_panel_seed)
     if chromosome_panel_style == 'bars_with_points':
@@ -1870,19 +1869,19 @@ axD.get_legend().remove()
 for i, ax in enumerate(axes.values()):
     add_letter_to_ax(ax, i, fontsize=8)
 
-# named for what it shows, not a number - the Extended Data numbers keep moving as figures get added
-plt.savefig(f'{figdir}/Extended Data - chromosome detail.png', facecolor='white')
-plt.savefig(f'{figdir}/Extended Data - chromosome detail.svg', facecolor='white')
-plt.savefig(f'{figdir}/Extended Data - chromosome detail.eps', facecolor='white')
-plt.savefig(f'{figdir}/Extended Data - chromosome detail.pdf', facecolor='white')
+# Extended Data Figure 2 assembly.
+plt.savefig(f'{figdir}/Extended Data Figure 2.png', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2.svg', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2.eps', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 2.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Figure 4 with only panels a and b
+# ### Figure 3 without graphic
 #
-# If Figure 4c,d move to the chromosome-detail Extended Data figure, Figure 4 is just the 4a graphic and the 4b violins. Same 4b code as the Figure 4 cell. Writes 'Figure 4 (a,b only)' and 'Figure 4 (a,b only) with graphic'.
+# Figure 3 contains the former a/b source panels after the chromosome components move to Extended Data Figure 2. Writes 'Figure 3 without graphic' and 'Figure 3'.
 
 # %%
-# keep a and b exactly where they were in the submitted Figure 4. Without c and d under them constrained layout makes b taller and shoves a over, so place the axes by hand (positions in points, measured off the submitted figure)
+# Keep a and b at their submitted positions; without c and d constrained layout changes the geometry.
 fig = plt.figure(figsize=(two_col, 2.5), layout='none')
 axA = fig.add_axes([36.4993/(two_col*72), 1-153.731/(2.5*72), (296.855-36.4993)/(two_col*72), (153.731-19.1315)/(2.5*72)])
 axB = fig.add_axes([348.356/(two_col*72), 1-153.731/(2.5*72), (506.760-348.356)/(two_col*72), (153.731-19.1315)/(2.5*72)])
@@ -1941,23 +1940,23 @@ axB.legend(new_handles,labels)
 for i, ax in enumerate(axes.values()):
     add_letter_to_ax(ax, i, fontsize=8)
 
-## Fig 4a - graphic
+## Figure 3a - graphic
 sns.despine(ax=axA, top=True, right=True, left=True, bottom=True)
 axA.set_yticks([])
 axA.set_xticks([])
-plt.savefig(f'{figdir}/Figure 4 (a,b only).png', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4 (a,b only).svg', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4 (a,b only).eps', facecolor='white')
-plt.savefig(f'{figdir}/Figure 4 (a,b only).pdf', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 without graphic.png', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 without graphic.svg', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 without graphic.eps', facecolor='white')
+plt.savefig(f'{figdir}/Figure 3 without graphic.pdf', facecolor='white')
 
 for ext in ['svg','pdf']:
-    shutil.copy(f'{figdir}/Figure 4 (a,b only).{ext}', f'{figdir}/Figure 4 (a,b only) with graphic.{ext}')
-place_panel_a(f'{figdir}/Figure 4 (a,b only) with graphic.svg', f'{figdir}/Figure 4 (a,b only) with graphic.pdf', f'{source_figures_folder}/Fig 4a.svg', 'illustrator',
+    shutil.copy(f'{figdir}/Figure 3 without graphic.{ext}', f'{figdir}/Figure 3.{ext}')
+place_panel_a(f'{figdir}/Figure 3.svg', f'{figdir}/Figure 3.pdf', f'{source_figures_folder}/Figure 3a.svg', 'illustrator',
               axis_top_left_points(fig, axA), centre_y=axis_vertical_centre_points(fig, axB))
-subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Figure 4 (a,b only) with graphic.pdf', f'{figdir}/Figure 4 (a,b only) with graphic'])
+subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Figure 3.pdf', f'{figdir}/Figure 3'])
 
 # %% [markdown]
-# ### Supplemental Figure 17
+# ### Extended Data Figure 3
 #
 # Association between flip error rate, switch error rate, true switch error rate, and genotyping error rate.
 #
@@ -1995,10 +1994,10 @@ sns.move_legend(g, loc='upper center', ncols=3, bbox_to_anchor=(axes_middle, 0))
 for lh in g._legend.legend_handles: # move_legend rebuilds the key, so this comes after it
     lh.set_alpha(1)
 
-g.savefig(f'{figdir}/supplemental/Supplemental 17.svg', facecolor='white')
-g.savefig(f'{figdir}/supplemental/Supplemental 17.png', facecolor='white')
-g.savefig(f'{figdir}/supplemental/Supplemental 17.eps', facecolor='white')
-g.savefig(f'{figdir}/supplemental/Supplemental 17.pdf', facecolor='white')
+g.savefig(f'{figdir}/Extended Data Figure 3.svg', facecolor='white')
+g.savefig(f'{figdir}/Extended Data Figure 3.png', facecolor='white')
+g.savefig(f'{figdir}/Extended Data Figure 3.eps', facecolor='white')
+g.savefig(f'{figdir}/Extended Data Figure 3.pdf', facecolor='white')
 
 # %% [markdown]
 # ### Supplemental Table - correlation of error rates
@@ -2049,14 +2048,14 @@ reported_r_squared.to_csv(f'{figdir}/reported_error_rate_r_squared.csv', index=F
 
 
 # %% [markdown]
-# ### Supplemental Figure 18
+# ### Extended Data Figure 4
 #
 # True switch error rate as a function of GRCh38 chromosomal completeness.
 #
 # Scatterplot of all chromosome-wide switch error rate in the GRCh38 and T2T-CHM13 1KGP panels for all chromosomes from HPRC-assembled samples by the percentage of each chromosome that is newly resolved in T2T-CHM13. A linear regression (true_switch_error_rate ~ %_chrom_novel), run separately for each 1KGP panel, is also plotted. Shaded areas indicate 95% ci of the regression slope. A linear regression was also performed of ΔSER% ~ %_chrom_novel. Summary statistics of all three regressions are presented in the upper left corner of the plot.
 
 # %%
-# Paper cross-reference: Supplemental Figure 1u; supplemental lines 210-216; manuscript lines 315-321.
+# Extended Data Figure 4.
 def plot_regression(x, y, hue, data, **kws):
     fig = sns.lmplot(x=x,y=y, hue='genome', data = data, robust=False, palette=default_style['palette'], aspect=1.5, height=4,
                      facet_kws={'legend_out':False}, units='sample_id', seed=seed, **kws)#, x_jitter=0.1) # seeded - the bootstrap bands changed with every run
@@ -2099,25 +2098,24 @@ sns.move_legend(fg, "upper left", bbox_to_anchor=(.8,0.98))
 
 fg.tight_layout()
 
-# this is Supplemental 18 - it was saving as 'Supplemental 16' and writing over the real Supplemental 16
-plt.savefig(f'{figdir}/supplemental/Supplemental 18.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 18.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 18.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 18.pdf', facecolor='white')
+# Extended Data Figure 4.
+plt.savefig(f'{figdir}/Extended Data Figure 4.svg', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 4.png', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 4.eps', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 4.pdf', facecolor='white')
 
 # %% [markdown]
-# Supplemental Figure 16: True switch error rate as a function of GRCh38 chromosomal completeness. Scatterplot of all chromosome-wide switch error rate in the GRCh38 and CHM13v2.0 1KGP panels for all chromosomes from HPRC-assembled samples by the percentage of each chromosome that is newly resolved in CHM13v2.0. A linear regression (true_switch_error_rate ~ %_chrom_novel), run separately for each 1KGP panel, is also plotted. Shaded areas indicate 95% ci of the regression slope. A linear regression was also performed of ΔSER% ~ %_chrom_novel. Summary statistics of all three regressions are presented in the upper left corner of the plot.
+# Extended Data Figure 4: True switch error rate as a function of GRCh38 chromosomal completeness.
 
 # %% [markdown]
-# ## Figure 5: out-of-panel phasing performance
+# ## Figure 4: out-of-panel phasing performance
 #
 # Switch error rates of SNPs from samples statistically phased with the 1KGP haplotype panel used as a reference.
 #
 # All HPRC-assembled samples and their relatives were removed from the GRCh38 1KGP and the CHM13v2.0 1KGP panels of 2504 unrelated samples, yielding 'non-HPRC' panels containing data from 2426 individuals. a) Filtered short read derived SNPs from 39 HPRC-assembled individuals were phased, using either the GRCh38 or CHM13v2.0 non-HPRC reference haplotype panel. Switch error rates were measured by mendelian concordance with parental genomes derived from short read variant calls. b) SNPs present in the HPRC human pangenome were unphased, then statistically phased with either the GRCh38 or CHM13v2.0 non-HPRC reference haplotype panel. Switch error rates were measured using the pangenome haplotypes as ground truth. Switch error rates and average minor allele frequency per bin are displayed on a log scale.
 
 # %%
-# Paper cross-reference: Figure 5; manuscript lines 325-342.
-# Figure 5
+# Figure 4: out-of-panel phasing performance.
 fig, (axA, axB) = plt.subplots(1,2,figsize=(two_col,3), layout='tight')
 sns.lineplot(x='MAF',y='switch_error_rate', style='syntenic', hue='genome', hue_order = genome_order, style_order = syntenic_order,
              data=binned_maf_data.loc[(binned_maf_data.ground_truth_data_source == 'HPRC_samples')
@@ -2187,20 +2185,20 @@ for i, ax in enumerate([axA, axB]): # legend axes
 
 
 # clean_figure(fig)
-plt.savefig(f'{figdir}/Figure 5.svg', facecolor='white')
-plt.savefig(f'{figdir}/Figure 5.png', facecolor='white')
-plt.savefig(f'{figdir}/Figure 5.pdf', facecolor='white')
-plt.savefig(f'{figdir}/Figure 5.eps', facecolor='white')
+plt.savefig(f'{figdir}/Figure 4.svg', facecolor='white')
+plt.savefig(f'{figdir}/Figure 4.png', facecolor='white')
+plt.savefig(f'{figdir}/Figure 4.pdf', facecolor='white')
+plt.savefig(f'{figdir}/Figure 4.eps', facecolor='white')
 
 
 # %% [markdown]
-# ## Figure 6: CNV-prone loci and ideograms
+# ## Figure 5: CNV-prone loci and ideograms
 #
-# Generated outside this notebook by the Figure 6/ideogram R script. Existing outputs are in `figures/figure6/`.
+# Generated outside this notebook by the Figure 5/ideogram R script. Existing outputs are in `figures/figure5/`.
 #
 
 # %% [markdown]
-# ### Supplemental Figure 19
+# ### Extended Data Figure 5
 #
 # Genotype error rates of 1KGP variants located in segmental duplications (SDs) annotated in both GRCh38 and T2T-CHM13
 #
@@ -2359,20 +2357,20 @@ axD.text(-.25,0.5, 'Indels', fontsize=7, weight='bold', transform=axD.transAxes,
 
 
 clean_figure(fig, letter_fontsize=8) # 8 pt panel letters for the journal (this is Extended Data now)
-plt.savefig(f'{figdir}/supplemental/Supplemental_19_segmental_duplication_genotype_error_with_ratio.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental_19_segmental_duplication_genotype_error_with_ratio.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental_19_segmental_duplication_genotype_error_with_ratio.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental_19_segmental_duplication_genotype_error_with_ratio.pdf', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 5.png', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 5.svg', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 5.eps', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 5.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Supplemental Figure 20
+# ### Supplementary Figure 16
 #
 # UCSC Genome Browser information on mappability of a region near the Prader-Willi breakpoint 2 (roughly chr15:24100000-24600000) that is enriched for genetic variants in the GRCh38 phased genomic panel. a) Mappability, blacklist status, location of segmental duplications, and genic regions in GRCh38. b) Mappability, location of segmental duplications, “difficult region” status from GIAB, and genic regions in CHM13v2.0.
 #
 # ![image.png](attachment:image.png)
 
 # %% [markdown]
-# ### Supplemental Figure 21
+# ### Extended Data Figure 7b
 #
 # A violin plot displaying the distribution of overall per-sample r2 values when imputing GRCh38 SGDP variation, stratified by SGDP-defined sample continental groups.
 #
@@ -2380,7 +2378,7 @@ plt.savefig(f'{figdir}/supplemental/Supplemental_19_segmental_duplication_genoty
 #
 
 # %%
-# Figure 8 supplements
+# Extended Data Figure 7b component.
 fig, ax = plt.subplots(1,1,figsize=(two_col,3), layout='tight')
 plt.rcParams["figure.dpi"] = 300
 
@@ -2426,14 +2424,14 @@ add_letter_to_ax(ax, 'b', fontsize=8) # this is panel b of the ancestry Extended
 # sns.despine()
 
 
-plt.savefig(f'{figdir}/supplemental/Supplemental 21.png', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 21.svg', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 21.eps', facecolor='white')
-plt.savefig(f'{figdir}/supplemental/Supplemental 21.pdf', facecolor='white')
-supp21_fig = fig # the ancestry Extended Data figure needs this one again after Supplemental 22 is drawn
+plt.savefig(f'{figdir}/Extended Data Figure 7b.png', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 7b.svg', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 7b.eps', facecolor='white')
+plt.savefig(f'{figdir}/Extended Data Figure 7b.pdf', facecolor='white')
+ed7b_fig = fig # the ancestry Extended Data figure needs this one again after Extended Data Figure 7a is drawn
 
 # %% [markdown]
-# ## Figure 7: imputation from native and lifted reference panels
+# ## Figure 6: imputation from native and lifted reference panels
 #
 # Imputation of genomic variation in 256 non-1KGP Human Genome Diversity Project (HGDP) samples, using 1KGP haplotype panels as references.
 #
@@ -2482,14 +2480,14 @@ ax1_labels = [labels[0]] + ['GRCh38\n(lifted to T2T-CHM13)', 'T2T-CHM13'] + labe
 axes[0].legend(handles=handles, labels=ax0_labels)
 axes[1].legend(handles=handles, labels=ax1_labels)
 
-plt.savefig(f'{figdir}/Figure 7.png', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{figdir}/Figure 7.svg', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{figdir}/Figure 7.eps', facecolor='white', bbox_inches='tight')
-plt.savefig(f'{figdir}/Figure 7.pdf', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{figdir}/Figure 6.png', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{figdir}/Figure 6.svg', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{figdir}/Figure 6.eps', facecolor='white', bbox_inches='tight')
+plt.savefig(f'{figdir}/Figure 6.pdf', facecolor='white', bbox_inches='tight')
 
 
 # %% [markdown]
-# ### Supplemental Figure 22
+# ### Extended Data Figure 7a
 #
 # Imputation of 256 non-1KGP HGDP GRCh38 genetic variation using 1KGP haplotype panels as references, stratified by SGDP population of origin.
 #
@@ -2535,37 +2533,37 @@ sns.move_legend(
     bbox_to_anchor=(axes_middle, key_y), ncol=6, title=None, frameon=True
 )
 
-fig.savefig(f'{figdir}/supplemental/Supplemental 22.svg', facecolor='white',bbox_inches='tight')
-fig.savefig(f'{figdir}/supplemental/Supplemental 22.png', facecolor='white',bbox_inches='tight')
-fig.savefig(f'{figdir}/supplemental/Supplemental 22.eps', facecolor='white',bbox_inches='tight')
-fig.savefig(f'{figdir}/supplemental/Supplemental 22.pdf', facecolor='white',bbox_inches='tight')
+fig.savefig(f'{figdir}/Extended Data Figure 7a.svg', facecolor='white',bbox_inches='tight')
+fig.savefig(f'{figdir}/Extended Data Figure 7a.png', facecolor='white',bbox_inches='tight')
+fig.savefig(f'{figdir}/Extended Data Figure 7a.eps', facecolor='white',bbox_inches='tight')
+fig.savefig(f'{figdir}/Extended Data Figure 7a.pdf', facecolor='white',bbox_inches='tight')
 
 # %% [markdown]
-# ### Extended Data: ancestry imputation (Supplemental 22 over 21)
+# ### Extended Data Figure 7: ancestry imputation
 #
-# Supplemental 22 (a) stacked on top of Supplemental 21 (b) on one 180 mm page, both at full size with their y axes lined up. Needs the Supplemental 21 and Supplemental 22 cells to have run first.
+# Extended Data Figure 7a (a) stacked on top of Extended Data Figure 7b (b) on one 180 mm page, both at full size with their y axes lined up. Needs the Extended Data Figure 7b and Extended Data Figure 7a cells to have run first.
 
 # %%
 import subprocess
 
-supp22_fig = fig.figure # fig is the Supplemental 22 FacetGrid from the cell above
-page_width = supp21_fig.get_size_inches()[0]*72 # in points
-tight22 = supp22_fig.get_tightbbox(supp22_fig.canvas.get_renderer())
-pad = plt.rcParams['savefig.pad_inches']*72 # bbox_inches='tight' puts this much white space around the saved Supplemental 22
+ed7a_fig = fig.figure # fig is the Extended Data Figure 7a FacetGrid from the cell above
+page_width = ed7b_fig.get_size_inches()[0]*72 # in points
+tight22 = ed7a_fig.get_tightbbox(ed7a_fig.canvas.get_renderer())
+pad = plt.rcParams['savefig.pad_inches']*72 # bbox_inches='tight' puts this much white space around the saved Extended Data Figure 7a
 
 # line up the y axes of a and b, but don't let a hang off the page
-x22 = axis_left_points(supp21_fig, supp21_fig.axes[0]) - axis_left_points(supp22_fig, fig.axes[0], tight22.x0)
+x22 = axis_left_points(ed7b_fig, ed7b_fig.axes[0]) - axis_left_points(ed7a_fig, fig.axes[0], tight22.x0)
 x22 = min(max(x22, 0), page_width - tight22.width*72)
 
-stack_figure_panels([dict(pdf=f'{figdir}/supplemental/Supplemental 22.pdf', svg=f'{figdir}/supplemental/Supplemental 22.svg',
+stack_figure_panels([dict(pdf=f'{figdir}/Extended Data Figure 7a.pdf', svg=f'{figdir}/Extended Data Figure 7a.svg',
                           clip=(pad, pad, tight22.width*72, tight22.height*72), x=x22),
-                     dict(pdf=f'{figdir}/supplemental/Supplemental 21.pdf', svg=f'{figdir}/supplemental/Supplemental 21.svg',
-                          clip=(0, 0, page_width, supp21_fig.get_size_inches()[1]*72), x=0)],
-                    page_width, f'{figdir}/Extended Data - ancestry imputation.pdf', f'{figdir}/Extended Data - ancestry imputation.svg', gap=2) # was 8: less space between a and b
-subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Extended Data - ancestry imputation.pdf', f'{figdir}/Extended Data - ancestry imputation'])
+                     dict(pdf=f'{figdir}/Extended Data Figure 7b.pdf', svg=f'{figdir}/Extended Data Figure 7b.svg',
+                          clip=(0, 0, page_width, ed7b_fig.get_size_inches()[1]*72), x=0)],
+                    page_width, f'{figdir}/Extended Data Figure 7.pdf', f'{figdir}/Extended Data Figure 7.svg', gap=2) # was 8: less space between a and b
+subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Extended Data Figure 7.pdf', f'{figdir}/Extended Data Figure 7'])
 
 # %% [markdown]
-# ### Supplemental Figure 23
+# ### Extended Data Figure 8
 #
 # Impact of including singleton variants in reference panels on imputation accuracy.
 #
@@ -2632,13 +2630,13 @@ axins.set_ylabel('')
 mark_inset(ax1, axins, loc1=2, loc2=1, fc="none", ec="0.5", linestyle='--')
 
 # no bbox_inches='tight' - its padding made the page 183 mm wide, over the journal's 180. constrained layout keeps everything on the page anyway
-fig.savefig(f'{figdir}/supplemental/Supplemental 23.svg', facecolor='white')
-fig.savefig(f'{figdir}/supplemental/Supplemental 23.png', facecolor='white')
-fig.savefig(f'{figdir}/supplemental/Supplemental 23.eps', facecolor='white')
-fig.savefig(f'{figdir}/supplemental/Supplemental 23.pdf', facecolor='white')
+fig.savefig(f'{figdir}/Extended Data Figure 8.svg', facecolor='white')
+fig.savefig(f'{figdir}/Extended Data Figure 8.png', facecolor='white')
+fig.savefig(f'{figdir}/Extended Data Figure 8.eps', facecolor='white')
+fig.savefig(f'{figdir}/Extended Data Figure 8.pdf', facecolor='white')
 
 # %% [markdown]
-# ### Supplemental Figure 24
+# ### Supplementary Figure 17
 #
 # Improved liftover algorithm results in better imputation of common indel variants.
 #
@@ -2755,7 +2753,7 @@ supp24_source_summary = (
     .reset_index()
 )
 supp24_source_summary.to_csv(
-    f'{figdir}/supplemental/Supplemental_24_source_summary.csv', index=False
+    f'{figdir}/supplemental/Supplementary Figure 17_source_summary.csv', index=False
 )
 
 
@@ -2779,13 +2777,13 @@ ax2.set_ylim(0.92, 1.0)
 clean_figure(fig)
 sns.move_legend(ax1, "lower left", frameon=True)
 sns.move_legend(ax2, "lower right", frameon=True)
-plt.savefig(f'{figdir}/supplemental/Supplemental_24.png', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_24.pdf', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_24.svg', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 17.png', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 17.pdf', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/supplemental/Supplementary Figure 17.svg', facecolor='white', dpi=300)
 
 
 # %% [markdown]
-# ### Supplemental Figure 25
+# ### Extended Data Figure 6ab
 # Distribution of r2 values of imputed common indels (>10% MAF) when imputed using a reference panel lifted to GRCh38 coordinates with bcftools +liftover or LiftoverIndel.
 # Each hexagonal bin represents the density of variants with a given pair of imputation r2 values (log-scaled color bar). Only bins with 3 or more variants are shown. The dashed diagonal denotes equality between methods. Points above the diagonal indicate higher imputation accuracy with LiftoverIndel. Inset: For each variant, we calculated the difference in imputed r2 value when using LiftoverIndel or Bcftools +liftover. Higher values indicate more accurate imputation when using a LiftoverIndel panel. The distribution of values for variants with an absolute difference over 0.05 are shown.
 #
@@ -2793,23 +2791,23 @@ plt.savefig(f'{figdir}/supplemental/Supplemental_24.svg', facecolor='white', dpi
 
 # %%
 # Report common indels with MAF > 1%; do not downsample so the SVG preserves all plotted points.
-s25_maf_threshold = 0.01
-s25_methods = ['liftover_plugin', 'LiftoverIndel']
+ed6ab_maf_threshold = 0.01
+ed6ab_methods = ['liftover_plugin', 'LiftoverIndel']
 
-s25_plot_data = comparative_indel_r2.loc[
+ed6ab_plot_data = comparative_indel_r2.loc[
     (comparative_indel_r2.genome == 'GRCh38') &
-    (comparative_indel_r2.maf > s25_maf_threshold) &
-    (comparative_indel_r2.liftover_method.isin(s25_methods))
+    (comparative_indel_r2.maf > ed6ab_maf_threshold) &
+    (comparative_indel_r2.liftover_method.isin(ed6ab_methods))
 ].copy()
-s25_plot_counts = s25_plot_data.groupby('liftover_method').size().to_dict()
-print(f"Supplemental Figure 25 plotted variants after MAF > {s25_maf_threshold:.0%}: {len(s25_plot_data):,}")
+ed6ab_plot_counts = ed6ab_plot_data.groupby('liftover_method').size().to_dict()
+print(f"Extended Data Figure 6ab plotted variants after MAF > {ed6ab_maf_threshold:.0%}: {len(ed6ab_plot_data):,}")
 
-fig, axes = plt.subplots(2, 1, figsize=(two_col*0.36, two_col*0.72), layout='tight') # a over b, beside c in Extended Data 6 (were side by side, two_col by two_col/2)
+fig, axes = plt.subplots(2, 1, figsize=(two_col*0.36, two_col*0.72), layout='tight') # a over b, beside c in Extended Data Figure 6
 sns.scatterplot(
     x='ds_r2_native',
     y='ds_r2_lifted',
     hue='maf',
-    data=s25_plot_data.loc[s25_plot_data.liftover_method == 'liftover_plugin'],
+    data=ed6ab_plot_data.loc[ed6ab_plot_data.liftover_method == 'liftover_plugin'],
     alpha=0.01,
     linewidth=0,
     s=2,
@@ -2822,7 +2820,7 @@ sns.scatterplot(
     x='ds_r2_native',
     y='ds_r2_lifted',
     hue='maf',
-    data=s25_plot_data.loc[s25_plot_data.liftover_method == 'LiftoverIndel'],
+    data=ed6ab_plot_data.loc[ed6ab_plot_data.liftover_method == 'LiftoverIndel'],
     alpha=0.01,
     linewidth=0,
     s=2,
@@ -2844,20 +2842,20 @@ for h in leg.legend_handles:
 
 axes[0].set_title(
     f"Liftover via bcftools +liftover\n"
-    f"n={s25_plot_counts.get('liftover_plugin', 0):,}"
+    f"n={ed6ab_plot_counts.get('liftover_plugin', 0):,}"
 )
 axes[1].set_title(
     f"Liftover via LiftoverIndel\n"
-    f"n={s25_plot_counts.get('LiftoverIndel', 0):,}" # was .get('liftoverindel') - wrong case, so the title said n=0
+    f"n={ed6ab_plot_counts.get('LiftoverIndel', 0):,}" # was .get('liftoverindel') - wrong case, so the title said n=0
 )
 clean_figure(fig, letter_fontsize=8) # 8 pt panel letters for the journal (this is Extended Data now)
-plt.savefig(f'{figdir}/supplemental/Supplemental_25_liftoverindel_common_indel_scatter.png', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_25_liftoverindel_common_indel_scatter.pdf', facecolor='white', dpi=300)
-plt.savefig(f'{figdir}/supplemental/Supplemental_25_liftoverindel_common_indel_scatter.svg', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 6ab.png', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 6ab.pdf', facecolor='white', dpi=300)
+plt.savefig(f'{figdir}/Extended Data Figure 6ab.svg', facecolor='white', dpi=300)
 
 
 # %% [markdown]
-# ### Supplemental Figure 26
+# ### Extended Data Figure 6c
 #
 # Distribution of r2 values of imputed common indels (>10% MAF) when imputed using a reference panel lifted to GRCh38 coordinates with bcftools +liftover or LiftoverIndel.
 #
@@ -2891,7 +2889,7 @@ sns.set_theme(context="paper", style="white",
                   "font.size": 6, "axes.labelsize": 6, "axes.titlesize": 7, "xtick.labelsize": 6, "ytick.labelsize": 6,
                   "legend.fontsize": 6, "legend.title_fontsize": 6})
 
-fig, ax = plt.subplots(figsize=(two_col*0.62,two_col*0.72), layout='tight') # c beside a and b (stacked) in Extended Data 6, about twice their height (was two_col*0.62 by two_col*0.52 under them; two_col by two_col as Supplemental 26)
+fig, ax = plt.subplots(figsize=(two_col*0.62,two_col*0.72), layout='tight') # c beside a and b in Extended Data Figure 6
 
 # Background density (cleaner than 800k-point scatter)
 hb = ax.hexbin(
@@ -2934,17 +2932,17 @@ axins.set_xlabel("Δ = r²(LI) − r²(plugin)")
 
 
 sns.despine(ax=axins)
-add_letter_to_ax(ax, 'c', fontsize=8) # panel c of the LiftoverIndel Extended Data figure, under Supplemental 25's a and b
+add_letter_to_ax(ax, 'c', fontsize=8) # panel c of Extended Data Figure 6, under Extended Data Figure 6ab's a and b
 
-fig.savefig(f'{figdir}/supplemental/Supplemental_26_liftoverindel_common_indel_hexbin.pdf', bbox_inches="tight")
-fig.savefig(f'{figdir}/supplemental/Supplemental_26_liftoverindel_common_indel_hexbin.png', bbox_inches="tight")
-fig.savefig(f'{figdir}/supplemental/Supplemental_26_liftoverindel_common_indel_hexbin.svg', bbox_inches="tight")
+fig.savefig(f'{figdir}/Extended Data Figure 6c.pdf', bbox_inches="tight")
+fig.savefig(f'{figdir}/Extended Data Figure 6c.png', bbox_inches="tight")
+fig.savefig(f'{figdir}/Extended Data Figure 6c.svg', bbox_inches="tight")
 
 
 # %% [markdown]
-# ### Extended Data: LiftoverIndel (Supplemental 25 beside Supplemental 26)
+# ### Extended Data Figure 6: LiftoverIndel (Extended Data Figure 6ab beside Extended Data Figure 6c)
 #
-# Supplemental 25 (a over b) on the left of Supplemental 26 (c), with the letters a and c level, the pair centred on one 180 mm page. Needs the Supplemental 25 and Supplemental 26 cells to have run first.
+# Extended Data Figure 6ab (a over b) is left of Extended Data Figure 6c (c); both source cells must run first.
 
 # %%
 import re
@@ -2952,16 +2950,16 @@ import subprocess
 import fitz
 
 page_width = two_col*72 # in points
-pad = plt.rcParams['savefig.pad_inches']*72 # bbox_inches='tight' puts this much white space around the saved Supplemental 26
-supp25 = f'{figdir}/supplemental/Supplemental_25_liftoverindel_common_indel_scatter'
-supp26 = f'{figdir}/supplemental/Supplemental_26_liftoverindel_common_indel_hexbin'
-with fitz.open(f'{supp25}.pdf') as supp25_pdf:
-    w25, h25 = supp25_pdf[0].rect.width, supp25_pdf[0].rect.height # saved without bbox_inches='tight', so the whole page
-    top_a = min(s['bbox'][1] for b in supp25_pdf[0].get_text('dict')['blocks'] for l in b.get('lines', []) for s in l['spans'] if s['text'] == 'a')
-with fitz.open(f'{supp26}.pdf') as supp26_pdf:
-    pdf_size = supp26_pdf[0].rect.width, supp26_pdf[0].rect.height
-    top_c = min(s['bbox'][1] for b in supp26_pdf[0].get_text('dict')['blocks'] for l in b.get('lines', []) for s in l['spans'] if s['text'] == 'c') - pad
-svg_size = [float(v) for v in re.search(r'<svg[^>]*width="([\d.]+)pt" height="([\d.]+)pt"', open(f'{supp26}.svg').read()).groups()]
+pad = plt.rcParams['savefig.pad_inches']*72 # bbox_inches='tight' puts this much white space around Extended Data Figure 6c
+ed6ab = f'{figdir}/Extended Data Figure 6ab'
+ed6c = f'{figdir}/Extended Data Figure 6c'
+with fitz.open(f'{ed6ab}.pdf') as ed6ab_pdf:
+    w25, h25 = ed6ab_pdf[0].rect.width, ed6ab_pdf[0].rect.height # saved without bbox_inches='tight', so the whole page
+    top_a = min(s['bbox'][1] for b in ed6ab_pdf[0].get_text('dict')['blocks'] for l in b.get('lines', []) for s in l['spans'] if s['text'] == 'a')
+with fitz.open(f'{ed6c}.pdf') as ed6c_pdf:
+    pdf_size = ed6c_pdf[0].rect.width, ed6c_pdf[0].rect.height
+    top_c = min(s['bbox'][1] for b in ed6c_pdf[0].get_text('dict')['blocks'] for l in b.get('lines', []) for s in l['spans'] if s['text'] == 'c') - pad
+svg_size = [float(v) for v in re.search(r'<svg[^>]*width="([\d.]+)pt" height="([\d.]+)pt"', open(f'{ed6c}.svg').read()).groups()]
 # each save trims to the figure's tight box at that moment, and this figure's layout shifts a few points with every redraw,
 # so the saved pdf and svg boxes differ - and get_tightbbox read off the figure here matched neither (it cut off the x label's descenders). Use the larger saved box
 w26, h26 = max(pdf_size[0], svg_size[0]) - 2*pad, max(pdf_size[1], svg_size[1]) - 2*pad
@@ -2970,10 +2968,10 @@ x25 = (page_width - (w25 + gap + w26))/2 # a/b and c together, centred on the pa
 assert x25 >= 0, f'a/b and c are {(w25 + gap + w26)/72*25.4:.1f} mm wide together, more than the page'
 y26 = max(top_a - top_c, 0) # letters a and c level: c has no titles over its axes, so with the tops level its letter sat 10 pt above a's
 
-stack_figure_panels([dict(pdf=f'{supp25}.pdf', svg=f'{supp25}.svg', clip=(0, 0, w25, h25), x=x25, y=0),
-                     dict(pdf=f'{supp26}.pdf', svg=f'{supp26}.svg', clip=(pad, pad, w26, h26), x=x25 + w25 + gap, y=y26)],
-                    page_width, f'{figdir}/Extended Data - LiftoverIndel.pdf', f'{figdir}/Extended Data - LiftoverIndel.svg')
-subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Extended Data - LiftoverIndel.pdf', f'{figdir}/Extended Data - LiftoverIndel'])
+stack_figure_panels([dict(pdf=f'{ed6ab}.pdf', svg=f'{ed6ab}.svg', clip=(0, 0, w25, h25), x=x25, y=0),
+                     dict(pdf=f'{ed6c}.pdf', svg=f'{ed6c}.svg', clip=(pad, pad, w26, h26), x=x25 + w25 + gap, y=y26)],
+                    page_width, f'{figdir}/Extended Data Figure 6.pdf', f'{figdir}/Extended Data Figure 6.svg')
+subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', f'{figdir}/Extended Data Figure 6.pdf', f'{figdir}/Extended Data Figure 6'])
 
 
 # %% [markdown]

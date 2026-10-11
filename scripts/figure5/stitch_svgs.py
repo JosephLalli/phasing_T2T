@@ -6,10 +6,10 @@ Single-pair mode:
     python stitch_svgs.py top.svg bottom.svg output.svg [--spacing -8] [--pdf]
 
 Batch mode (pairs grch38_*.svg with t2t_*.svg by matching suffix):
-    python stitch_svgs.py --batch figures/figure6/ [--spacing -8] [--pdf]
+    python stitch_svgs.py --batch figures/figure5/ [--spacing -8] [--pdf]
 
 Figure 5 block mode (build the pre-colorbar chr15 + chr22 regional block):
-    python stitch_svgs.py --grid figures/figure6/ [--pdf]
+    python stitch_svgs.py --grid figures/figure5/ [--pdf]
 """
 
 import argparse
@@ -53,9 +53,9 @@ PANEL_TAG_METRICS_FAMILY = "Arial:style=Bold"
 PANEL_TAG_LOCAL_X = -0.68 - (10.0 * (72.0 / 96.0))
 # Tag positions are stored in the figure's pt-like user units.
 PANEL_TAG_LOCAL_Y = -1.621719 + (10.0 * (72.0 / 96.0))
-FIGURE6_BLOCK_LEFT_PAD = 12.0
+FIGURE5_BLOCK_LEFT_PAD = 12.0
 GRID_BOTTOM_PADDING = 10.72
-FIGURE6_BOTTOM_PADDING = 0.9
+FIGURE5_BOTTOM_PADDING = 0.9
 BASE_COLORBAR_Y = 254.18
 GENOME_STYLES = {
     "grch38": ("GRCh38", "#8499B1"),
@@ -84,11 +84,11 @@ GRID_TITLE_SPECS = [
         "lines": ["22q11.2", "distal deletion", "syndrome"],
     },
 ]
-FIGURE6_LAYOUT = {
+FIGURE5_LAYOUT = {
     "width": 495.0 + GRID_LEFT_PAD,
 }
-FIGURE6_PNG_DPI = 300
-FIGURE6_EXTRA_PNG_DPIS = (600,)
+FIGURE5_PNG_DPI = 300
+FIGURE5_EXTRA_PNG_DPIS = (600,)
 
 
 def _float_attr(element, attr):
@@ -346,7 +346,7 @@ def _title_band_height(specs):
     )
 
 
-def _figure6_title_specs_from_grid(grid_root):
+def _figure5_title_specs_from_grid(grid_root):
     chr15_block = _find_svg_by_id_suffix(grid_root, "chr15-block")
     chr22_block = _find_svg_by_id_suffix(grid_root, "chr22-block")
 
@@ -378,7 +378,7 @@ def _figure6_title_specs_from_grid(grid_root):
     ]
 
 
-def _figure6_panel_tag_specs_from_grid(grid_root):
+def _figure5_panel_tag_specs_from_grid(grid_root):
     chr15_block = _find_svg_by_id_suffix(grid_root, "chr15-block")
     chr22_block = _find_svg_by_id_suffix(grid_root, "chr22-block")
 
@@ -394,7 +394,7 @@ def _figure6_panel_tag_specs_from_grid(grid_root):
     return specs
 
 
-def _figure6_colorbar_x(grid_root, colorbar_root):
+def _figure5_colorbar_x(grid_root, colorbar_root):
     chr15_block = _find_svg_by_id_suffix(grid_root, "chr15-block")
     chr22_block = _find_svg_by_id_suffix(grid_root, "chr22-block")
     left_panel_center = _svg_local_x_to_parent_x(chr15_block, 108.0)
@@ -514,7 +514,7 @@ def _extract_cnv_centers(root, expected_count):
     return [((start + end) / 2.0) for start, end in selected]
 
 
-def _normalize_figure6_panel(root):
+def _normalize_figure5_panel(root):
     """Fix legacy short-panel SVG base-number text that lands just below the canvas."""
     panel_height = _float_attr(root, "height")
     for text in root.findall(f".//{{{SVG_NS}}}text"):
@@ -530,7 +530,7 @@ def _normalize_figure6_panel(root):
             text.set("y", "115.52")
 
 
-def _normalize_figure6_block(root):
+def _normalize_figure5_block(root):
     """Normalize text that falls just below the block canvas after export."""
     block_height = _float_attr(root, "height")
     for text in root.findall(f".//{{{SVG_NS}}}text"):
@@ -606,14 +606,14 @@ def stitch(top_svg: Path, bottom_svg: Path, out_svg: Path, spacing=None):
     return out_svg
 
 
-def make_figure6_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
+def make_figure5_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
     """Stack short Figure 5 source panels into one canonical region block."""
 
     grch38_root = etree.parse(str(grch38_svg)).getroot()
     t2t_root = etree.parse(str(t2t_svg)).getroot()
 
-    _normalize_figure6_panel(grch38_root)
-    _normalize_figure6_panel(t2t_root)
+    _normalize_figure5_panel(grch38_root)
+    _normalize_figure5_panel(t2t_root)
     _prefix_ids(grch38_root, "grch38")
     _prefix_ids(t2t_root, "t2t")
 
@@ -636,8 +636,8 @@ def make_figure6_region_block(grch38_svg: Path, t2t_svg: Path, out_svg: Path):
             f"{source_viewbox[0]} {source_viewbox[1]} {source_viewbox[2]} {combined_height}",
         )
     background = root.find(f"{{{SVG_NS}}}rect")
-    if background is not None and FIGURE6_BLOCK_LEFT_PAD:
-        background.set("x", f"{-FIGURE6_BLOCK_LEFT_PAD}")
+    if background is not None and FIGURE5_BLOCK_LEFT_PAD:
+        background.set("x", f"{-FIGURE5_BLOCK_LEFT_PAD}")
         background.set("width", f"{width}")
     _merge_defs(root, (grch38_root, t2t_root))
 
@@ -734,7 +734,7 @@ def make_chr15_chr22_grid(chr15_block_svg: Path, chr22_block_svg: Path, out_svg:
     return out_svg
 
 
-def assemble_figure6(grid_svg: Path, colorbar_svg: Path, out_svg: Path):
+def assemble_figure5(grid_svg: Path, colorbar_svg: Path, out_svg: Path):
     """Assemble the final Figure 5 SVG from the chr15/chr22 grid and colorbar."""
 
     grid_root = etree.parse(str(grid_svg)).getroot()
@@ -743,29 +743,29 @@ def assemble_figure6(grid_svg: Path, colorbar_svg: Path, out_svg: Path):
     _prefix_ids(grid_root, "grid")
     _prefix_ids(colorbar_root, "colorbar")
 
-    title_specs = _figure6_title_specs_from_grid(grid_root)
-    panel_tag_specs = _figure6_panel_tag_specs_from_grid(grid_root)
-    colorbar_x = _figure6_colorbar_x(grid_root, colorbar_root)
+    title_specs = _figure5_title_specs_from_grid(grid_root)
+    panel_tag_specs = _figure5_panel_tag_specs_from_grid(grid_root)
+    colorbar_x = _figure5_colorbar_x(grid_root, colorbar_root)
     content_height = max(
         _float_attr(grid_root, "height"),
-        BASE_COLORBAR_Y + _float_attr(colorbar_root, "height") + FIGURE6_BOTTOM_PADDING,
+        BASE_COLORBAR_Y + _float_attr(colorbar_root, "height") + FIGURE5_BOTTOM_PADDING,
     )
 
     root = _new_svg_root(
-        FIGURE6_LAYOUT["width"],
+        FIGURE5_LAYOUT["width"],
         content_height,
         _nsmap_for_root(grid_root, colorbar_root),
     )
     _merge_defs(root, (grid_root, colorbar_root))
 
-    grid_group = etree.SubElement(root, f"{{{SVG_NS}}}g", attrib={"id": "figure6-grid"})
+    grid_group = etree.SubElement(root, f"{{{SVG_NS}}}g", attrib={"id": "figure5-grid"})
     _append_svg_children(grid_group, grid_root)
 
     colorbar_group = etree.SubElement(
         root,
         f"{{{SVG_NS}}}g",
         attrib={
-            "id": "figure6-colorbar",
+            "id": "figure5-colorbar",
             "transform": f"translate({colorbar_x},{BASE_COLORBAR_Y})",
         },
     )
@@ -819,7 +819,7 @@ def to_pdf(svg_path: Path):
         )
 
 
-def to_png(svg_path: Path, png_path: Path, dpi: int = FIGURE6_PNG_DPI):
+def to_png(svg_path: Path, png_path: Path, dpi: int = FIGURE5_PNG_DPI):
     """Convert an SVG to a PNG with explicit DPI metadata."""
     tmp_path = None
     try:
@@ -895,10 +895,10 @@ def run_batch(directory: Path, spacing: float, pdf: bool):
 
 def run_grid(directory: Path, spacing: float, pdf: bool):
     source_paths = {
-        "grch38_chr15": directory / "figure6_grch38_chr15_anglemans.svg",
-        "t2t_chr15": directory / "figure6_t2t_chr15_anglemans.svg",
-        "grch38_chr22": directory / "figure6_grch38_chr22_22q11.svg",
-        "t2t_chr22": directory / "figure6_t2t_chr22_22q11.svg",
+        "grch38_chr15": directory / "figure5_grch38_chr15_anglemans.svg",
+        "t2t_chr15": directory / "figure5_t2t_chr15_anglemans.svg",
+        "grch38_chr22": directory / "figure5_grch38_chr22_22q11.svg",
+        "t2t_chr22": directory / "figure5_t2t_chr22_22q11.svg",
     }
     missing = [path.name for path in source_paths.values() if not path.exists()]
     if missing:
@@ -908,25 +908,25 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
         )
         sys.exit(1)
 
-    chr15_block = directory / "figure6_block_chr15_anglemans.svg"
+    chr15_block = directory / "figure5_block_chr15_anglemans.svg"
     print(
         "Overlaying "
         f"{source_paths['grch38_chr15'].name} + {source_paths['t2t_chr15'].name} "
         f"-> {chr15_block.name}"
     )
-    make_figure6_region_block(
+    make_figure5_region_block(
         source_paths["grch38_chr15"],
         source_paths["t2t_chr15"],
         chr15_block,
     )
 
-    chr22_block = directory / "figure6_block_chr22_22q11.svg"
+    chr22_block = directory / "figure5_block_chr22_22q11.svg"
     print(
         "Overlaying "
         f"{source_paths['grch38_chr22'].name} + {source_paths['t2t_chr22'].name} "
         f"-> {chr22_block.name}"
     )
-    make_figure6_region_block(
+    make_figure5_region_block(
         source_paths["grch38_chr22"],
         source_paths["t2t_chr22"],
         chr22_block,
@@ -939,23 +939,23 @@ def run_grid(directory: Path, spacing: float, pdf: bool):
     colorbar_svg = directory / "colorbar.svg"
     pdf_source = out_svg
     if colorbar_svg.exists():
-        figure6_svg = directory / "figure6.svg"
-        print(f"Assembling {out_svg.name} + {colorbar_svg.name} -> {figure6_svg.name}")
-        assemble_figure6(out_svg, colorbar_svg, figure6_svg)
-        pdf_source = figure6_svg
+        figure5_svg = directory / "figure5.svg"
+        print(f"Assembling {out_svg.name} + {colorbar_svg.name} -> {figure5_svg.name}")
+        assemble_figure5(out_svg, colorbar_svg, figure5_svg)
+        pdf_source = figure5_svg
 
-        figure6_png = directory / "figure6.png"
-        print(f"Rasterizing {figure6_svg.name} -> {figure6_png.name} ({FIGURE6_PNG_DPI} dpi)")
-        to_png(figure6_svg, figure6_png, dpi=FIGURE6_PNG_DPI)
+        figure5_png = directory / "figure5.png"
+        print(f"Rasterizing {figure5_svg.name} -> {figure5_png.name} ({FIGURE5_PNG_DPI} dpi)")
+        to_png(figure5_svg, figure5_png, dpi=FIGURE5_PNG_DPI)
 
-        figure6_300dpi_png = directory / f"figure6_{FIGURE6_PNG_DPI}dpi.png"
-        shutil.copy2(figure6_png, figure6_300dpi_png)
-        print(f"  PNG:     {figure6_300dpi_png} ({FIGURE6_PNG_DPI} dpi)")
+        figure5_300dpi_png = directory / f"figure5_{FIGURE5_PNG_DPI}dpi.png"
+        shutil.copy2(figure5_png, figure5_300dpi_png)
+        print(f"  PNG:     {figure5_300dpi_png} ({FIGURE5_PNG_DPI} dpi)")
 
-        for dpi in FIGURE6_EXTRA_PNG_DPIS:
-            dpi_png = directory / f"figure6_{dpi}dpi.png"
-            print(f"Rasterizing {figure6_svg.name} -> {dpi_png.name} ({dpi} dpi)")
-            to_png(figure6_svg, dpi_png, dpi=dpi)
+        for dpi in FIGURE5_EXTRA_PNG_DPIS:
+            dpi_png = directory / f"figure5_{dpi}dpi.png"
+            print(f"Rasterizing {figure5_svg.name} -> {dpi_png.name} ({dpi} dpi)")
+            to_png(figure5_svg, dpi_png, dpi=dpi)
 
     if pdf:
         to_pdf(pdf_source)

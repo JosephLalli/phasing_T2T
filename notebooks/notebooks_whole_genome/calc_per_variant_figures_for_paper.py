@@ -478,11 +478,11 @@ print()
 print(f'Manual inspection of pangenome-discordant indels showed that they were frequently '
       f'found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed '
       f'with genome-wide analysis (GRCh38: {grch38_multiallelic_indel_disc:.2f}%, T2T-CHM13: '
-      f'{chm13_multiallelic_indel_disc:.2f}% indel discordance within STRs, Supplemental Figure 13).')
+      f'{chm13_multiallelic_indel_disc:.2f}% indel discordance within STRs, Extended Data Figure 1).')
 print()
 print(f'In contrast, isolated indels that did not overlap with other variant classes in the '
       f'panel showed substantially lower discordance rates (GRCh38: {grch38_isolated_indel_disc:.2f}%, '
-      f'T2T-CHM13: {chm13_isolated_indel_disc:.2f}%, Supplemental Figure 14).')
+      f'T2T-CHM13: {chm13_isolated_indel_disc:.2f}%, Supplementary Figure 13).')
 print()
 
 # ---- Singleton SER ----
@@ -648,7 +648,7 @@ rows.append({
         f'Manual inspection of pangenome-discordant indels showed that they were frequently '
         f'found within multiallelic short tandem repeats (STRs) -- a trend that we confirmed '
         f'with genome-wide analysis (GRCh38: {grch38_str_indel_disc:.2f}%, T2T-CHM13: '
-        f'{chm13_str_indel_disc:.2f}% indel discordance within STRs, Supplemental Figure 11).'
+        f'{chm13_str_indel_disc:.2f}% indel discordance within STRs, Extended Data Figure 1).'
     ),
     'Paper_Location': 'Results: STR stratification; manuscript lines 222-229',
     'Source_Notebook': 'calc_per_variant_figures_for_paper.ipynb',
@@ -665,7 +665,7 @@ rows.append({
     'Paper_Text': (
         f'In contrast, isolated indels that did not overlap with other variant classes in the '
         f'panel showed substantially lower discordance rates (GRCh38: {grch38_isolated_indel_disc:.2f}%, '
-        f'T2T-CHM13: {chm13_isolated_indel_disc:.2f}%, Supplemental Figure 12).'
+        f'T2T-CHM13: {chm13_isolated_indel_disc:.2f}%, Supplementary Figure 13).'
     ),
     'Paper_Location': 'Results: isolated variant stratification; manuscript lines 222-229',
     'Source_Notebook': 'calc_per_variant_figures_for_paper.ipynb',
