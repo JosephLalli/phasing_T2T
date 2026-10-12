@@ -16,13 +16,13 @@ The HTML files in `notebooks_whole_genome/` can also be opened locally. They sho
 
 The notebooks in this directory use the test-region data. `notebooks_whole_genome/` contains the whole-genome notebooks and figure code.
 
-To produce figures from the supplied whole-genome inputs, run this from the host repository root:
+To produce figures from the supplied whole-genome inputs, run this from the repository root on your host machine:
 
 ```bash
 bash scripts/run_make_plots.sh
 ```
 
-The runner checks the 188 supplied inputs and executes only `notebooks_whole_genome/make_plots.ipynb` in Docker. Generate Figure 5 separately with `scripts/figure5/Figure_5_script.R`, then combine its panels with `scripts/figure5/stitch_svgs.py`.
+The runner starts Docker itself; do not run it inside a container. It checks the 188 supplied inputs and executes only `notebooks_whole_genome/make_plots.ipynb` in Docker. Generate Figure 5 separately with `scripts/figure5/Figure_5_script.R`, then combine its panels with `scripts/figure5/stitch_svgs.py`.
 
 See the [main README](../README.md#produce-figures-from-summary-statistics) for input files, Docker settings, and figure filenames.
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Download large external resources required by the phasing pipeline.
-# Run from the repository root:  bash scripts/utility/download_resources.sh [OPTIONS]
+# Download and prepare external resources required by the phasing pipeline.
+# Uses bcftools, samtools, bgzip, and zstd; see the README for the Docker command.
+# Usage: bash scripts/utility/download_resources.sh [OPTIONS]
 #
 # Files that already exist are skipped (wget -nc).  Re-run safely at any time.
 #
@@ -529,10 +530,15 @@ print_summary() {
     echo "  ls -lh resources/SGDP_variation/t2t/*.vcf.gz | head -3"
     echo ""
     echo "Next steps:"
-    echo "  Run the pipeline: ./scripts/create_and_assess_haplotype_panels.sh chr22_test 12 my_suffix CHM13v2.0"
+    echo "  Run the pipeline from the repository root on your host machine:"
+    if [[ "${TEST_MODE}" == true ]]; then
+        echo "  bash run_pipeline.sh chr22_test 12 my_suffix CHM13v2.0"
+    else
+        echo "  bash run_pipeline.sh chr22 12 my_suffix CHM13v2.0"
+    fi
     echo ""
     echo "For a quick test with minimal downloads:"
-    echo "  bash scripts/utility/download_resources.sh --test"
+    echo "  Use --test with the command in the README to download and prepare test inputs."
 }
 
 main() {

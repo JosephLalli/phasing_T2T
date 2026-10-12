@@ -26,4 +26,4 @@ Published T2T-CHM13 panels are available from the [T2T/HPRC bucket browser](http
 
 ## GRCh38 comparison panels
 
-Use the Docker download command in the [main README](../README.md#phase-1kgp-variation-and-calculate-summary-statistics) to prepare the GRCh38 comparison panels. It downloads the upstream phased VCFs, stores them under the names used by this pipeline, and prepares the 2,504-sample biallelic BCF panels used for imputation comparisons.
+From the repository root on your host machine, use the command in the [main README](../README.md#phase-1kgp-variation-and-calculate-summary-statistics) to download and prepare the GRCh38 comparison panels. It downloads the upstream phased VCFs, stores them under the names used by this pipeline, and uses the tools in the Docker image to prepare the 2,504-sample biallelic BCF panels used for imputation comparisons.

@@ -12,9 +12,9 @@ This directory holds the reference files used by the analysis. Small annotations
 
 ## Download inputs
 
-Use the Docker download command in the [main README](../README.md#phase-1kgp-variation-and-calculate-summary-statistics). It runs `scripts/utility/download_resources.sh` inside the project image and downloads the reference genomes, unphased 1KGP calls, GRCh38 comparison panels, SGDP truth data, and HPRC/HGSVC3 pangenome VCFs; it also prepares and indexes the FASTAs. Existing files are skipped.
+Use the command in the [main README](../README.md#phase-1kgp-variation-and-calculate-summary-statistics) to download and prepare the inputs. It runs `scripts/utility/download_resources.sh` with the bioinformatics tools in the project image: the script downloads the files, prepares the reference FASTAs and GRCh38 comparison panels, and creates their indexes. Run that command from the repository root on your host machine. Existing files are skipped.
 
-For the chr15 and chr22 test regions, use the `--test` Docker command shown there. It extracts test-region unphased calls and SGDP truth data, but downloads whole-chromosome GRCh38 comparison panels because liftover needs variants outside the test regions.
+For the chr15 and chr22 test regions, use the `--test` command shown there. It extracts test-region unphased calls and SGDP truth data, but downloads whole-chromosome GRCh38 comparison panels because liftover needs variants outside the test regions.
 
 ## Required file paths
 
@@ -35,24 +35,18 @@ All VCF files require their corresponding `.tbi` tabix index at the same path.
 
 ## Sources and manual downloads
 
-Use the supported Docker download command above for a complete setup. The links below are provided for readers who need an individual input or wish to inspect its source.
-
-To run the manual download commands, start a container from the repository root:
-
-```bash
-docker run --rm -it --user "$(id -u):$(id -g)" \
-  --mount "type=bind,src=$PWD,dst=/phasing_T2T_project" \
-  --workdir /phasing_T2T_project jlalli/phasing_t2t:v2.1 bash
-```
-
-Run the commands below inside that container. The downloaded files are saved in the repository on your disk.
+Use the automated command above for a complete setup. To download an individual input, run the commands below from the repository root on your host machine. Plain downloads do not require Docker.
 
 ### Reference genomes
 
 ```bash
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/GCA_009914755.4/chm13v2.0.fa.gz
-curl https://42basepairs.com/download/s3/1000genomes/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa | bgzip > resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
+curl -fL https://42basepairs.com/download/s3/1000genomes/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa \
+  | docker run --rm -i --user "$(id -u):$(id -g)" jlalli/phasing_t2t:v2.1 bgzip \
+  > resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
 ```
+
+The GRCh38 command downloads on the host and uses the image's `bgzip` tool to compress the FASTA into the format required by the pipeline. For complete FASTA preparation and indexing, use the automated command above.
 
 ### HPRC pangenome VCFs
 

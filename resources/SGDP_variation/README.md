@@ -4,15 +4,15 @@ Ground-truth variant calls from the Simons Genome Diversity Project, used to
 evaluate imputation accuracy. Data was published with the T2T HG002-Y paper
 (Rhie et al., Nature 2023; https://www.nature.com/articles/s41586-023-06457-y).
 
-From the repository root, use the Docker download commands in the
+From the repository root on your host machine, use the commands in the
 [main README](../../README.md#phase-1kgp-variation-and-calculate-summary-statistics).
-The downloader obtains both T2T-CHM13 and GRCh38 inputs, including their indexes.
+The downloader obtains both T2T-CHM13 and GRCh38 inputs and prepares their indexes with the tools in the Docker image.
 Use `--test` for the chr15 and chr22 test regions.
 
 ## T2T-CHM13 coordinates
 
 The full chromosome VCFs and indexes are publicly available. To download them
-manually instead:
+manually instead, run this on your host machine from the repository root:
 
 ```bash
 for chr in {1..22} X; do

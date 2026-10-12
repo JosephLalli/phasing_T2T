@@ -70,8 +70,9 @@ docker pull jlalli/phasing_t2t:v2.1
 
 ### Phase 1KGP variation and calculate summary statistics
 
-Download the inputs listed in [resources/README.md](resources/README.md). We have created a script to do this [scripts/utility/download_resources.sh](scripts/utility/download_resources.sh). 
-From the repository root, download all input files that are too large to host on github using Docker:
+The inputs are listed in [resources/README.md](resources/README.md). The [download script](scripts/utility/download_resources.sh) downloads these files, prepares the reference FASTAs and GRCh38 comparison panels, and creates their indexes. It uses the bioinformatics tools supplied by the Docker image.
+
+From the repository root on your host machine, download and prepare the inputs:
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" \
@@ -80,7 +81,7 @@ docker run --rm --user "$(id -u):$(id -g)" \
   bash scripts/utility/download_resources.sh
 ```
 
-To only download test datasets, run:
+To download and prepare the test datasets, run:
 
 ```bash
 docker run --rm --user "$(id -u):$(id -g)" \
@@ -89,7 +90,7 @@ docker run --rm --user "$(id -u):$(id -g)" \
   bash scripts/utility/download_resources.sh --test
 ```
 
-Then, to run the pipeline from the repository root, provide the chromosome, number of
+Then, run the pipeline from the repository root on your host machine, providing the chromosome, number of
 threads, output suffix, and reference genome (in that order):
 
 ```bash
@@ -106,7 +107,7 @@ bash run_pipeline.sh chr22_test 12 test_run CHM13v2.0
 bash run_pipeline.sh chr22_test 12 test_run GRCh38
 ```
 
-`run_pipeline.sh` is a driver script that coordinates running `scripts/create_and_assess_haplotype_panels.sh` in Docker.
+`run_pipeline.sh` starts Docker and runs `scripts/create_and_assess_haplotype_panels.sh` inside it. Run the driver on your host machine, not inside a container.
 Put inputs at the paths listed in the resources README; results are saved in
 the repository. The image and downloads require internet access.
 
@@ -144,13 +145,13 @@ do
 done
 ```
 
-Then, you can run the driver script that runs figure generation scripts using a Docker container with all requirements installed.
+Then, run the figure driver from the repository root on your host machine. It starts a Docker container with all requirements installed.
 
 ```bash
 bash scripts/run_make_plots.sh
 ```
 
-The runner checks the input files against their supplied checksums, then runs `notebooks/notebooks_whole_genome/make_plots.ipynb` in a Docker container. Figures, tables, and the executed notebook are saved in `figures_whole_genome/`, `tables_whole_genome/`, and `notebook_runs/` inside the repository on your disk.
+The runner checks the input files against their supplied checksums, then runs `notebooks/notebooks_whole_genome/make_plots.ipynb` in a Docker container. Run this driver on your host machine, not inside a container. Figures, tables, and the executed notebook are saved in `figures_whole_genome/`, `tables_whole_genome/`, and `notebook_runs/` inside the repository on your disk.
 
 Figure 1 is generated as part of the [1kgp_chm13_maps](https://github.com/mccoy-lab/1kgp_chm13_maps) repository. Figure 5 is generated separately by running `scripts/figure5/Figure_5_script.R` followed by `scripts/figure5/stitch_svgs.py`.
 
