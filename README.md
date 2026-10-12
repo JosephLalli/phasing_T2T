@@ -1,6 +1,8 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17178669.svg)](https://doi.org/10.5281/zenodo.17178669)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23308197.svg)](https://doi.org/10.5281/zenodo.23308197)
 
 **[Download phased haplotype panel at this location](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/)**
+
+**[Panel and recombination-map archive](https://doi.org/10.5281/zenodo.23289633)**
 
 **[CHM13v2.0 recombination maps used by the pipeline](resources/recombination_maps/t2t_native_scaled_maps)**
 
@@ -11,7 +13,7 @@
 
 This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2023](https://www.nature.com/articles/s41586-023-06457-y)) that have been computationally phased using SHAPEIT5 ([Hofmeister et al 2023](https://www.nature.com/articles/s41588-023-01415-w)). Phased panels (both unrelated 2504 member panels and full 3202 member panels) are available at the [T2T/HPRC aws bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/).
 
-The previous code and analysis data are available at [Zenodo record 17178669](https://zenodo.org/record/17178669). Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
+The [Zenodo release family 17178669](https://zenodo.org/record/17178669) contains earlier code releases. The current code and figure inputs are in [Zenodo record 23308197](https://doi.org/10.5281/zenodo.23308197) and will be available after publication. Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
 Code used to generate T2T recombination maps can be found at [1kgp_chm13_maps](https://github.com/mccoy-lab/1kgp_chm13_maps).
 
@@ -113,12 +115,12 @@ the repository. The image and downloads require internet access.
 
 ### Produce figures from summary statistics
 
-Processing and phasing the full panel takes a lot of compute power. To reproduce the figures without repeating those steps, we provide the intermediate files on [Zenodo](https://zenodo.org/records/23289651): 12 summary Parquet files and 176 chromosome-level files containing variant-level imputation accuracy results.
+Processing and phasing the full panel takes a lot of compute power. To reproduce the figures without repeating those steps, we provide the intermediate files on [Zenodo](https://doi.org/10.5281/zenodo.23308197): 12 summary Parquet files and 176 chromosome-level files containing variant-level imputation accuracy results. They will be available after publication.
 
 Assuming you have already cloned the Github repository, run the following commands from the repository root to download the intermediate data inputs into their appropriate folders:
 
 ```bash
-zenodo_files_url="https://zenodo.org/records/23289651/files"
+zenodo_files_url="https://zenodo.org/records/23308197/files"
 
 curl -fL "$zenodo_files_url/NG-TR68126R_concordance_files.zip?download=1" \
   -o NG-TR68126R_concordance_files.zip

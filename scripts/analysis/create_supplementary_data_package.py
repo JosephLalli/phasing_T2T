@@ -779,8 +779,8 @@ def data_sources_text() -> str:
 Primary data and code links associated with the preprint:
 
 - bioRxiv preprint: https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1
-- Code and performance data Zenodo record: https://zenodo.org/records/12121420
-- T2T-CHM13 recombination maps Zenodo record: https://zenodo.org/records/14891074
+- Current code and input Zenodo record (available after publication): https://doi.org/10.5281/zenodo.23308197
+- T2T-CHM13 panels and recombination maps (available after publication): https://doi.org/10.5281/zenodo.23289633
 - GitHub repository: https://github.com/JosephLalli/phasing_T2T
 - Public HPRC panel path from the preprint Data/Code tab:
   https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/
