@@ -1,6 +1,6 @@
 # Unphased Variant Calls
 
-This directory holds unphased 1000 Genomes Project variant calls mapped to T2T-CHM13 and GRCh38.
+This directory is where to place unphased 1000 Genomes Project variant calls mapped to T2T-CHM13 and GRCh38.
 
 ## Directories
 
