@@ -1,40 +1,9 @@
 # Phasing T2T Project Docker Container
-# Runs the phasing pipeline test cases (chr22_test, chr15_test).
-# Includes bcftools/samtools/htslib, Python, and the R stack needed for Figure 6.
-# No Java or GATK.
-#
-# ── Volume mount requirements ──
-# The following MUST be bind-mounted at runtime (too large for the image).
-# They are intentionally not tracked in git and are excluded from the image
-# via .dockerignore. Supply them as bind mounts to the paths listed below.
-#
-# Reference genomes:
-#   -v <chm13_fa>:/phasing_T2T_project/resources/chm13v2.0.fa.gz:ro  (+.fai, +.gzi)
-#   -v <grch38_fa>:/phasing_T2T_project/resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz:ro (+.fai, +.gzi)
-#
-# Unphased variant calls:
-#   -v <unphased_vcfs>:/phasing_T2T_project/unphased_variant_calls:ro
-#
-# Pangenome VCFs:
-#   -v <hprc_chm13_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz:ro  (+.tbi)
-#   -v <hprc_grch38_vcf>:/phasing_T2T_project/resources/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz:ro (+.tbi)
-#
-# SGDP ground truth:
-#   -v <sgdp_grch38_dir>:/phasing_T2T_project/resources/SGDP_variation/grch38:ro
-#   -v <sgdp_t2t_dir>:/phasing_T2T_project/resources/SGDP_variation/t2t:ro
-#
-# Precomputed GRCh38 panels (read-write: assess_imputation.sh writes filtered BCFs here):
-#   -v <grch38_panels>:/phasing_T2T_project/phased_panels/grch38
-#
-# Persistent working directories:
-#   -v <output_dir>/working_directories:/phasing_T2T_project/working_directories
-#   -v <output_dir>/intermediate_data:/phasing_T2T_project/intermediate_data
-#   -v <output_dir>/imputation_statistics:/phasing_T2T_project/imputation_statistics
-#   -v <output_dir>/SHAPEIT5_switch_output:/phasing_T2T_project/SHAPEIT5_switch_output
-#
-# See scripts/run_docker_smoke_test.sh plus docker.env.example for a complete example.
+# Runs the phasing pipeline and includes the Python/R support needed for Figure 5.
+# The published image is used by ./run_pipeline.sh and scripts/run_make_plots.sh.
+# External inputs and generated outputs stay in the bind-mounted repository.
 
-FROM ubuntu:22.04
+FROM python:3.11-bookworm@sha256:a8f8fbe1a0edc9e4dddafa64ba73f7e04be7be5ebc23f332362e779e0a2e4e52
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
@@ -42,7 +11,11 @@ ENV TZ=UTC
 WORKDIR /build
 
 # ── System dependencies ──
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Microsoft core fonts are installed from Debian's contrib package so SVG/PDF
+# generation resolves Arial consistently. The EULA is accepted noninteractively.
+RUN sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources && \
+    echo 'msttcorefonts msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections && \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     autoconf \
     automake \
@@ -66,16 +39,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfribidi-dev \
     libjpeg-dev \
     libpng-dev \
-    libtiff5-dev \
+    libtiff-dev \
     libxml2-dev \
-    python3 \
-    python3-pip \
     python3-dev \
     r-base \
     r-base-dev \
     cmake \
+    fontconfig \
     fonts-liberation2 \
+    ttf-mscorefonts-installer \
+    librsvg2-bin \
+    poppler-utils \
     parallel \
+    && fc-cache -f \
+    && test "$(fc-match -f '%{family}' Arial)" = 'Arial' \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Build htslib 1.22 ──
@@ -111,11 +88,16 @@ RUN bcftools +liftover --help 2>&1 | head -1
 
 # ── Python packages ──
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
-# ── R packages for Figure 6 generation ──
-RUN R -q -e "install.packages(c('BiocManager', 'arrow', 'PlotTools', 'tidyverse', 'svglite'), repos='https://cloud.r-project.org')" && \
-    R -q -e "BiocManager::install(c('GenomicRanges', 'rtracklayer', 'karyoploteR'), ask=FALSE, update=FALSE)"
+# ── R packages for Figure 5 generation ──
+# fs can build its bundled libuv without another system dependency.
+RUN USE_BUNDLED_LIBUV=1 R -q -e "options(Ncpus=8); install.packages(c('BiocManager', 'arrow', 'PlotTools', 'tidyverse', 'svglite'), repos='https://cloud.r-project.org')" && \
+    USE_BUNDLED_LIBUV=1 R -q -e "options(Ncpus=8); BiocManager::install(c('GenomicRanges', 'rtracklayer', 'karyoploteR'), ask=FALSE, update=FALSE); stopifnot(all(vapply(c('arrow', 'PlotTools', 'tidyverse', 'svglite', 'GenomicRanges', 'rtracklayer', 'karyoploteR'), requireNamespace, logical(1), quietly=TRUE)))"
+
+# The resource downloader decompresses the GRCh38 reference with zstd.
+RUN apt-get update && apt-get install -y --no-install-recommends zstd && \
+    rm -rf /var/lib/apt/lists/*
 
 # ── Set up project directory ──
 WORKDIR /phasing_T2T_project
@@ -152,6 +134,6 @@ RUN mkdir -p \
     resources/SGDP_variation/grch38
 
 LABEL description="T2T genomic variant phasing pipeline with Python and R analysis support"
-LABEL version="2.0"
+LABEL version="2.1"
 
 CMD ["/bin/bash"]

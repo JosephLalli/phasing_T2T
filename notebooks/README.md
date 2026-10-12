@@ -1,42 +1,35 @@
 # Notebooks
 
-This directory contains Jupyter notebooks for data analysis, figure generation, and statistical computation.
+This directory contains the notebooks used to calculate paper values and make figures.
 
-## Directory Structure
-- Main directory - Core analysis notebooks (88 files total)
-- `notebooks_whole_genome/` - The same notebooks run on genome-wide results
+Read the whole-genome notebooks at [Phasing T2T notebooks](https://josephlalli.github.io/phasing_T2T/):
 
-## Core Analysis Notebooks
+- [Manuscript values](https://josephlalli.github.io/phasing_T2T/calc_figures_for_paper.html)
+- [Per-variant calculations](https://josephlalli.github.io/phasing_T2T/calc_per_variant_figures_for_paper.html)
+- [Publication figures](https://josephlalli.github.io/phasing_T2T/make_plots.html)
 
-### Primary Publication Notebooks
-- **calc_figures_for_paper.ipynb** - Calculates all values reported in manuscript text
-  - Summary statistics across populations and chromosomes
-  - Switch error rate calculations  
-  - Imputation accuracy measurements
-  - Designed to run on laptop with summary data
-  
-- **calc_per_variant_figures_for_paper.ipynb** - Per-variant detailed analysis
-  - Requires loading full variant dataframes into memory
-  - Variant-level switch error analysis
-  - Regional and population-specific variant patterns
-  - Requires high-memory server environment
+The HTML files in `notebooks_whole_genome/` can also be opened locally. They show saved notebook outputs; `make_plots.html` shows the Docker figure run.
 
-- **make_plots.ipynb** - Primary figure generation notebook
-  - Creates all main, extended, and supplementary figures
-  - Outputs figures to `figures/` directory
-  - Generates tables for `tables/` directory
-  - Note: Does not generate Figure 6 (handled by R script)
+`calc_figures_for_paper.ipynb` calculates all values reported in the text of the paper. It only uses smaller summary parquet files and is designed to run on a laptop in Docker.
 
-## Data Dependencies
+`calc_per_variant_figures_for_paper.ipynb` calculates values that require loading the full variant dataframes into memory. It requires at least 400GB of RAM.
 
-### Input Data Sources
-- `intermediate_data/` - Test-region summary analysis files
-- `imputation_statistics/` - Test-region imputation results
-- `intermediate_data_whole_genome/` - Complete genome-wide analysis results
-- `imputation_statistics_whole_genome/` - Complete genome-wide imputation results
-- `SHAPEIT5_switch_output/` - Switch error calculations
+The notebooks in this directory use the test-region data. `notebooks_whole_genome/` contains the whole-genome notebooks and figure code.
 
-### Output Locations
-- `figures/` and `tables/` - Test run figures and tables
-- `figures_whole_genome/` and `tables_whole_genome/` - Publication-scale figures and tables
-- Inline notebook outputs - Interactive analysis results
+To produce figures from the supplied whole-genome inputs, run this from the repository root on your host machine:
+
+```bash
+scripts/run_make_plots.sh
+```
+
+The runner checks the supplied inputs and executes only `notebooks_whole_genome/make_plots.ipynb` in Docker. Generate Figure 5 separately with `scripts/figure5/Figure_5_script.R`, then combine its panels with `scripts/figure5/stitch_svgs.py`.
+
+See the [main README](../README.md#produce-figures-from-summary-statistics) for input files, Docker settings, and figure filenames.
+
+Input data:
+
+- `intermediate_data/` and `imputation_statistics/` contain test-region summary and imputation results.
+- `intermediate_data_whole_genome/` and `imputation_statistics_whole_genome/` contain whole-genome results.
+- `SHAPEIT5_switch_output/` contains switch-error calculations.
+
+The test run writes figures and tables to `figures/` and `tables/`. The whole-genome run writes them to `figures_whole_genome/` and `tables_whole_genome/`.
