@@ -4,7 +4,7 @@
 
 **[CHM13v2.0 recombination maps used by the pipeline](resources/recombination_maps/t2t_native_scaled_maps)**
 
-The GRCh38 maps are in [resources/recombination_maps/grch38](resources/recombination_maps/grch38).
+[Classic GRCh38 recombination maps used by the pipeline](resources/recombination_maps/t2t_native_scaled_maps)
 
 
 # Computationally phased T2T 1KGP panel
