@@ -8,7 +8,7 @@ Read the whole-genome notebooks at [Phasing T2T notebooks](https://josephlalli.g
 - [Per-variant calculations](https://josephlalli.github.io/phasing_T2T/calc_per_variant_figures_for_paper.html)
 - [Publication figures](https://josephlalli.github.io/phasing_T2T/make_plots.html)
 
-The HTML files in `notebooks_whole_genome/` can also be opened locally. They show saved notebook outputs; `make_plots.html` uses the validated Docker run.
+The HTML files in `notebooks_whole_genome/` can also be opened locally. They show saved notebook outputs; `make_plots.html` shows the Docker figure run.
 
 `calc_figures_for_paper.ipynb` calculates all values reported in the text of the paper. It only uses smaller summary parquet files and is designed to run on a laptop in Docker.
 
@@ -16,11 +16,15 @@ The HTML files in `notebooks_whole_genome/` can also be opened locally. They sho
 
 The notebooks in this directory use the test-region data. `notebooks_whole_genome/` contains the whole-genome notebooks and figure code.
 
-`notebooks_whole_genome/make_plots.py` is the Jupytext `py:percent` source for `make_plots.ipynb`. Edit the Python file, then sync and validate the notebook. Set `PHASING_T2T_RUN_PROFILE=whole_genome` for publication inputs or `test` for test-region inputs.
+To produce figures from the supplied whole-genome inputs, run this from the host repository root:
 
-Run the host `scripts/run_make_plots.sh` wrapper after leaving the interactive container; it checks the 188 supplied input files and runs the whole-genome notebook in Docker. Run Figure 5 separately with `scripts/figure5/Figure_5_script.R` and `scripts/figure5/stitch_svgs.py`. `figure_composition.py` combines figure panels and `utilities.py` contains plotting and data helpers. Run notebook, Python, and R commands inside the Docker container described in the [main README](../README.md#run-downloads-and-manual-analysis-in-docker).
+```bash
+bash scripts/run_make_plots.sh
+```
 
-See the [main README](../README.md#publication-figure-code) for input files, Docker instructions, and figure filenames.
+The runner checks the 188 supplied inputs and executes only `notebooks_whole_genome/make_plots.ipynb` in Docker. Generate Figure 5 separately with `scripts/figure5/Figure_5_script.R`, then combine its panels with `scripts/figure5/stitch_svgs.py`.
+
+See the [main README](../README.md#produce-figures-from-summary-statistics) for input files, Docker settings, and figure filenames.
 
 Input data:
 

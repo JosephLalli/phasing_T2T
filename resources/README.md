@@ -1,7 +1,6 @@
 # Resources
 
-Reference files for the analysis. Small annotations are included here; download
-the larger inputs separately.
+This directory holds the reference files used by the analysis. Small annotations are included with the repository; download the larger inputs separately.
 
 ## Included files
 
@@ -11,26 +10,15 @@ the larger inputs separately.
 - `sample_subsets/`
 - chain files, cytobands, BEDs, and other small annotations used by the paper
 
-## Downloads
+## Download inputs
 
-Run the commands below inside the Docker container described in the [main README](../README.md#run-downloads-and-manual-analysis-in-docker).
+Use the Docker download command in the [main README](../README.md#phase-1kgp-variation-and-calculate-summary-statistics). It runs `scripts/utility/download_resources.sh` inside the project image and downloads the reference genomes, unphased 1KGP calls, GRCh38 comparison panels, SGDP truth data, and HPRC/HGSVC3 pangenome VCFs; it also prepares and indexes the FASTAs. Existing files are skipped.
 
-Download these files to run the pipeline, including the chr15 and chr22 tests:
-
-- CHM13 and GRCh38 reference FASTA files and indexes
-- unphased 1KGP variant calls in T2T and GRCh38 coordinates
-- phased GRCh38 reference panels
-- SGDP truth data in T2T and GRCh38 coordinates
-- HPRC and HGSVC3 pangenome VCFs and indexes
-
-Put them at the paths below. After downloading, leave the container and run
-`run_pipeline.sh` from the repository root. The script mounts the repository
-and these inputs into Docker.
+For the chr15 and chr22 test regions, use the `--test` Docker command shown there. It extracts test-region unphased calls and SGDP truth data, but downloads whole-chromosome GRCh38 comparison panels because liftover needs variants outside the test regions.
 
 ## Required file paths
 
-The shell pipeline expects these paths when running inside the repository or
-inside the Docker container:
+The pipeline expects these paths in the cloned repository:
 
 - `resources/chm13v2.0.fa.gz`
 - `resources/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz`
@@ -45,10 +33,19 @@ inside the Docker container:
 
 All VCF files require their corresponding `.tbi` tabix index at the same path.
 
-## Download links
+## Sources and manual downloads
 
-Download links are below. Keep the inputs used for an analysis so it can be
-repeated.
+Use the supported Docker download command above for a complete setup. The links below are provided for readers who need an individual input or wish to inspect its source.
+
+To run the manual download commands, start a container from the repository root:
+
+```bash
+docker run --rm -it --user "$(id -u):$(id -g)" \
+  --mount "type=bind,src=$PWD,dst=/phasing_T2T_project" \
+  --workdir /phasing_T2T_project jlalli/phasing_t2t:v2.1 bash
+```
+
+Run the commands below inside that container. The downloaded files are saved in the repository on your disk.
 
 ### Reference genomes
 
@@ -61,7 +58,9 @@ curl https://42basepairs.com/download/s3/1000genomes/technical/reference/GRCh38_
 
 ```bash
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-chm13/hprc-v1.1-mc-chm13.vcfbub.a100k.wave.vcf.gz.tbi
 wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz
+wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz.tbi
 ```
 
 ### HGSVC3 pangenome VCFs
@@ -79,44 +78,8 @@ wget -P resources/ https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenom
 
 ### SGDP ground truth
 
-**T2T-CHM13 coordinates** (downloaded automatically by the script):
+T2T-CHM13 VCFs are available from the [T2T/HPRC bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/SGDP/chm13v2.0/).
 
-```bash
-for chr in {1..22} X; do
-  wget -P resources/SGDP_variation/t2t/ "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz"
-  wget -P resources/SGDP_variation/t2t/ "https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/variants/SGDP/chm13v2.0/SGDP.CHM13v2.0.chr${chr}.recalibrated.snp_indel.pass.vcf.gz.tbi"
-done
-```
+The GRCh38 archives are available on Zenodo: [test-region data](https://zenodo.org/records/19371182/files/SGDP_GRCh38_test_regions.tar.gz?download=1) or [whole-genome data](https://zenodo.org/records/19371182/files/SGDP_GRCh38_all_chromosomes.tar.gz?download=1). The automated downloader selects the appropriate archive and extracts it into `resources/SGDP_variation/grch38/`.
 
-**GRCh38 coordinates**:
-Download the test-region or whole-genome data from Zenodo and extract it into
-`resources/SGDP_variation/grch38/`.
-
-Test-region data:
-```bash
-wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_test_regions.tar.gz \
-  "https://zenodo.org/records/19371182/files/SGDP_GRCh38_test_regions.tar.gz?download=1"
-```
-
-Whole-genome data:
-```bash
-wget -O resources/SGDP_variation/grch38/SGDP_GRCh38_all_chromosomes.tar.gz \
-  "https://zenodo.org/records/19371182/files/SGDP_GRCh38_all_chromosomes.tar.gz?download=1"
-```
-
-Originally sourced from https://anvil.terra.bio/#workspaces/anvil-datastorage/AnVIL_T2T_CHRY/data
-
-See `SGDP_variation/README.md` for expected file naming.
-
-### Automated download
-
-Run `scripts/utility/download_resources.sh` from the repository root to fetch
-reference genomes, pangenome VCFs, both T2T and GRCh38 SGDP truth data, and
-the required FASTA indexes (`.fai` and `.gzi`). The script skips existing
-files. Add `--parallel` to download datasets at the same time.
-
-To download the chr15 and chr22 test-region inputs, run:
-
-```bash
-bash scripts/utility/download_resources.sh --test
-```
+The GRCh38 data were originally sourced from [AnVIL T2T CHRY](https://anvil.terra.bio/#workspaces/anvil-datastorage/AnVIL_T2T_CHRY/data). See [SGDP_variation/README.md](SGDP_variation/README.md) for expected file names.
