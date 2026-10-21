@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23308197.svg)](https://doi.org/10.5281/zenodo.23308197)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17178669.svg)](https://doi.org/10.5281/zenodo.17178669)
 
 **[Download phased haplotype panel at this location](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/)**
 
@@ -13,7 +13,7 @@
 
 This repository contains CHM13v2-aligned 1000 Genomes Project (1KGP) variant data ([Rhie et al 2023](https://www.nature.com/articles/s41586-023-06457-y)) that have been computationally phased using SHAPEIT5 ([Hofmeister et al 2023](https://www.nature.com/articles/s41588-023-01415-w)). Phased panels (both unrelated 2504 member panels and full 3202 member panels) are available at the [T2T/HPRC aws bucket](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/variants/1000_Genomes_Project/chm13v2.0/Phased_SHAPEIT5_v1.1/).
 
-The [Zenodo release family 17178669](https://zenodo.org/record/17178669) contains earlier code releases. The current code and figure inputs are in [Zenodo record 23308197](https://doi.org/10.5281/zenodo.23308197) and will be available after publication. Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
+The [Zenodo code release family](https://doi.org/10.5281/zenodo.17178669) contains the code releases. The current figure inputs are in [Zenodo record 23308197](https://doi.org/10.5281/zenodo.23308197) and will be available after publication. Use the code and inputs described below to generate the current figures. Please cite our preprint, [Lalli et al. 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639687v1).
 
 Code used to generate T2T recombination maps can be found at [1kgp_chm13_maps](https://github.com/mccoy-lab/1kgp_chm13_maps).
 
@@ -234,14 +234,14 @@ Note: the SHAPEIT5 UK Biobank phasing paper excludes alternative alleles with AA
 <br>
 
 ## Phasing
-Phasing was performed with SHAPEIT v5.1.1, largely in accordance with the recommendations outlined in [SHAPEIT5's online tutorial](https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs_200k/). For each chromosome, common variants were phased in one chunk. Rare variants were phased in chunks of 40 megabases.
+Phasing was performed with SHAPEIT v5.1.1, largely in accordance with the recommendations outlined in [SHAPEIT5 documentation](https://github.com/JosephLalli/Shapeit5.2). For each chromosome, common variants were phased in one chunk. Rare variants were phased in chunks of 40 megabases.
 
 Chromosome X PAR regions were phased separately from the rest of chromosome X. To phase the body of chromsome X, male samples were provided to SHAPEIT5 via the --halpoid option. The provided Ne value was reduced to 75% of the overall Ne, to account for the reduced population of haplotypes in this region of chrX. Phasing statistics were only calculated for female samples.
 
 ## Evaluation of phasing accuracy
 We rely on two different methods of phasing quality evaluation:
 
-- Using family data [as outlined in SHAPEIT5's documentation](https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs/#validation-of-your-phasing).  
+- Using family data [as outlined in SHAPEIT5 documentation](https://github.com/JosephLalli/Shapeit5.2).
 
 - Using the haplotype-phased samples present in the draft human pangenome as a ground truth.  
 
@@ -256,7 +256,7 @@ We then calculate different sets of performance statistics using SHAPEIT5's swit
 Using family data as 'ground truth', we can:
 - Evaluate switch error rate of pedigree-informed 3202 sample panel, using family data
     - Measures best-case performance of phasing when using pedigree data
-- Evaluate switch error rate of 2002 sample no-parent phased panel using family data [as outlined in SHAPEIT5's documentation](https://odelaneau.github.io/shapeit5/docs/tutorials/ukb_wgs/#validation-of-your-phasing). 
+- Evaluate switch error rate of 2002 sample no-parent phased panel using family data [as outlined in SHAPEIT5 documentation](https://github.com/JosephLalli/Shapeit5.2).
     - Most valid measure of phasing accuracy when not using pedigree data
     - Sets upper bound on error rate, as phasing is performed with ~66% of our dataset's haplotypes
 
