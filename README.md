@@ -203,25 +203,38 @@ Performance was measured by comparing the phased haplotypes of 39 samples shared
 |T2T-CHM13|HGSVC3|Non-Trio|1.110|0.474|0.130|1.253|
 
 ## Abbreviated Methods
-### Variant filters used in this analysis (And string used to implement filter with bcftools)
+### Variant filters implemented in the CHM13v2.0 panel-generation script
+
+The exclusions below describe the current implementation in
+[`scripts/create_and_assess_haplotype_panels.sh`](scripts/create_and_assess_haplotype_panels.sh).
+They are combined with `||` in `bcftools view -e`; a site is excluded if any
+listed condition is true. The five population-specific HWE tests are combined
+with `&&`, so that condition requires all five tests to be true.
 <br>
 
-- exclude FILTER (column in the VCF) = PASS:
+- exclude variants whose FILTER column is not PASS:
 
       FILTER!="PASS"
 
 - exclude variants with an alt allele of '*' after multiallelic splitting: 
         
       ALT=='*'
-- exclude GT missingness rate < 5%
+- exclude variants with GT missingness rate > 5%
 
       F_MISSING>0.05
-- exclude Hardy-Weinberg p-value < 1e−10 in any 1000G subpopulation (as calculated in the 2504 unrelated 1KGP samples):
+- exclude variants with Hardy-Weinberg p-value < 1e−10 in all five 1KGP superpopulations (EUR, AFR, EAS, AMR and SAS), as calculated in the 2504 unrelated 1KGP samples:
 
       INFO/HWE_EUR<1e-10 && INFO/HWE_AFR<1e-10 && INFO/HWE_EAS<1e-10 && INFO/HWE_AMR<1e-10 && INFO/HWE_SAS<1e-10
-- exclude sites where Mendelian Error Rate (Mendelian errors/num alleles) >= 0.05 (Note: 0.05*602 trios = 30 mendelian errors)
-    
-      INFO/MERR>=30
+- exclude sites where the number of trios with Mendelian errors (`INFO/MERR`) exceeds 5% of `INFO/AN`:
+
+      INFO/MERR>(INFO/AN*0.05)
+
+  `INFO/AN` is the called-allele count recalculated after `bcftools +mendelian2`
+  sets genotypes in inconsistent trios to missing. It is not the number of trios,
+  so this expression is not a fixed 30-error threshold.
+- exclude non-SNP variants with an absolute length change of at least 50 bp:
+
+      TYPE!='snp' && ABS(ILEN)>=50
 - exclude homoalellelic sites
 
       MAC==0
